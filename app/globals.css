@@ -888,6 +888,10 @@ a.set-action:hover { text-decoration: none; }
 .text-secondary { color: var(--fg-secondary); }
 .spacer { flex: 1; }
 
+/* ── Budget & Modal layout ── */
+.budget-cat-icon-row { display: flex; align-items: center; gap: 8px; }
+.modal-kind-row { display: flex; align-items: center; gap: 8px; }
+
 /* ── Budget month selector ── */
 .month-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
 .budget-summary-box { margin-bottom: 20px; padding: 16px; }

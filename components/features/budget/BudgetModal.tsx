@@ -65,7 +65,7 @@ export function BudgetModal({ budget, month, categories, onClose, onSaved }: Pro
         <form onSubmit={handleSubmit} className="modal-body">
           <div className="form-group">
             <label className="form-label">Catégorie</label>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div className="budget-cat-icon-row">
               {category && (
                 <span style={{ color: category.colorHex }}>{category.icon}</span>
               )}
