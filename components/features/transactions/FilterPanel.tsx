@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { Account, Category } from "@/db/schema"
 
 export interface Filters {
@@ -32,13 +32,21 @@ interface Props {
 export function FilterPanel({ filters, accounts, categories, onChange }: Props) {
   const [localQ, setLocalQ] = useState(filters.q)
 
-  // Debounce text search
+  const onChangeRef = useRef(onChange)
+  useEffect(() => { onChangeRef.current = onChange })
+
+  const filtersRef = useRef(filters)
+  useEffect(() => { filtersRef.current = filters })
+
+  // Debounce text search — refs ensure no stale closure
   useEffect(() => {
     const t = setTimeout(() => {
-      if (localQ !== filters.q) onChange({ ...filters, q: localQ })
+      if (localQ !== filtersRef.current.q) {
+        onChangeRef.current({ ...filtersRef.current, q: localQ })
+      }
     }, 300)
     return () => clearTimeout(t)
-  }, [localQ]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [localQ])
 
   function set(patch: Partial<Filters>) {
     onChange({ ...filters, ...patch })

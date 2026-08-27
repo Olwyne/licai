@@ -113,7 +113,7 @@ export function TransactionModal({
 
   return (
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="modal" style={{ maxWidth: 500 }}>
+      <div className="modal tx-modal">
         <div className="modal-header">
           <h2>{isEdit ? "Modifier l'opération" : "Nouvelle opération"}</h2>
           <button className="modal-close" type="button" onClick={onClose}>✕</button>
@@ -206,12 +206,12 @@ export function TransactionModal({
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Optionnel…"
                 rows={2}
-                style={{ resize: "vertical" }}
+                className="tx-modal-note"
               />
             </div>
 
             {isEdit && (
-              <div style={{ fontSize: 12, color: "var(--fg-secondary)" }}>
+              <div className="tx-modal-hint">
                 Solde actuel : {formatCents(editingTx.amountCents)}
               </div>
             )}
@@ -227,7 +227,7 @@ export function TransactionModal({
                 size="sm"
                 onClick={() => void handleDelete()}
                 disabled={loading}
-                style={{ marginRight: "auto" }}
+                className="tx-modal-del-spacer"
               >
                 Supprimer
               </Button>

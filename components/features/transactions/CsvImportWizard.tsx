@@ -1,5 +1,5 @@
 "use client"
-import { useCallback, useRef, useState } from "react"
+import React, { useCallback, useRef, useState } from "react"
 import { Button } from "@/components/ui/Button"
 import { formatCents } from "@/lib/money"
 import { mapColumns } from "@/lib/finance/csv"
@@ -351,7 +351,7 @@ export function CsvImportWizard({
 
   return (
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="modal import-modal" style={{ maxWidth: 680, width: "95%" }}>
+      <div className="modal import-modal">
         <div className="modal-header">
           <h2>Importer un fichier CSV</h2>
           <button className="modal-close" type="button" onClick={onClose}>✕</button>
@@ -360,16 +360,15 @@ export function CsvImportWizard({
         {/* Step indicator */}
         <div className="import-steps">
           {([1, 2, 3] as const).map((s, idx) => (
-            <>
-              {idx > 0 && <div key={`sep-${s}`} className="step-sep" />}
+            <React.Fragment key={s}>
+              {idx > 0 && <div className="step-sep" />}
               <div
-                key={s}
                 className={`step${step === s ? " active" : step > s ? " done" : ""}`}
               >
                 <span className="step-num">{step > s ? "✓" : s}</span>
                 {s === 1 ? "Fichier" : s === 2 ? "Colonnes" : "Aperçu"}
               </div>
-            </>
+            </React.Fragment>
           ))}
         </div>
 
@@ -394,7 +393,7 @@ export function CsvImportWizard({
             />
           </div>
 
-          <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
+          <div className="wizard-toolbar">
             <div className="filter-group">
               <label>Banque</label>
               <select value={bankId} onChange={(e) => setBankId(e.target.value)}>
@@ -451,7 +450,7 @@ export function CsvImportWizard({
             </div>
           )}
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="wizard-col-form">
             <div className="map-row">
               <label>Séparateur</label>
               <select value={separator} onChange={(e) => setSeparator(e.target.value)}>
@@ -536,7 +535,7 @@ export function CsvImportWizard({
 
           {/* Preview table */}
           {previewLines.length > 0 && (
-            <div style={{ marginTop: 16, overflowX: "auto" }}>
+            <div className="wizard-preview-scroll">
               <table className="rp-table">
                 <thead>
                   <tr>{headers.map((h) => <th key={h}>{h}</th>)}</tr>
@@ -553,7 +552,7 @@ export function CsvImportWizard({
           )}
 
           {/* Save preset */}
-          <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
+          <div className="wizard-preset-row">
             <input
               type="text"
               placeholder="Nom du format…"
@@ -593,7 +592,7 @@ export function CsvImportWizard({
           </div>
 
           {/* Preview rows */}
-          <div style={{ maxHeight: 340, overflowY: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
+          <div className="wizard-pv-list">
             {previewRows.map((row, i) => (
               <div key={i} className={`pv-row${row.isDup ? " dup" : ""}`}>
                 <input

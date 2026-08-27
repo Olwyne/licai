@@ -83,7 +83,7 @@ export function TransactionList({
                       <i className={`ti ${cat.icon}`} />
                     </span>
                   ) : (
-                    <span className="tx-icon" style={{ background: "var(--border)" }}>
+                    <span className="tx-icon tx-icon-empty">
                       <i className="ti ti-receipt" />
                     </span>
                   )}

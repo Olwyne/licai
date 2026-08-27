@@ -858,3 +858,18 @@ a.set-action:hover { text-decoration: none; }
 .amode-btns { display: flex; gap: 4px; }
 .amode-btn { padding: 5px 12px; font-size: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent; color: var(--fg-secondary); cursor: pointer; }
 .amode-btn.active { border-color: var(--primary); color: var(--primary); background: var(--primary)10; }
+
+/* ── Transaction modal ── */
+.tx-modal { max-width: 500px; }
+.tx-modal-note { resize: vertical; }
+.tx-modal-hint { font-size: 12px; color: var(--fg-secondary); }
+.tx-modal-del-spacer { margin-right: auto; }
+
+/* ── CSV Import Wizard ── */
+.import-modal { max-width: 680px; width: 95%; }
+.wizard-toolbar { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+.wizard-col-form { display: flex; flex-direction: column; gap: 12px; }
+.wizard-preview-scroll { margin-top: 16px; overflow-x: auto; }
+.wizard-preset-row { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
+.wizard-pv-list { max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.tx-icon-empty { background: var(--border); }
