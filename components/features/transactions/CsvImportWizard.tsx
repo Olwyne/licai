@@ -414,9 +414,8 @@ export function CsvImportWizard({
             </div>
             <button
               type="button"
-              className="filter-reset"
+              className="wizard-sample-btn"
               onClick={loadSample}
-              style={{ color: "var(--primary)" }}
             >
               Charger un exemple
             </button>
@@ -558,7 +557,7 @@ export function CsvImportWizard({
               placeholder="Nom du format…"
               value={presetName}
               onChange={(e) => setPresetName(e.target.value)}
-              style={{ padding: "6px 10px", fontSize: 13, border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", background: "var(--bg)", color: "var(--fg)", flex: 1 }}
+              className="wizard-preset-input"
             />
             <button type="button" className="amode-btn" onClick={handleSavePreset}>
               Enregistrer ce format
@@ -603,7 +602,7 @@ export function CsvImportWizard({
                 <div className="pv-info">
                   <div className="pv-name">{row.name}</div>
                   {row.isDup && (
-                    <div className="pv-raw" style={{ color: "var(--danger)" }}>Doublon détecté</div>
+                    <div className="pv-dup-label">Doublon détecté</div>
                   )}
                 </div>
                 <span className="pv-date">{row.date}</span>
@@ -625,7 +624,7 @@ export function CsvImportWizard({
             ))}
           </div>
 
-          {importError && <div className="err on" style={{ marginTop: 8 }}>{importError}</div>}
+          {importError && <div className="wizard-error">{importError}</div>}
 
           <div className="modal-footer">
             <Button variant="ghost" type="button" onClick={() => setStep(2)}>Précédent</Button>

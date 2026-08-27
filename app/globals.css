@@ -873,3 +873,13 @@ a.set-action:hover { text-decoration: none; }
 .wizard-preset-row { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
 .wizard-pv-list { max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
 .tx-icon-empty { background: var(--border); }
+
+/* ── CSV Import Wizard inline styles fix ── */
+.wizard-sample-btn { color: var(--primary); background: transparent; border: none; cursor: pointer; font-size: 13px; text-decoration: underline; padding: 0; }
+.wizard-preset-input { padding: 6px 10px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); flex: 1; }
+.pv-dup-label { color: var(--danger); font-size: 11px; }
+.wizard-error { margin-top: 8px; font-size: 13px; color: var(--danger); }
+
+/* ── Preview amount colors ── */
+.pv-amt.pos { color: var(--success); }
+.pv-amt.neg { color: var(--danger); }
