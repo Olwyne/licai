@@ -883,3 +883,20 @@ a.set-action:hover { text-decoration: none; }
 /* ── Preview amount colors ── */
 .pv-amt.pos { color: var(--success); }
 .pv-amt.neg { color: var(--danger); }
+
+/* ── Utility ── */
+.text-secondary { color: var(--fg-secondary); }
+.spacer { flex: 1; }
+
+/* ── Budget month selector ── */
+.month-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.budget-summary-box { margin-bottom: 20px; padding: 16px; }
+.budget-summary-stats { display: flex; gap: 32px; flex-wrap: wrap; }
+
+/* ── Alertes ── */
+.al-icon-wrap { padding-top: 2px; }
+.al-due.soon { color: var(--accent); font-weight: 600; }
+
+/* ── Recurring ── */
+.rec-chips-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.rec-owners-wrap { display: flex; gap: 4px; }

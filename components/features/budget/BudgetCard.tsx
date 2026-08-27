@@ -60,7 +60,7 @@ export function BudgetCard({ budget, onEdit }: Props) {
       </div>
 
       <div className="budget-foot">
-        <span>{pct} %</span>
+        <span>{Math.round(pct)} %</span>
         <span className={`budget-remain ${remainCents < 0 ? "over" : ""} ${priv ? "private" : ""}`}>
           {remainCents >= 0
             ? `${formatCents(remainCents)} restants`

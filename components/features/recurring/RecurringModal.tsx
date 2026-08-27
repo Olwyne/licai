@@ -234,7 +234,7 @@ export function RecurringModal({
                 {deleting ? "Suppression…" : "Supprimer"}
               </Button>
             )}
-            <div style={{ flex: 1 }} />
+            <div className="spacer" />
             <Button type="button" variant="ghost" onClick={onClose}>
               Annuler
             </Button>

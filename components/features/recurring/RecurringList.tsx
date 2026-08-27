@@ -138,7 +138,7 @@ export function RecurringList({
         </div>
       </div>
 
-      <div className="chips" style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+      <div className="rec-chips-row">
         {FILTERS.map((f) => (
           <Chip key={f.value} active={filter === f.value} onClick={() => onFilterChange(f.value)}>
             {f.label}
@@ -148,7 +148,7 @@ export function RecurringList({
 
       <div className="rec-rows">
         {filtered.length === 0 && (
-          <p style={{ color: "var(--fg-secondary)" }}>Aucun élément.</p>
+          <p className="text-secondary">Aucun élément.</p>
         )}
         {filtered.map((r) => {
           const account = accounts.find((a) => a.id === r.accountId)
@@ -196,7 +196,7 @@ export function RecurringList({
                 </span>
               </div>
 
-              <div style={{ display: "flex", gap: 4 }}>
+              <div className="rec-owners-wrap">
                 <button
                   className="rec-act"
                   title={r.active ? "Mettre en pause" : "Réactiver"}

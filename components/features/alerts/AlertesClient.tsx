@@ -100,19 +100,23 @@ export function AlertesClient({ initialAlerts }: Props) {
 
       <div className="al-list">
         {filtered.length === 0 && (
-          <p style={{ color: "var(--fg-secondary)" }}>Aucune alerte.</p>
+          <p className="text-secondary">Aucune alerte.</p>
         )}
         {filtered.map((a) => {
           const toneClass = TONE_CLASS[a.tone] ?? "info"
           const icon = TONE_ICON[a.tone] ?? "ti-info-circle"
           const iconColor = TONE_COLOR[a.tone] ?? "var(--info)"
+          const daysUntil = a.date
+            ? Math.round((new Date(a.date).getTime() - Date.now()) / 86400000)
+            : null
+          const dueSoon = daysUntil !== null && daysUntil <= 30
 
           return (
             <div
               key={a.id}
               className={`al-row ${toneClass} ${a.resolved ? "muted" : ""}`}
             >
-              <div style={{ paddingTop: 2 }}>
+              <div className="al-icon-wrap">
                 <i
                   className={`ti ${icon}`}
                   style={{ color: iconColor, fontSize: 20 }}
@@ -125,7 +129,7 @@ export function AlertesClient({ initialAlerts }: Props) {
               </div>
 
               <div className="al-side">
-                <span className={`al-due`}>
+                <span className={`al-due${dueSoon ? " soon" : ""}`}>
                   {a.date ? a.date : "Sans échéance"}
                 </span>
                 <div className="al-acts">
