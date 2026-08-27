@@ -70,7 +70,7 @@ export function MemberModal({ onClose, onSaved }: Props) {
           <button
             type="button"
             onClick={onClose}
-            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "20px", color: "var(--fg-secondary)" }}
+            className="modal-close"
             aria-label="Fermer"
           >
             ×

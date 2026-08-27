@@ -770,3 +770,13 @@ a.set-action:hover { text-decoration: none; }
 .owner-opt.on { border-color: var(--primary); background: var(--primary)18; color: var(--primary); }
 
 .empty-state { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--fg-secondary); padding: 40px; font-size: 14px; }
+
+/* Accounts toolbar */
+.accounts-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+
+/* Field select */
+.field select { appearance: none; padding: 9px 12px; font-size: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); width: 100%; cursor: pointer; }
+
+/* Modal close button */
+.modal-close { background: transparent; border: none; color: var(--fg-secondary); cursor: pointer; font-size: 20px; line-height: 1; padding: 4px; border-radius: var(--radius-sm); }
+.modal-close:hover { color: var(--fg); }

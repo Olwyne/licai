@@ -97,7 +97,7 @@ export function AccountModal({ members, banks, onClose, onSaved }: Props) {
           <button
             type="button"
             onClick={onClose}
-            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "20px", color: "var(--fg-secondary)" }}
+            className="modal-close"
             aria-label="Fermer"
           >
             ×
@@ -127,7 +127,6 @@ export function AccountModal({ members, banks, onClose, onSaved }: Props) {
                     e.target.value as "checking" | "savings" | "investment" | "other"
                   )
                 }
-                style={{ background: "var(--input-bg)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", padding: "9px 12px", fontSize: "14px", color: "var(--fg)" }}
               >
                 {TYPE_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -143,7 +142,6 @@ export function AccountModal({ members, banks, onClose, onSaved }: Props) {
                   id="acct-bank"
                   value={bankId}
                   onChange={(e) => setBankId(e.target.value)}
-                  style={{ background: "var(--input-bg)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", padding: "9px 12px", fontSize: "14px", color: "var(--fg)" }}
                 >
                   <option value="">Sans banque</option>
                   {banks.map((b) => (

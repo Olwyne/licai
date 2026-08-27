@@ -1,6 +1,7 @@
 "use client"
 import { formatCents } from "@/lib/money"
 import { usePrivacy } from "@/contexts/PrivacyContext"
+import { Card } from "@/components/ui/Card"
 import type { EnrichedAccount, Member } from "./types"
 
 function initials(name: string): string {
@@ -38,7 +39,7 @@ export function HouseholdCard({
   })
 
   return (
-    <div className="card">
+    <Card>
       <div className="hh-head">
         <div className="hh-mark">🏠</div>
         <div>
@@ -94,6 +95,6 @@ export function HouseholdCard({
           <span>Ajouter une personne</span>
         </div>
       </div>
-    </div>
+    </Card>
   )
 }

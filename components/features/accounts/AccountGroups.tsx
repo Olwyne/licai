@@ -53,7 +53,7 @@ export function AccountGroups({
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+      <div className="accounts-toolbar">
         <div className="owner-chips">
           <Chip active={ownerFilter === "all"} onClick={() => onOwnerFilter("all")}>
             Tout le foyer
@@ -157,10 +157,7 @@ export function AccountGroups({
                     </div>
                     <div className="acct-foot">
                       <span className="acct-sync">
-                        ↻{" "}
-                        {account.ownerNames.length > 0
-                          ? account.ownerNames.join(", ")
-                          : "—"}
+                        <i className="ti ti-refresh" /> Aucune opération importée
                       </span>
                       <button className="acct-import" disabled type="button">
                         ⬆ Importer
