@@ -5,7 +5,7 @@ import {
 } from "@/db/schema"
 import { randomUUID } from "crypto"
 
-export async function seedDemoData(householdId: string) {
+export function seedDemoData(householdId: string): void {
   const now = new Date()
 
   // Members
