@@ -1,19 +1,23 @@
 import type { Metadata } from "next"
+import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
+import { SessionProvider } from "next-auth/react"
+
+const geist = Geist({ subsets: ["latin"], variable: "--font-geist" })
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" })
 
 export const metadata: Metadata = {
-  title: "Lǐcái",
-  description: "Personal finance app",
+  title: "Lǐcái — Finances personnelles",
+  description: "Comptes, budget, placements et patrimoine de votre foyer.",
+  manifest: "/manifest.json",
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
-      <body>{children}</body>
+    <html lang="fr" data-theme="dark" suppressHydrationWarning>
+      <body className={`${geist.variable} ${geistMono.variable}`}>
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   )
 }
