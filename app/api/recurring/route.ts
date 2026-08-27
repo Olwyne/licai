@@ -1,0 +1,72 @@
+import { db } from "@/lib/db"
+import { recurring } from "@/db/schema"
+import { eq } from "drizzle-orm"
+import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
+import { revalidateTag } from "next/cache"
+import { randomUUID } from "crypto"
+
+export async function GET() {
+  const householdId = await getHouseholdId()
+  if (!householdId) return unauthorized()
+  const rows = db
+    .select()
+    .from(recurring)
+    .where(eq(recurring.householdId, householdId))
+    .all()
+  return ok(rows)
+}
+
+export async function POST(req: Request) {
+  const householdId = await getHouseholdId()
+  if (!householdId) return unauthorized()
+
+  const body = (await req.json()) as {
+    name?: string
+    amountCents?: number
+    frequency?: string
+    kind?: string
+    nextDate?: string
+    accountId?: string
+    categoryId?: string
+    active?: boolean
+  }
+
+  const { name, amountCents, frequency, kind, nextDate, accountId, categoryId, active } = body
+
+  if (
+    !name ||
+    typeof amountCents !== "number" ||
+    !frequency ||
+    !kind ||
+    !nextDate
+  ) {
+    return err("name, amountCents, frequency, kind, nextDate are required")
+  }
+
+  if (!["monthly", "quarterly", "annual"].includes(frequency)) {
+    return err("frequency must be monthly, quarterly, or annual")
+  }
+  if (!["charge", "subscription", "saving"].includes(kind)) {
+    return err("kind must be charge, subscription, or saving")
+  }
+
+  const id = randomUUID()
+  db.insert(recurring)
+    .values({
+      id,
+      householdId,
+      name,
+      amountCents,
+      frequency: frequency as "monthly" | "quarterly" | "annual",
+      kind: kind as "charge" | "subscription" | "saving",
+      nextDate,
+      accountId: accountId ?? null,
+      categoryId: categoryId ?? null,
+      active: active ?? true,
+      createdAt: new Date(),
+    })
+    .run()
+
+  revalidateTag("recurring", { expire: 0 })
+  return ok(db.select().from(recurring).where(eq(recurring.id, id)).get(), 201)
+}
