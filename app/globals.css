@@ -695,8 +695,8 @@ a.set-action:hover { text-decoration: none; }
 .main { flex: 1; overflow-y: auto; background: var(--bg); }
 .main-inner { max-width: 1280px; margin: 0 auto; padding: 28px 32px 60px; }
 
-/* ── Auth form field overrides ──────────────────────────────── */
-.auth-card .field { gap: 6px; }
-.auth-card .field label { font-size: 13px; font-weight: 500; color: var(--fg-secondary); }
-.auth-card .field input { background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; font-size: 14px; color: var(--fg); outline: none; transition: border-color .15s; }
-.auth-card .field input:focus { border-color: var(--primary); }
+/* ── Auth field overrides (brief-specified, global) ─────────── */
+.field { gap: 6px; }
+.field label { font-size: 13px; font-weight: 500; color: var(--fg-secondary); }
+.field input { background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; font-size: 14px; color: var(--fg); outline: none; transition: border-color .15s; }
+.field input:focus { border-color: var(--primary); }
