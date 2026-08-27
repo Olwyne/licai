@@ -3,6 +3,7 @@ import { accounts, members } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { getHouseholdId, ok, unauthorized, err } from "@/lib/api"
 import { randomUUID } from "crypto"
+import { revalidateTag } from "next/cache"
 
 export async function GET() {
   const householdId = await getHouseholdId()
@@ -36,5 +37,6 @@ export async function POST(req: Request) {
     colorHex: colorHex ?? null,
     ownerIds: JSON.stringify(ownerIds ?? []),
   }).run()
+  revalidateTag("accounts")
   return ok(db.select().from(accounts).where(eq(accounts.id, id)).get(), 201)
 }
