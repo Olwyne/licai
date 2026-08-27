@@ -14,6 +14,6 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     .set({ balanceCents: body.balanceCents })
     .where(and(eq(accounts.id, id), eq(accounts.householdId, householdId)))
     .run()
-  revalidateTag("accounts")
+  revalidateTag("accounts", { expire: 0 })
   return ok(db.select().from(accounts).where(eq(accounts.id, id)).get())
 }

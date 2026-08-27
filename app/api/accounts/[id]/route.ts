@@ -16,7 +16,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
   if (Object.keys(updates).length === 0) return err("Nothing to update")
   db.update(accounts).set(updates).where(and(eq(accounts.id, id), eq(accounts.householdId, householdId))).run()
-  revalidateTag("accounts")
+  revalidateTag("accounts", { expire: 0 })
   return ok(db.select().from(accounts).where(eq(accounts.id, id)).get())
 }
 
@@ -25,6 +25,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   if (!householdId) return unauthorized()
   const { id } = await params
   db.delete(accounts).where(and(eq(accounts.id, id), eq(accounts.householdId, householdId))).run()
-  revalidateTag("accounts")
+  revalidateTag("accounts", { expire: 0 })
   return ok({ ok: true })
 }

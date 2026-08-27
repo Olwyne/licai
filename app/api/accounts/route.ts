@@ -37,6 +37,6 @@ export async function POST(req: Request) {
     colorHex: colorHex ?? null,
     ownerIds: JSON.stringify(ownerIds ?? []),
   }).run()
-  revalidateTag("accounts")
+  revalidateTag("accounts", { expire: 0 })
   return ok(db.select().from(accounts).where(eq(accounts.id, id)).get(), 201)
 }

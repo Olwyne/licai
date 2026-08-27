@@ -28,6 +28,6 @@ export async function POST(req: Request) {
     birthYear: birthYear ?? null,
     retireYear: retireYear ?? null,
   }).run()
-  revalidateTag("members")
+  revalidateTag("members", { expire: 0 })
   return ok(db.select().from(members).where(eq(members.id, id)).get(), 201)
 }
