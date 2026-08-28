@@ -15,6 +15,7 @@ const NAV = [
   { href: "/transactions", icon: "ti-arrows-exchange",   label: "Transactions" },
   { href: "/budget",       icon: "ti-chart-pie",         label: "Budget" },
   { href: "/recurrent",    icon: "ti-repeat",            label: "Récurrent" },
+  { href: "/partage",      icon: "ti-scale-outline",     label: "Répartition" },
   { section: "Patrimoine" },
   { href: "/comptes",      icon: "ti-building-bank",     label: "Comptes & foyer" },
   { section: "Réglages" },
