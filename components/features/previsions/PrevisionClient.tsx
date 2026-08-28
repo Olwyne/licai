@@ -33,14 +33,19 @@ export function PrevisionClient() {
   const [horizon, setHorizon] = useState<Horizon>(12)
   const [data, setData] = useState<PrevisionData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setLoading(true)
     setData(null)
+    setError(null)
     fetch(`/api/previsions?horizon=${horizon}`)
       .then((r) => r.json())
       .then((json: { data?: PrevisionData; error?: string }) => {
         if (json.data) setData(json.data)
+      })
+      .catch(() => {
+        setError("Impossible de charger les prévisions.")
       })
       .finally(() => setLoading(false))
   }, [horizon])
@@ -48,7 +53,7 @@ export function PrevisionClient() {
   const months = data?.months ?? []
   const kpi = data?.kpi
 
-  // Next 3 months events (flat list, deduped by month+name)
+  // Next 3 months events (flat list)
   const upcomingEvents: Array<{ month: string; name: string; amountCents: number; kind: string }> =
     []
   for (const m of months.slice(0, 3)) {
@@ -148,7 +153,7 @@ export function PrevisionClient() {
           <div className="card-header">
             <div className="card-title">Trésorerie prévisionnelle</div>
           </div>
-          <div style={{ height: 280 }}>
+          <div className="prevision-chart">
             {!loading && months.length > 0 && (
               <BarChart labels={barLabels} series={barSeries} />
             )}
@@ -191,7 +196,7 @@ export function PrevisionClient() {
         <div className="card-header">
           <div className="card-title">Détail mois par mois</div>
         </div>
-        <div style={{ overflowX: "auto" }}>
+        <div className="table-scroll">
           <table className="rp-table">
             <thead>
               <tr>
@@ -215,10 +220,10 @@ export function PrevisionClient() {
                   <td>{formatCents(m.incomeCents)}</td>
                   <td>{formatCents(m.expenseCents)}</td>
                   <td
+                    className="fw-600"
                     style={{
                       color:
                         m.balanceCents >= 0 ? "var(--primary)" : "var(--danger)",
-                      fontWeight: 600,
                     }}
                   >
                     {formatCents(m.balanceCents)}

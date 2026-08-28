@@ -976,3 +976,8 @@ a.set-action:hover { text-decoration: none; }
 .budget-sum-fill.ok { background: var(--success); }
 .budget-sum-fill.warn { background: var(--warning); }
 .budget-sum-fill.over { background: var(--danger); }
+
+/* ── Previsions ── */
+.prevision-chart { height: 280px; }
+.table-scroll { overflow-x: auto; }
+.fw-600 { font-weight: 600; }
