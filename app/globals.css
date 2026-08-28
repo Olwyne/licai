@@ -1220,7 +1220,7 @@ a.set-action:hover { text-decoration: none; }
 .rapport-nav-btn { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 10px; cursor: pointer; color: var(--fg); display: flex; align-items: center; transition: background .1s; }
 .rapport-nav-btn:hover { background: var(--card-hover); }
 .rapport-month-label { font-size: 18px; font-weight: 600; color: var(--fg); }
-.rapport-cat-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.rapport-cat-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; background: var(--cat-color, var(--fg-muted)); }
 .rapport-muted { color: var(--fg-muted); }
 .rapport-empty { font-size: 13px; color: var(--fg-muted); padding: 12px 0; }
 .rapport-loading, .rapport-error { padding: 40px; text-align: center; color: var(--fg-muted); }
@@ -1239,7 +1239,7 @@ a.set-action:hover { text-decoration: none; }
   body { background: white !important; }
   .main-content, .page-content { padding: 0 !important; margin: 0 !important; }
   .rapport-page { padding: 0; max-width: 100%; }
-  .rapport-kpi { border: 1px solid #ddd; }
+  .rapport-kpi { border: 1px solid var(--border); }
   .rapport-table { page-break-inside: avoid; }
   .rapport-section { page-break-inside: avoid; }
   .pos { color: #1D9E75 !important; }

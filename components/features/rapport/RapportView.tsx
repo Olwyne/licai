@@ -222,7 +222,7 @@ export function RapportView({ month, householdId: _householdId }: Props) {
                     <td className="rapport-td">
                       <span
                         className="rapport-cat-dot"
-                        style={{ background: cat.categoryColor } as React.CSSProperties}
+                        style={{ '--cat-color': cat.categoryColor } as React.CSSProperties}
                       />
                       {cat.categoryLabel}
                     </td>
