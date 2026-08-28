@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { db } from "@/lib/db"
 import { accounts, members, transactions, budgets, goals } from "@/db/schema"
-import { eq, gte } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { getHouseholdId } from "@/lib/api"
 
 const client = new Anthropic()

@@ -1262,3 +1262,4 @@ a.set-action:hover { text-decoration: none; }
 .chat-send:disabled { opacity: .5; cursor: not-allowed; }
 .chat-cursor { display: inline-block; width: 2px; height: 14px; background: var(--fg-base); margin-left: 2px; animation: blink 1s step-end infinite; vertical-align: text-bottom; }
 @keyframes blink { 50% { opacity: 0; } }
+.chat-close-btn { background: none; border: none; cursor: pointer; color: var(--fg-muted); padding: 2px 4px; }

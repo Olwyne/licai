@@ -100,7 +100,7 @@ export function AssistantChat() {
           <span>Assistant IA</span>
           <button
             onClick={() => setOpen(false)}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--fg-muted)", padding: "2px 4px" }}
+            className="chat-close-btn"
             aria-label="Fermer"
           >
             <i className="ti ti-x" />
