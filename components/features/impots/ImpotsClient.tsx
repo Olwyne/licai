@@ -86,7 +86,7 @@ export function ImpotsClient() {
   return (
     <div>
       {/* Header */}
-      <div className="page-header" style={{ marginBottom: "20px" }}>
+      <div className="page-header">
         <div>
           <h1 className="page-title">Impôts</h1>
           <p className="page-sub">Estimation IR · Barème 2024</p>
@@ -135,25 +135,17 @@ export function ImpotsClient() {
           {brackets.map((b) => {
             const pct = totalBracketTax > 0 ? (b.amountCents / totalBracketTax) * 100 : 0
             const rateLabel = `${Math.round(b.rate * 100)} %`
-            const ceilLabel =
-              b.ceiling !== null
-                ? ` → ${formatCents(b.ceiling)}`
-                : " → ∞"
+            const ceilLabel = b.ceiling !== null ? ` → ${formatCents(b.ceiling)}` : " → ∞"
             const floorLabel = formatCents(b.floor)
 
             return (
               <div key={b.label} className="bareme-row">
                 <div className="bareme-label">
-                  <span style={{ color: "var(--fg-base)", fontWeight: 500 }}>{rateLabel}</span>
-                  <span style={{ color: "var(--fg-muted)", fontSize: "11px" }}>
-                    {" "}({floorLabel}{ceilLabel})
-                  </span>
+                  <span className="bareme-rate">{rateLabel}</span>
+                  <span className="bareme-detail"> ({floorLabel}{ceilLabel})</span>
                 </div>
                 <div className="bareme-bar">
-                  <div
-                    className="bareme-fill"
-                    style={{ width: `${pct.toFixed(1)}%` }}
-                  />
+                  <div className="bareme-fill" style={{ width: `${pct.toFixed(1)}%` }} />
                 </div>
                 <div className="bareme-amt">{formatCents(b.amountCents)}</div>
               </div>
@@ -172,22 +164,22 @@ export function ImpotsClient() {
             <thead>
               <tr>
                 <th className="impots-th">Membre</th>
-                <th className="impots-th" style={{ textAlign: "right" }}>Revenu brut annuel</th>
-                <th className="impots-th" style={{ textAlign: "right" }}>Abattement 10%</th>
-                <th className="impots-th" style={{ textAlign: "right" }}>Net imposable</th>
-                <th className="impots-th" style={{ textAlign: "right" }}>Parts</th>
+                <th className="impots-th impots-th-right">Revenu brut annuel</th>
+                <th className="impots-th impots-th-right">Abattement 10%</th>
+                <th className="impots-th impots-th-right">Net imposable</th>
+                <th className="impots-th impots-th-right">Parts</th>
               </tr>
             </thead>
             <tbody>
               {members.map((m) => (
                 <tr key={m.name}>
                   <td className="impots-td">{m.name}</td>
-                  <td className="impots-td" style={{ textAlign: "right" }}>{formatCents(m.annualGrossCents)}</td>
-                  <td className="impots-td" style={{ textAlign: "right", color: "var(--success)" }}>
+                  <td className="impots-td impots-td-right">{formatCents(m.annualGrossCents)}</td>
+                  <td className="impots-td impots-td-right" style={{ color: "var(--success)" }}>
                     −{formatCents(m.abattementCents)}
                   </td>
-                  <td className="impots-td" style={{ textAlign: "right", fontWeight: 500 }}>{formatCents(m.netImposableCents)}</td>
-                  <td className="impots-td" style={{ textAlign: "right" }}>{m.partsFiscales}</td>
+                  <td className="impots-td impots-td-right fw-600">{formatCents(m.netImposableCents)}</td>
+                  <td className="impots-td impots-td-right">{m.partsFiscales}</td>
                 </tr>
               ))}
             </tbody>
@@ -206,22 +198,10 @@ export function ImpotsClient() {
           <SynthesisRow label="Quotient familial" value={formatCents(household.quotientFamilialCents)} />
           <SynthesisRow label="IR brut" value={formatCents(household.irBrutCents)} />
           {household.decoteCents > 0 && (
-            <SynthesisRow
-              label="Décote"
-              value={`−${formatCents(household.decoteCents)}`}
-              valueColor="var(--success)"
-            />
+            <SynthesisRow label="Décote" value={`−${formatCents(household.decoteCents)}`} valueColor="var(--success)" />
           )}
-          <SynthesisRow
-            label="IR net"
-            value={formatCents(household.irNetCents)}
-            bold
-          />
-          <SynthesisRow
-            label="Mensualité"
-            value={formatCents(household.monthlyIrCents)}
-            bold
-          />
+          <SynthesisRow label="IR net" value={formatCents(household.irNetCents)} bold />
+          <SynthesisRow label="Mensualité" value={formatCents(household.monthlyIrCents)} bold />
         </div>
       </div>
     </div>
@@ -243,13 +223,10 @@ function SynthesisRow({
 }) {
   return (
     <div className="synthesis-row">
-      <span style={{ color: "var(--fg-secondary)", fontSize: "13.5px" }}>{label}</span>
+      <span className="synthesis-label">{label}</span>
       <span
-        style={{
-          fontSize: "13.5px",
-          fontWeight: bold ? 600 : 400,
-          color: valueColor ?? "var(--fg-base)",
-        }}
+        className={`synthesis-val${bold ? " bold" : ""}`}
+        style={valueColor ? { color: valueColor } : undefined}
       >
         {value}
       </span>

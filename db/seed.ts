@@ -1,7 +1,7 @@
 import { db } from "@/lib/db"
 import {
   members, banks, accounts, categories, transactions,
-  budgets, recurring, alerts, goals, properties, loans, investments,
+  budgets, recurring, alerts, goals, properties, loans, investments, contracts,
 } from "@/db/schema"
 import { randomUUID } from "crypto"
 
@@ -160,6 +160,13 @@ export function seedDemoData(householdId: string): void {
     { id: randomUUID(), householdId, name: "S&P 500 ETF", ticker: "PE500", kind: "etf", quantity: 23, unitPriceCents: 58900, purchasePriceCents: 51200, note: "BNP PEA", createdAt: now },
     { id: randomUUID(), householdId, name: "LVMH", ticker: "MC", kind: "action", quantity: 2, unitPriceCents: 68500, purchasePriceCents: 72000, note: "CTO", createdAt: now },
     { id: randomUUID(), householdId, name: "Bitcoin", ticker: "BTC", kind: "crypto", quantity: 0.12, unitPriceCents: 6230000, purchasePriceCents: 4150000, note: "Ledger", createdAt: now },
+  ]).run()
+
+  // Contracts (prévoyance)
+  db.insert(contracts).values([
+    { id: randomUUID(), householdId, name: "Assurance-vie Linxea Spirit 2", insurer: "Linxea", kind: "assurance-vie", valueCents: 1840000, monthlyPremiumCents: 30000, startDate: "2020-04-01", endDate: null, note: "Fonds euros + UC", createdAt: now },
+    { id: randomUUID(), householdId, name: "Mutuelle Alan", insurer: "Alan", kind: "sante", valueCents: 0, monthlyPremiumCents: 6800, startDate: "2023-01-01", endDate: null, note: "Formule Éco+", createdAt: now },
+    { id: randomUUID(), householdId, name: "PER BNP Paribas", insurer: "BNP Paribas", kind: "retraite", valueCents: 420000, monthlyPremiumCents: 20000, startDate: "2022-09-01", endDate: null, note: "Plan épargne retraite", createdAt: now },
   ]).run()
 
   // Alerts — a few demo notifications

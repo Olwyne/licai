@@ -1138,3 +1138,10 @@ a.set-action:hover { text-decoration: none; }
 .impots-synthesis { display: flex; flex-direction: column; gap: 0; }
 .synthesis-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border-subtle); }
 .synthesis-row:last-child { border-bottom: none; }
+.impots-th-right { text-align: right; }
+.impots-td-right { text-align: right; }
+.bareme-rate { color: var(--fg-base); font-weight: 500; }
+.bareme-detail { color: var(--fg-muted); font-size: 11px; }
+.synthesis-label { color: var(--fg-secondary); font-size: 13.5px; }
+.synthesis-val { font-size: 13.5px; color: var(--fg-base); }
+.synthesis-val.bold { font-weight: 600; }
