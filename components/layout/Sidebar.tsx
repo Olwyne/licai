@@ -13,6 +13,7 @@ const NAV = [
   { href: "/trajectoire", icon: "ti-trending-up",        label: "Trajectoire" },
   { href: "/placements",  icon: "ti-chart-pie",         label: "Placements" },
   { href: "/impots",      icon: "ti-receipt-tax",       label: "Impôts" },
+  { href: "/prevoyance",  icon: "ti-shield-check",      label: "Prévoyance" },
   { href: "/objectifs",   icon: "ti-target",            label: "Objectifs" },
   { section: "Au quotidien" },
   { href: "/transactions", icon: "ti-arrows-exchange",   label: "Transactions" },
