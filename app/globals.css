@@ -1095,6 +1095,10 @@ a.set-action:hover { text-decoration: none; }
 .metrics-3 { grid-template-columns: repeat(3, 1fr); }
 .fw-700 { font-weight: 700; }
 
+.metric-ic-info { background: color-mix(in srgb, var(--info) 15%, transparent); color: var(--info); }
+.metric-ic-up   { background: color-mix(in srgb, var(--primary) 15%, transparent); color: var(--primary); }
+.metric-ic-down { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }
+
 /* ── Placements ──────────────────────────────────────────────── */
 .page-placements { display: flex; flex-direction: column; gap: 20px; padding: 24px; max-width: 1200px; }
 .plac-layout { display: grid; grid-template-columns: 260px 1fr; gap: 20px; align-items: start; }

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
 import { investments } from "@/db/schema"
-import { eq, desc } from "drizzle-orm"
+import { eq, and, desc } from "drizzle-orm"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
 import { randomUUID } from "crypto"
 import type { Investment } from "@/db/schema"
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
       createdAt: now,
     }).run()
 
-    const row = db.select().from(investments).where(eq(investments.id, id)).get()
+    const row = db.select().from(investments).where(and(eq(investments.id, id), eq(investments.householdId, householdId))).get()
     return ok(row, 201)
   } catch {
     return err("Erreur lors de la création.", 500)

@@ -278,7 +278,7 @@ export function PlacementsClient() {
         <div className="metric">
           <div className="metric-top">
             <span className="metric-label">Valeur totale</span>
-            <div className="metric-ic" style={{ background: "rgba(55,138,221,0.15)", color: "var(--info)" }}>
+            <div className="metric-ic metric-ic-info">
               <i className="ti ti-chart-pie" />
             </div>
           </div>
@@ -292,7 +292,7 @@ export function PlacementsClient() {
         <div className="metric">
           <div className="metric-top">
             <span className="metric-label">Plus-value totale</span>
-            <div className="metric-ic" style={{ background: gainPos ? "rgba(29,158,117,0.15)" : "rgba(216,90,48,0.15)", color: gainPos ? "var(--primary)" : "var(--danger)" }}>
+            <div className={`metric-ic ${gainPos ? "metric-ic-up" : "metric-ic-down"}`}>
               <i className="ti ti-trending-up" />
             </div>
           </div>
@@ -308,7 +308,7 @@ export function PlacementsClient() {
         <div className="metric">
           <div className="metric-top">
             <span className="metric-label">Performance</span>
-            <div className="metric-ic" style={{ background: gainPos ? "rgba(29,158,117,0.15)" : "rgba(216,90,48,0.15)", color: gainPos ? "var(--primary)" : "var(--danger)" }}>
+            <div className={`metric-ic ${gainPos ? "metric-ic-up" : "metric-ic-down"}`}>
               <i className="ti ti-percentage" />
             </div>
           </div>
