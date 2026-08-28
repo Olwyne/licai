@@ -107,6 +107,8 @@ function ContractModal({ contract, onClose, onSaved, onDeleted }: ContractModalP
       if (!res.ok) { setError("Erreur lors de l'enregistrement."); return }
       const json = (await res.json()) as { data: ContractRow }
       onSaved(json.data)
+    } catch {
+      setError("Erreur réseau. Réessayez.")
     } finally {
       setLoading(false)
     }
@@ -119,6 +121,8 @@ function ContractModal({ contract, onClose, onSaved, onDeleted }: ContractModalP
       const res = await fetch(`/api/prevoyance/${contract.id}`, { method: "DELETE" })
       if (!res.ok) { setError("Erreur lors de la suppression."); return }
       onDeleted(contract.id)
+    } catch {
+      setError("Erreur réseau. Réessayez.")
     } finally {
       setDeleting(false)
     }
