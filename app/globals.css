@@ -9,6 +9,7 @@
   --primary-strong: #178860;
   --primary-deep: #0F6E56;
   --accent: #EF9F27;
+  --warning: #f59e0b;
   --danger: #D85A30;
   --success: #639922;
   --info: #378ADD;
@@ -955,5 +956,5 @@ a.set-action:hover { text-decoration: none; }
 .budget-sum-bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
 .budget-sum-fill { height: 100%; border-radius: 3px; transition: width .3s; }
 .budget-sum-fill.ok { background: var(--success); }
-.budget-sum-fill.warn { background: var(--accent); }
+.budget-sum-fill.warn { background: var(--warning); }
 .budget-sum-fill.over { background: var(--danger); }

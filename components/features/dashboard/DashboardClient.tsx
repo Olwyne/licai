@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { usePrivacy } from "@/contexts/PrivacyContext"
 import { formatCents } from "@/lib/money"
 import { percentSpent, budgetTone } from "@/lib/finance/budget"
@@ -78,14 +78,18 @@ export function DashboardClient({ initialData }: Props) {
   const [loading, setLoading] = useState(false)
   const { private: isPrivate } = usePrivacy()
 
-  const months = getLast6Months(data.month)
+  const months = useMemo(() => getLast6Months(initialData.month), [initialData.month])
 
   async function switchMonth(m: string) {
     if (m === data.month) return
     setLoading(true)
     try {
       const res = await fetch(`/api/dashboard?month=${m}`)
-      const json = await res.json() as { data: DashboardData }
+      const json = await res.json()
+      if (!res.ok || !("data" in json)) {
+        setLoading(false)
+        return
+      }
       setData(json.data)
     } finally {
       setLoading(false)
