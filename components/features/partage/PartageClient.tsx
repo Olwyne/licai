@@ -194,10 +194,7 @@ export function PartageClient() {
                 </div>
                 <div className="bal-row bal-row-total">
                   <span className="bal-label">Solde</span>
-                  <span
-                    className="bal-val"
-                    style={{ color: m.balanceCents >= 0 ? "var(--primary)" : "var(--danger)" }}
-                  >
+                  <span className={`bal-val ${m.balanceCents >= 0 ? "pos" : "neg"}`}>
                     {formatCents(m.balanceCents)}
                   </span>
                 </div>
