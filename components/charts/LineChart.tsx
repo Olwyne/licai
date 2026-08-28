@@ -63,7 +63,7 @@ export function LineChart({ labels, series, yFormatter }: Props) {
     scales: {
       x: { grid: { display: false } },
       y: {
-        grid: { color: "rgba(128,128,128,0.15)" },
+        grid: { color: "var(--border, rgba(128,128,128,0.15))" },
         ticks: {
           callback: (v: number | string) =>
             yFormatter ? yFormatter(v) : String(v),

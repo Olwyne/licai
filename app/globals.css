@@ -1088,3 +1088,9 @@ a.set-action:hover { text-decoration: none; }
 .traj-td { padding: 11px 12px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
 .traj-row:last-child .traj-td { border-bottom: none; }
 .traj-row:hover .traj-td { background: var(--card-hover); }
+.traj-chart { height: 300px; }
+.traj-member-cell { display: flex; align-items: center; gap: 8px; }
+.traj-year { color: var(--fg-muted); font-size: 12px; }
+.traj-projected { color: var(--primary); font-weight: 700; }
+.metrics-3 { grid-template-columns: repeat(3, 1fr); }
+.fw-700 { font-weight: 700; }

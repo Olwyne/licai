@@ -84,7 +84,7 @@ export function TrajectoireClient() {
       )}
 
       {/* KPI cards */}
-      <div className="metrics" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+      <div className="metrics metrics-3">
         <div className="metric">
           <div className="metric-top">
             <div className="metric-label">Épargne actuelle</div>
@@ -153,7 +153,7 @@ export function TrajectoireClient() {
           <div className="card-title">Projection du patrimoine</div>
           <div className="card-sub">Hypothèse : rendement annuel 4%, règle des 4%</div>
         </div>
-        <div style={{ height: 300 }}>
+        <div className="traj-chart">
           {loading && <p className="text-secondary">Chargement…</p>}
           {!loading && members.length === 0 && (
             <p className="text-secondary">
@@ -192,22 +192,17 @@ export function TrajectoireClient() {
                 {members.map((m: MemberProjection) => (
                   <tr key={m.memberId} className="traj-row">
                     <td className="traj-td">
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span
-                          className="traj-legend"
-                          style={{ background: m.colorHex }}
-                        />
-                        <span style={{ fontWeight: 600 }}>{m.name}</span>
+                      <div className="traj-member-cell">
+                        <span className="traj-legend" style={{ background: m.colorHex }} />
+                        <span className="fw-600">{m.name}</span>
                       </div>
                     </td>
                     <td className="traj-td">
                       {m.yearsToRetirement} an{m.yearsToRetirement > 1 ? "s" : ""}{" "}
-                      <span style={{ color: "var(--fg-muted)", fontSize: 12 }}>
-                        ({m.retireYear})
-                      </span>
+                      <span className="traj-year">({m.retireYear})</span>
                     </td>
                     <td className="traj-td">{formatCents(m.currentSavingsCents)}</td>
-                    <td className="traj-td" style={{ color: "var(--primary)", fontWeight: 700 }}>
+                    <td className="traj-td traj-projected">
                       {formatCents(m.projectedFVCents)}
                     </td>
                     <td className="traj-td">{formatCents(m.monthlyRetirementIncomeCents)}</td>
