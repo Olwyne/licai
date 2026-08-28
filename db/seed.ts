@@ -62,26 +62,32 @@ export function seedDemoData(householdId: string): void {
     db.insert(categories).values({ id: cats[c.key], householdId, label: c.label, icon: c.icon, colorHex: c.colorHex, isSystem: true }).run()
   }
 
+  // Build relative dates: current month (cm) and previous month (pm)
+  const cm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
+  const pmDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  const pm = `${pmDate.getFullYear()}-${String(pmDate.getMonth() + 1).padStart(2, "0")}`
+  const d = (ym: string, day: number) => `${ym}-${String(day).padStart(2, "0")}`
+
   // Transactions — 18 entries from prototype data.js (amounts converted to cents)
   const txData = [
-    { name: "Carrefour",             cat: "food",      amountCents: -6400,   date: "2026-06-01", note: "Courses de la semaine" },
-    { name: "Salaire juin",          cat: "income",    amountCents: 210000,  date: "2026-06-01", note: "Virement employeur" },
-    { name: "Loyer",                 cat: "home",      amountCents: -78000,  date: "2026-06-01", note: "Appartement Lyon 3e" },
-    { name: "Spotify",               cat: "leisure",   amountCents: -1099,   date: "2026-05-31", note: "Abonnement Premium" },
-    { name: "SNCF — Paris-Lyon",     cat: "transport", amountCents: -4200,   date: "2026-05-30", note: "Aller-retour week-end" },
-    { name: "Mission freelance",     cat: "income",    amountCents: 30000,   date: "2026-05-30", note: "Design landing page" },
-    { name: "Pharmacie",             cat: "health",    amountCents: -1800,   date: "2026-05-29", note: "" },
-    { name: "Zara",                  cat: "shopping",  amountCents: -8900,   date: "2026-05-28", note: "Veste été" },
-    { name: "Boulangerie Paul",      cat: "food",      amountCents: -740,    date: "2026-05-28", note: "" },
-    { name: "Cinéma Pathé",          cat: "leisure",   amountCents: -2400,   date: "2026-05-27", note: "2 places" },
-    { name: "Uber",                  cat: "transport", amountCents: -1650,   date: "2026-05-26", note: "" },
-    { name: "Monoprix",              cat: "food",      amountCents: -3820,   date: "2026-05-25", note: "" },
-    { name: "EDF",                   cat: "home",      amountCents: -6200,   date: "2026-05-24", note: "Électricité mai" },
-    { name: "Décathlon",             cat: "shopping",  amountCents: -5400,   date: "2026-05-23", note: "Chaussures running" },
-    { name: "Restaurant Le Bouchon", cat: "food",      amountCents: -4700,   date: "2026-05-22", note: "Dîner entre amis" },
-    { name: "Essence Total",         cat: "transport", amountCents: -5800,   date: "2026-05-21", note: "" },
-    { name: "Netflix",               cat: "leisure",   amountCents: -1349,   date: "2026-05-20", note: "Abonnement" },
-    { name: "Mutuelle santé",        cat: "health",    amountCents: -3400,   date: "2026-05-19", note: "Cotisation mensuelle" },
+    { name: "Carrefour",             cat: "food",      amountCents: -6400,   date: d(cm, 1),  note: "Courses de la semaine" },
+    { name: `Salaire ${now.toLocaleString("fr-FR", { month: "long" })}`, cat: "income", amountCents: 210000, date: d(cm, 1), note: "Virement employeur" },
+    { name: "Loyer",                 cat: "home",      amountCents: -78000,  date: d(cm, 1),  note: "Appartement Lyon 3e" },
+    { name: "Spotify",               cat: "leisure",   amountCents: -1099,   date: d(cm, 2),  note: "Abonnement Premium" },
+    { name: "SNCF — Paris-Lyon",     cat: "transport", amountCents: -4200,   date: d(cm, 5),  note: "Aller-retour week-end" },
+    { name: "Mission freelance",     cat: "income",    amountCents: 30000,   date: d(cm, 7),  note: "Design landing page" },
+    { name: "Pharmacie",             cat: "health",    amountCents: -1800,   date: d(cm, 8),  note: "" },
+    { name: "Zara",                  cat: "shopping",  amountCents: -8900,   date: d(cm, 10), note: "Veste été" },
+    { name: "Boulangerie Paul",      cat: "food",      amountCents: -740,    date: d(cm, 11), note: "" },
+    { name: "Cinéma Pathé",          cat: "leisure",   amountCents: -2400,   date: d(cm, 13), note: "2 places" },
+    { name: "Uber",                  cat: "transport", amountCents: -1650,   date: d(cm, 14), note: "" },
+    { name: "Monoprix",              cat: "food",      amountCents: -3820,   date: d(pm, 25), note: "" },
+    { name: "EDF",                   cat: "home",      amountCents: -6200,   date: d(pm, 24), note: `Électricité ${pmDate.toLocaleString("fr-FR", { month: "long" })}` },
+    { name: "Décathlon",             cat: "shopping",  amountCents: -5400,   date: d(pm, 23), note: "Chaussures running" },
+    { name: "Restaurant Le Bouchon", cat: "food",      amountCents: -4700,   date: d(pm, 22), note: "Dîner entre amis" },
+    { name: "Essence Total",         cat: "transport", amountCents: -5800,   date: d(pm, 21), note: "" },
+    { name: "Netflix",               cat: "leisure",   amountCents: -1349,   date: d(pm, 20), note: "Abonnement" },
+    { name: "Mutuelle santé",        cat: "health",    amountCents: -3400,   date: d(pm, 19), note: "Cotisation mensuelle" },
   ]
   for (const t of txData) {
     db.insert(transactions).values({
@@ -91,7 +97,7 @@ export function seedDemoData(householdId: string): void {
     }).run()
   }
 
-  // Budgets for current month (2026-06)
+  // Budgets for current month (dynamic)
   const budgetDefs = [
     { cat: "food",      limitCents: 40000 },
     { cat: "home",      limitCents: 85000 },
@@ -101,19 +107,25 @@ export function seedDemoData(householdId: string): void {
     { cat: "health",    limitCents: 10000 },
   ]
   for (const b of budgetDefs) {
-    db.insert(budgets).values({ id: randomUUID(), householdId, categoryId: cats[b.cat], limitCents: b.limitCents, month: "2026-06" }).run()
+    db.insert(budgets).values({ id: randomUUID(), householdId, categoryId: cats[b.cat], limitCents: b.limitCents, month: cm }).run()
   }
+
+  // Build next month date string for recurring items
+  const nmDate = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+  const nm = `${nmDate.getFullYear()}-${String(nmDate.getMonth() + 1).padStart(2, "0")}`
+  const n2mDate = new Date(now.getFullYear(), now.getMonth() + 2, 1)
+  const n2m = `${n2mDate.getFullYear()}-${String(n2mDate.getMonth() + 1).padStart(2, "0")}`
 
   // Recurring charges — 8 items from prototype data.js
   const recDefs = [
-    { name: "Netflix",              cat: "leisure",   amountCents: 1349,  frequency: "monthly"   as const, kind: "subscription" as const, nextDate: "2026-07-20", accountId: acctRevId },
-    { name: "Spotify Famille",      cat: "leisure",   amountCents: 1799,  frequency: "monthly"   as const, kind: "subscription" as const, nextDate: "2026-07-31", accountId: acctJointId },
-    { name: "Mutuelle santé",       cat: "health",    amountCents: 6800,  frequency: "monthly"   as const, kind: "charge"       as const, nextDate: "2026-07-05", accountId: acctJointId },
-    { name: "EDF — mensualisation", cat: "home",      amountCents: 7450,  frequency: "monthly"   as const, kind: "charge"       as const, nextDate: "2026-07-04", accountId: acctJointId },
-    { name: "Internet + mobile",    cat: "home",      amountCents: 4999,  frequency: "monthly"   as const, kind: "charge"       as const, nextDate: "2026-07-15", accountId: acctJointId },
-    { name: "Virement épargne",     cat: "income",    amountCents: 40000, frequency: "monthly"   as const, kind: "saving"       as const, nextDate: "2026-07-02", accountId: acctSophieId },
-    { name: "Assurance habitation", cat: "home",      amountCents: 18900, frequency: "annual"    as const, kind: "charge"       as const, nextDate: "2026-09-12", accountId: acctJointId },
-    { name: "Assurance auto",       cat: "transport", amountCents: 12600, frequency: "quarterly" as const, kind: "charge"       as const, nextDate: "2026-07-08", accountId: acctThomasId },
+    { name: "Netflix",              cat: "leisure",   amountCents: 1349,  frequency: "monthly"   as const, kind: "subscription" as const, nextDate: `${nm}-20`,  accountId: acctRevId },
+    { name: "Spotify Famille",      cat: "leisure",   amountCents: 1799,  frequency: "monthly"   as const, kind: "subscription" as const, nextDate: `${nm}-28`,  accountId: acctJointId },
+    { name: "Mutuelle santé",       cat: "health",    amountCents: 6800,  frequency: "monthly"   as const, kind: "charge"       as const, nextDate: `${nm}-05`,  accountId: acctJointId },
+    { name: "EDF — mensualisation", cat: "home",      amountCents: 7450,  frequency: "monthly"   as const, kind: "charge"       as const, nextDate: `${nm}-04`,  accountId: acctJointId },
+    { name: "Internet + mobile",    cat: "home",      amountCents: 4999,  frequency: "monthly"   as const, kind: "charge"       as const, nextDate: `${nm}-15`,  accountId: acctJointId },
+    { name: "Virement épargne",     cat: "income",    amountCents: 40000, frequency: "monthly"   as const, kind: "saving"       as const, nextDate: `${nm}-02`,  accountId: acctSophieId },
+    { name: "Assurance habitation", cat: "home",      amountCents: 18900, frequency: "annual"    as const, kind: "charge"       as const, nextDate: `${n2m}-12`, accountId: acctJointId },
+    { name: "Assurance auto",       cat: "transport", amountCents: 12600, frequency: "quarterly" as const, kind: "charge"       as const, nextDate: `${nm}-08`,  accountId: acctThomasId },
   ]
   for (const r of recDefs) {
     db.insert(recurring).values({
@@ -131,7 +143,7 @@ export function seedDemoData(householdId: string): void {
       title: "Budget Loisirs dépassé",
       body: "Vous avez dépensé 210 € sur un budget de 150 € en Loisirs ce mois-ci.",
       tone: "warning",
-      date: "2026-06-01",
+      date: d(cm, 1),
       resolved: false,
     },
     {
@@ -140,16 +152,16 @@ export function seedDemoData(householdId: string): void {
       title: "Budget Logement presque atteint",
       body: "842 € dépensés sur 850 € de budget Logement — il reste 8 €.",
       tone: "danger",
-      date: "2026-06-01",
+      date: d(cm, 1),
       resolved: false,
     },
     {
       id: randomUUID(), householdId,
       kind: "echeance",
       title: "Prélèvement à venir — Mutuelle santé",
-      body: "68 € seront prélevés le 5 juillet sur le Compte joint.",
+      body: `68 € seront prélevés le 5 ${nmDate.toLocaleString("fr-FR", { month: "long" })} sur le Compte joint.`,
       tone: "info",
-      date: "2026-06-28",
+      date: d(cm, 14),
       resolved: false,
     },
   ]).run()
