@@ -125,7 +125,7 @@ export function CommandPalette({ open, onClose }: Props) {
     <div className="cmd-overlay" onClick={onClose}>
       <div className="cmd-box" onClick={e => e.stopPropagation()}>
         <div className="cmd-input-wrap">
-          <i className="ti ti-search" style={{ color: "var(--fg-muted)", fontSize: "16px" }} />
+          <i className="ti ti-search cmd-icon" />
           <input
             ref={inputRef}
             className="cmd-input"
@@ -135,8 +135,8 @@ export function CommandPalette({ open, onClose }: Props) {
             autoComplete="off"
             spellCheck={false}
           />
-          {loading && <i className="ti ti-loader-2 spin" style={{ color: "var(--fg-muted)", fontSize: "16px" }} />}
-          <kbd style={{ fontSize: "11px", color: "var(--fg-muted)", background: "var(--bg-subtle)", padding: "2px 5px", borderRadius: "4px", border: "1px solid var(--border)", flexShrink: 0 }}>Esc</kbd>
+          {loading && <i className="ti ti-loader-2 spin cmd-icon" />}
+          <kbd className="cmd-hint">Esc</kbd>
         </div>
         <div className="cmd-results">
           {error && (
@@ -161,7 +161,7 @@ export function CommandPalette({ open, onClose }: Props) {
                     <div className="cmd-item-icon">
                       <i className={`ti ${KIND_ICONS[item.kind]}`} />
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="cmd-item-content">
                       <div className="cmd-item-label">{item.label}</div>
                       {item.sub && <div className="cmd-item-sub">{item.sub}</div>}
                     </div>

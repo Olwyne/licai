@@ -11,7 +11,7 @@ export function Topbar({ title, sub, action }: Props) {
         <h1 id="screen-title">{title}</h1>
         <div className="sub" id="screen-sub">{sub}</div>
       </div>
-      <div className="topbar-right" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <div className="topbar-right">
         <button className="btn btn-ghost btn-sm cmd-trigger" onClick={openSearch}>
           <i className="ti ti-search" />
           <span className="cmd-hint">⌘K</span>
