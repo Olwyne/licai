@@ -1,7 +1,7 @@
 import { db } from "@/lib/db"
 import {
   members, banks, accounts, categories, transactions,
-  budgets, recurring, alerts, goals, properties, loans,
+  budgets, recurring, alerts, goals, properties, loans, investments,
 } from "@/db/schema"
 import { randomUUID } from "crypto"
 
@@ -152,6 +152,14 @@ export function seedDemoData(householdId: string): void {
   db.insert(loans).values([
     { id: randomUUID(), householdId, name: "Crédit immobilier", kind: "immobilier", principalCents: 18000000, remainingCents: 14200000, monthlyPaymentCents: 89000, ratePercent: 2.1, endDate: "2044-06-01", note: "BNP Paribas", createdAt: now },
     { id: randomUUID(), householdId, name: "Crédit auto", kind: "auto", principalCents: 1200000, remainingCents: 380000, monthlyPaymentCents: 32000, ratePercent: 4.5, endDate: "2026-03-01", note: "Crédit Agricole", createdAt: now },
+  ]).run()
+
+  // Investments
+  db.insert(investments).values([
+    { id: randomUUID(), householdId, name: "MSCI World ETF", ticker: "CW8", kind: "etf", quantity: 47.5, unitPriceCents: 42300, purchasePriceCents: 38100, note: "Boursobank PEA", createdAt: now },
+    { id: randomUUID(), householdId, name: "S&P 500 ETF", ticker: "PE500", kind: "etf", quantity: 23, unitPriceCents: 58900, purchasePriceCents: 51200, note: "BNP PEA", createdAt: now },
+    { id: randomUUID(), householdId, name: "LVMH", ticker: "MC", kind: "action", quantity: 2, unitPriceCents: 68500, purchasePriceCents: 72000, note: "CTO", createdAt: now },
+    { id: randomUUID(), householdId, name: "Bitcoin", ticker: "BTC", kind: "crypto", quantity: 0.12, unitPriceCents: 6230000, purchasePriceCents: 4150000, note: "Ledger", createdAt: now },
   ]).run()
 
   // Alerts — a few demo notifications

@@ -1094,3 +1094,28 @@ a.set-action:hover { text-decoration: none; }
 .traj-projected { color: var(--primary); font-weight: 700; }
 .metrics-3 { grid-template-columns: repeat(3, 1fr); }
 .fw-700 { font-weight: 700; }
+
+/* ── Placements ──────────────────────────────────────────────── */
+.page-placements { display: flex; flex-direction: column; gap: 20px; padding: 24px; max-width: 1200px; }
+.plac-layout { display: grid; grid-template-columns: 260px 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .plac-layout { grid-template-columns: 1fr; } }
+.plac-donut { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.plac-legend { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.plac-legend-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.plac-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.plac-legend-label { flex: 1; color: var(--fg-secondary); }
+.plac-legend-pct { color: var(--fg); font-weight: 600; font-size: 12px; }
+.plac-table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; overflow-x: auto; }
+.plac-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.plac-th { text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 600; color: var(--fg-secondary); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.plac-th-num { text-align: right; }
+.plac-td { padding: 12px 12px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+.plac-td-num { text-align: right; font-variant-numeric: tabular-nums; }
+.plac-row { cursor: pointer; }
+.plac-row:last-child .plac-td { border-bottom: none; }
+.plac-row:hover .plac-td { background: var(--card-hover); }
+.plac-name { font-weight: 600; color: var(--fg); }
+.plac-ticker { font-size: 12px; color: var(--fg-muted); font-weight: 500; margin-top: 2px; }
+.plac-pct { font-size: 12px; opacity: .8; margin-top: 2px; }
+.plac-td.pos { color: var(--success); }
+.plac-td.neg { color: var(--danger); }

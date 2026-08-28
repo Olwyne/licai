@@ -146,6 +146,19 @@ export const loans = sqliteTable("loans", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 })
 
+export const investments = sqliteTable("investments", {
+  id: text("id").primaryKey(),
+  householdId: text("household_id").notNull().references(() => households.id),
+  name: text("name").notNull(),
+  ticker: text("ticker").notNull().default(""),
+  kind: text("kind").notNull(),           // "etf" | "action" | "fonds" | "crypto" | "autre"
+  quantity: real("quantity").notNull(),
+  unitPriceCents: integer("unit_price_cents").notNull(),
+  purchasePriceCents: integer("purchase_price_cents").notNull(),
+  note: text("note").notNull().default(""),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+})
+
 // Inferred types
 export type Household = typeof households.$inferSelect
 export type User = typeof users.$inferSelect
@@ -160,3 +173,4 @@ export type Alert = typeof alerts.$inferSelect
 export type Goal = typeof goals.$inferSelect
 export type Property = typeof properties.$inferSelect
 export type Loan = typeof loans.$inferSelect
+export type Investment = typeof investments.$inferSelect

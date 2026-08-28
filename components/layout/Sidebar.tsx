@@ -11,6 +11,7 @@ const NAV = [
   { href: "/alertes",      icon: "ti-bell",              label: "Alertes" },
   { href: "/previsions",  icon: "ti-chart-arrows-vertical", label: "Prévisions" },
   { href: "/trajectoire", icon: "ti-trending-up",        label: "Trajectoire" },
+  { href: "/placements",  icon: "ti-chart-pie",         label: "Placements" },
   { href: "/objectifs",   icon: "ti-target",            label: "Objectifs" },
   { section: "Au quotidien" },
   { href: "/transactions", icon: "ti-arrows-exchange",   label: "Transactions" },
