@@ -1063,3 +1063,28 @@ a.set-action:hover { text-decoration: none; }
 .loan-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), var(--primary-light, var(--primary))); transition: width .5s cubic-bezier(.2,.7,.3,1); }
 .loan-foot { display: flex; align-items: center; justify-content: space-between; }
 .loan-monthly { font-size: 13px; font-weight: 600; color: var(--fg-secondary); }
+
+/* ── Trajectoire ─────────────────────────────────────────────── */
+.traj-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.traj-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 99px;
+  border: 1px solid var(--border); background: var(--card);
+  font-size: 13px; font-weight: 500; color: var(--fg-secondary);
+  cursor: pointer; transition: border-color .15s, color .15s;
+}
+.traj-chip:hover { border-color: var(--fg-secondary); color: var(--fg); }
+.traj-chip.active { font-weight: 600; }
+.traj-legend {
+  display: inline-block; width: 10px; height: 10px;
+  border-radius: 50%; flex-shrink: 0;
+}
+.traj-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.traj-th {
+  text-align: left; padding: 8px 12px;
+  font-size: 12px; font-weight: 600; color: var(--fg-secondary);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.traj-td { padding: 11px 12px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+.traj-row:last-child .traj-td { border-bottom: none; }
+.traj-row:hover .traj-td { background: var(--card-hover); }
