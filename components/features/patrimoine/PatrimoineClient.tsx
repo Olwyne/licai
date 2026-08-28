@@ -107,7 +107,8 @@ function PropertyModal({ property, onClose, onSaved, onDeleted }: PropertyModalP
     if (!property) return
     setDeleting(true)
     try {
-      await fetch(`/api/patrimoine/properties/${property.id}`, { method: "DELETE" })
+      const res = await fetch(`/api/patrimoine/properties/${property.id}`, { method: "DELETE" })
+      if (!res.ok) { setError("Erreur lors de la suppression"); return }
       onDeleted(property.id)
     } finally {
       setDeleting(false)
@@ -130,8 +131,8 @@ function PropertyModal({ property, onClose, onSaved, onDeleted }: PropertyModalP
             </div>
             <div className="field">
               <label className="">Type</label>
-              <div className="select" style={{ width: "100%" }}>
-                <select className="" value={kind} onChange={(e) => setKind(e.target.value)} style={{ width: "100%" }}>
+              <div className="select w-full">
+                <select className="w-full" value={kind} onChange={(e) => setKind(e.target.value)}>
                   {PROPERTY_KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
                 </select>
               </div>
@@ -227,7 +228,8 @@ function LoanModal({ loan, onClose, onSaved, onDeleted }: LoanModalProps) {
     if (!loan) return
     setDeleting(true)
     try {
-      await fetch(`/api/patrimoine/loans/${loan.id}`, { method: "DELETE" })
+      const res = await fetch(`/api/patrimoine/loans/${loan.id}`, { method: "DELETE" })
+      if (!res.ok) { setError("Erreur lors de la suppression"); return }
       onDeleted(loan.id)
     } finally {
       setDeleting(false)
@@ -250,8 +252,8 @@ function LoanModal({ loan, onClose, onSaved, onDeleted }: LoanModalProps) {
             </div>
             <div className="field">
               <label className="">Type</label>
-              <div className="select" style={{ width: "100%" }}>
-                <select className="" value={kind} onChange={(e) => setKind(e.target.value)} style={{ width: "100%" }}>
+              <div className="select w-full">
+                <select className="w-full" value={kind} onChange={(e) => setKind(e.target.value)}>
                   {LOAN_KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
                 </select>
               </div>

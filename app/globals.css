@@ -281,6 +281,7 @@ a.set-action:hover { text-decoration: none; }
 .mt-14 { margin-top: 14px; }
 .mt-18 { margin-top: 18px; }
 .flex-1 { flex: 1; }
+.w-full { width: 100%; }
 .text-success { color: var(--success); }
 .text-danger-sm { color: var(--danger); font-size: 13px; }
 
@@ -1059,6 +1060,6 @@ a.set-action:hover { text-decoration: none; }
 .loan-info { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .loan-rate { font-size: 12.5px; font-weight: 600; color: var(--accent); }
 .loan-bar { height: 7px; background: var(--track); border-radius: 99px; overflow: hidden; margin-bottom: 10px; }
-.loan-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), #2bbf8f); transition: width .5s cubic-bezier(.2,.7,.3,1); }
+.loan-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), var(--primary-light, var(--primary))); transition: width .5s cubic-bezier(.2,.7,.3,1); }
 .loan-foot { display: flex; align-items: center; justify-content: space-between; }
 .loan-monthly { font-size: 13px; font-weight: 600; color: var(--fg-secondary); }

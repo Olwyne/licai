@@ -38,7 +38,7 @@ export async function PATCH(
 
     db.update(properties).set(patch).where(and(eq(properties.id, id), eq(properties.householdId, householdId))).run()
 
-    const updated = db.select().from(properties).where(eq(properties.id, id)).get()
+    const updated = db.select().from(properties).where(and(eq(properties.id, id), eq(properties.householdId, householdId))).get()
     return ok(updated)
   } catch {
     return err("Erreur lors de la mise à jour.", 500)
