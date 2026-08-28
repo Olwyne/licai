@@ -38,7 +38,7 @@ export async function PATCH(
     if (body.kind !== undefined) patch.kind = body.kind
     if (body.colorHex !== undefined) patch.colorHex = body.colorHex
 
-    db.update(goals).set(patch).where(eq(goals.id, id)).run()
+    db.update(goals).set(patch).where(and(eq(goals.id, id), eq(goals.householdId, householdId))).run()
 
     const updated = db.select().from(goals).where(eq(goals.id, id)).get()
     return ok(updated)
@@ -63,7 +63,7 @@ export async function DELETE(
       .get()
     if (!row) return err("Not found", 404)
 
-    db.delete(goals).where(eq(goals.id, id)).run()
+    db.delete(goals).where(and(eq(goals.id, id), eq(goals.householdId, householdId))).run()
     return ok({ deleted: true })
   } catch {
     return err("Erreur lors de la suppression.", 500)

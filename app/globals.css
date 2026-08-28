@@ -406,6 +406,20 @@ a.set-action:hover { text-decoration: none; }
 .goal-pct { font-size: 12.5px; color: var(--fg-secondary); white-space: nowrap; }
 .goal-pct b { color: var(--primary); }
 .goal-add { font-size: 12.5px; font-weight: 500; color: var(--primary); display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.goal-card.clickable { cursor: pointer; }
+
+/* ── Objectifs ─────────────────────────────────────────────── */
+.obj-color-btn { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; padding: 0; border: 2px solid transparent; }
+.obj-color-btn.on { border-color: var(--fg); }
+.obj-modal-err { color: var(--danger); font-size: 13px; }
+.obj-modal-foot { display: flex; justify-content: space-between; margin-top: 8px; }
+.obj-modal-foot-right { display: flex; gap: 8px; margin-left: auto; }
+.obj-kpi-row { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+.obj-empty { text-align: center; padding: 48px 0; }
+.obj-empty-msg { margin-bottom: 16px; }
+.flex-gap-8 { display: flex; gap: 8px; }
+.flex-wrap { flex-wrap: wrap; }
+.icon-sm { font-size: 13px; }
 
 /* ── Reports ───────────────────────────────────────────────── */
 .report-bars { display: flex; flex-direction: column; gap: 14px; }

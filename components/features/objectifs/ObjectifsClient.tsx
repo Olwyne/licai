@@ -165,7 +165,7 @@ function GoalModal({ goal, onClose, onSaved, onDeleted }: GoalModalProps) {
 
           <div className="form-group">
             <label className="form-label">Terme</label>
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div className="flex-gap-8">
               {(["court", "long"] as const).map((k) => (
                 <button
                   key={k}
@@ -181,30 +181,23 @@ function GoalModal({ goal, onClose, onSaved, onDeleted }: GoalModalProps) {
 
           <div className="form-group">
             <label className="form-label">Couleur</label>
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <div className="flex-gap-8 flex-wrap">
               {PRESET_COLORS.map((c) => (
                 <button
                   key={c}
                   type="button"
                   onClick={() => setColorHex(c)}
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: "50%",
-                    background: c,
-                    border: colorHex === c ? "3px solid var(--fg)" : "3px solid transparent",
-                    cursor: "pointer",
-                    padding: 0,
-                  }}
+                  className={`obj-color-btn${colorHex === c ? " on" : ""}`}
+                  style={{ background: c }}
                   aria-label={c}
                 />
               ))}
             </div>
           </div>
 
-          {error && <p style={{ color: "var(--danger)", fontSize: 13 }}>{error}</p>}
+          {error && <p className="obj-modal-err">{error}</p>}
 
-          <div className="modal-footer" style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+          <div className="obj-modal-foot">
             {isEdit && (
               <button
                 type="button"
@@ -215,7 +208,7 @@ function GoalModal({ goal, onClose, onSaved, onDeleted }: GoalModalProps) {
                 {deleting ? "Suppression…" : "Supprimer"}
               </button>
             )}
-            <div style={{ display: "flex", gap: 8, marginLeft: "auto" }}>
+            <div className="obj-modal-foot-right">
               <button type="button" className="btn btn-ghost" onClick={onClose}>Annuler</button>
               <button type="submit" className="btn btn-primary" disabled={loading}>
                 {loading ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer"}
@@ -292,12 +285,14 @@ function AddFundsModal({ goal, onClose, onSaved }: AddFundsModalProps) {
               required
             />
           </div>
-          {error && <p style={{ color: "var(--danger)", fontSize: 13 }}>{error}</p>}
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 8 }}>
-            <button type="button" className="btn btn-ghost" onClick={onClose}>Annuler</button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? "Ajout…" : "Ajouter"}
-            </button>
+          {error && <p className="obj-modal-err">{error}</p>}
+          <div className="obj-modal-foot">
+            <div className="obj-modal-foot-right">
+              <button type="button" className="btn btn-ghost" onClick={onClose}>Annuler</button>
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? "Ajout…" : "Ajouter"}
+              </button>
+            </div>
           </div>
         </form>
       </div>
@@ -319,7 +314,7 @@ function GoalCard({ goal, onEdit, onAddFunds }: GoalCardProps) {
     : 0
 
   return (
-    <div className="goal-card" onClick={() => onEdit(goal)} style={{ cursor: "pointer" }}>
+    <div className="goal-card clickable" onClick={() => onEdit(goal)}>
       <div className="goal-top">
         <div
           className="goal-emoji"
@@ -354,7 +349,7 @@ function GoalCard({ goal, onEdit, onAddFunds }: GoalCardProps) {
           type="button"
           onClick={(e) => { e.stopPropagation(); onAddFunds(goal) }}
         >
-          <i className="ti ti-plus" style={{ fontSize: 13 }} />
+          <i className="ti ti-plus icon-sm" />
           Ajouter
         </button>
       </div>
@@ -379,7 +374,7 @@ function KpiRow({ goalList }: { goalList: Goal[] }) {
     : "—"
 
   return (
-    <div className="kpi-row" style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+    <div className="obj-kpi-row">
       <div className="kpi-card">
         <div className="kpi-label">Total visé</div>
         <div className="kpi-value">{formatCents(totalTarget)}</div>
@@ -405,6 +400,7 @@ function KpiRow({ goalList }: { goalList: Goal[] }) {
 export default function ObjectifsClient() {
   const [goalList, setGoalList] = useState<Goal[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState("")
   const [filter, setFilter] = useState<FilterMode>("tous")
   const [modalGoal, setModalGoal] = useState<Goal | null | "new">(null)
   const [addFundsGoal, setAddFundsGoal] = useState<Goal | null>(null)
@@ -415,7 +411,11 @@ export default function ObjectifsClient() {
       if (res.ok) {
         const json = (await res.json()) as { data: Goal[] }
         setGoalList(json.data)
+      } else {
+        setLoadError("Impossible de charger les objectifs.")
       }
+    } catch {
+      setLoadError("Erreur réseau. Veuillez réessayer.")
     } finally {
       setLoading(false)
     }
@@ -478,11 +478,13 @@ export default function ObjectifsClient() {
 
       {!loading && goalList.length > 0 && <KpiRow goalList={goalList} />}
 
+      {loadError && <p className="obj-modal-err">{loadError}</p>}
+
       {loading && <p className="text-secondary">Chargement…</p>}
 
       {!loading && goalList.length === 0 && (
-        <div style={{ textAlign: "center", padding: "48px 0" }}>
-          <p className="text-secondary" style={{ marginBottom: 16 }}>
+        <div className="obj-empty">
+          <p className="text-secondary obj-empty-msg">
             Aucun objectif d&apos;épargne pour le moment.
           </p>
           <button

@@ -8,14 +8,18 @@ export async function GET() {
   const householdId = await getHouseholdId()
   if (!householdId) return unauthorized()
 
-  const rows = db
-    .select()
-    .from(goals)
-    .where(eq(goals.householdId, householdId))
-    .orderBy(desc(goals.createdAt))
-    .all()
+  try {
+    const rows = db
+      .select()
+      .from(goals)
+      .where(eq(goals.householdId, householdId))
+      .orderBy(desc(goals.createdAt))
+      .all()
 
-  return ok(rows)
+    return ok(rows)
+  } catch {
+    return err("Database error", 500)
+  }
 }
 
 export async function POST(req: Request) {
