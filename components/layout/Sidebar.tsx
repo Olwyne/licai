@@ -25,6 +25,7 @@ const NAV = [
   { href: "/comptes",      icon: "ti-building-bank",     label: "Comptes & foyer" },
   { section: "Réglages" },
   { href: "/parametres",   icon: "ti-settings",          label: "Paramètres" },
+  { href: "/rapport",      icon: "ti-file-text",         label: "Rapport PDF" },
 ]
 
 export function Sidebar() {

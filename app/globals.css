@@ -1197,3 +1197,51 @@ a.set-action:hover { text-decoration: none; }
 .cmd-empty { padding: 32px 16px; text-align: center; color: var(--fg-muted); font-size: 14px; }
 .cmd-trigger { display: flex; align-items: center; gap: 6px; }
 .cmd-hint { font-size: 11px; color: var(--fg-muted); background: var(--bg-subtle); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); }
+
+/* ─── Rapport PDF ────────────────────────────────────────────────────────── */
+.rapport-page { max-width: 800px; margin: 0 auto; padding: 32px 24px; }
+.rapport-controls { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.rapport-header { margin-bottom: 32px; }
+.rapport-title { font-size: 24px; font-weight: 700; color: var(--fg-base); }
+.rapport-sub { font-size: 14px; color: var(--fg-muted); margin-top: 4px; }
+.rapport-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+.rapport-kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.rapport-kpi-label { font-size: 12px; color: var(--fg-muted); font-weight: 600; margin-bottom: 6px; }
+.rapport-kpi-val { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rapport-section { margin-bottom: 28px; }
+.rapport-section-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); }
+.rapport-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rapport-th { text-align: left; padding: 6px 10px; font-size: 11px; font-weight: 600; color: var(--fg-muted); border-bottom: 1px solid var(--border); }
+.rapport-td { padding: 8px 10px; border-bottom: 1px solid var(--border-subtle); }
+.rapport-td-right { text-align: right; }
+.rapport-td-mono { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--fg-muted); }
+.rapport-footer { margin-top: 40px; font-size: 12px; color: var(--fg-muted); text-align: center; border-top: 1px solid var(--border); padding-top: 16px; }
+.rapport-nav { display: flex; align-items: center; gap: 12px; }
+.rapport-nav-btn { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 10px; cursor: pointer; color: var(--fg); display: flex; align-items: center; transition: background .1s; }
+.rapport-nav-btn:hover { background: var(--card-hover); }
+.rapport-month-label { font-size: 18px; font-weight: 600; color: var(--fg); }
+.rapport-cat-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.rapport-muted { color: var(--fg-muted); }
+.rapport-empty { font-size: 13px; color: var(--fg-muted); padding: 12px 0; }
+.rapport-loading, .rapport-error { padding: 40px; text-align: center; color: var(--fg-muted); }
+.pos { color: var(--color-income, #1D9E75); }
+.neg { color: var(--color-expense, #E05C5C); }
+.no-print { /* screen only */ }
+
+@media (max-width: 640px) {
+  .rapport-kpis { grid-template-columns: repeat(2, 1fr); }
+  .rapport-controls { flex-direction: column; align-items: flex-start; gap: 12px; }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  .sidebar, .topbar, nav, .sidebar-tools { display: none !important; }
+  body { background: white !important; }
+  .main-content, .page-content { padding: 0 !important; margin: 0 !important; }
+  .rapport-page { padding: 0; max-width: 100%; }
+  .rapport-kpi { border: 1px solid #ddd; }
+  .rapport-table { page-break-inside: avoid; }
+  .rapport-section { page-break-inside: avoid; }
+  .pos { color: #1D9E75 !important; }
+  .neg { color: #E05C5C !important; }
+}

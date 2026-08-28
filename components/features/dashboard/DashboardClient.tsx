@@ -1,5 +1,6 @@
 "use client"
 import { useState, useMemo } from "react"
+import Link from "next/link"
 import { usePrivacy } from "@/contexts/PrivacyContext"
 import { formatCents } from "@/lib/money"
 import { percentSpent, budgetTone } from "@/lib/finance/budget"
@@ -120,6 +121,13 @@ export function DashboardClient({ initialData }: Props) {
     <div className="page-dashboard">
       <div className="dash-header">
         <h1>Tableau de bord</h1>
+        <Link
+          href={`/rapport?month=${data.month}`}
+          className="btn-secondary dash-export-btn"
+        >
+          <i className="ti ti-file-text" />
+          Exporter PDF
+        </Link>
         <div className="month-chips">
           {months.map(m => (
             <button
