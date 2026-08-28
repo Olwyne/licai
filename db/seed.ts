@@ -1,7 +1,7 @@
 import { db } from "@/lib/db"
 import {
   members, banks, accounts, categories, transactions,
-  budgets, recurring, alerts,
+  budgets, recurring, alerts, goals,
 } from "@/db/schema"
 import { randomUUID } from "crypto"
 
@@ -134,6 +134,13 @@ export function seedDemoData(householdId: string): void {
       nextDate: r.nextDate, active: true, createdAt: now,
     }).run()
   }
+
+  // Goals
+  db.insert(goals).values([
+    { id: randomUUID(), householdId, name: "Voyage au Japon", emoji: "✈️", targetCents: 350000, currentCents: 127000, deadline: `${n2m}-15`, kind: "court", colorHex: "#378ADD", createdAt: now },
+    { id: randomUUID(), householdId, name: "Apport immobilier", emoji: "🏠", targetCents: 5000000, currentCents: 1240000, deadline: null, kind: "long", colorHex: "#1D9E75", createdAt: now },
+    { id: randomUUID(), householdId, name: "Fonds d'urgence", emoji: "🛡️", targetCents: 600000, currentCents: 600000, deadline: null, kind: "court", colorHex: "#7C6BD6", createdAt: now },
+  ]).run()
 
   // Alerts — a few demo notifications
   db.insert(alerts).values([

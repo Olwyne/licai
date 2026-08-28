@@ -107,6 +107,19 @@ export const alerts = sqliteTable("alerts", {
   resolved: integer("resolved", { mode: "boolean" }).notNull().default(false),
 })
 
+export const goals = sqliteTable("goals", {
+  id: text("id").primaryKey(),
+  householdId: text("household_id").notNull().references(() => households.id),
+  name: text("name").notNull(),
+  emoji: text("emoji").notNull().default("🎯"),
+  targetCents: integer("target_cents").notNull(),
+  currentCents: integer("current_cents").notNull().default(0),
+  deadline: text("deadline"), // "YYYY-MM-DD" or null
+  kind: text("kind").notNull().default("court"), // "court" | "long"
+  colorHex: text("color_hex").notNull().default("#1D9E75"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+})
+
 // Inferred types
 export type Household = typeof households.$inferSelect
 export type User = typeof users.$inferSelect
@@ -118,3 +131,4 @@ export type Transaction = typeof transactions.$inferSelect
 export type Budget = typeof budgets.$inferSelect
 export type Recurring = typeof recurring.$inferSelect
 export type Alert = typeof alerts.$inferSelect
+export type Goal = typeof goals.$inferSelect

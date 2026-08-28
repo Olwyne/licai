@@ -9,6 +9,7 @@ const NAV = [
   { section: "Pilotage" },
   { href: "/dashboard",    icon: "ti-layout-dashboard",  label: "Dashboard" },
   { href: "/alertes",      icon: "ti-bell",              label: "Alertes" },
+  { href: "/objectifs",   icon: "ti-target",            label: "Objectifs" },
   { section: "Au quotidien" },
   { href: "/transactions", icon: "ti-arrows-exchange",   label: "Transactions" },
   { href: "/budget",       icon: "ti-chart-pie",         label: "Budget" },
