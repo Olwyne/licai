@@ -15,6 +15,8 @@ const NAV = [
   { href: "/recurrent",    icon: "ti-repeat",            label: "Récurrent" },
   { section: "Patrimoine" },
   { href: "/comptes",      icon: "ti-building-bank",     label: "Comptes & foyer" },
+  { section: "Réglages" },
+  { href: "/parametres",   icon: "ti-settings",          label: "Paramètres" },
 ]
 
 export function Sidebar() {
