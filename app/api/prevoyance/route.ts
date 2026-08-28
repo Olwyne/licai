@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
 import { contracts } from "@/db/schema"
-import { eq, desc } from "drizzle-orm"
+import { eq, desc, and } from "drizzle-orm"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
 import { randomUUID } from "crypto"
 
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
     const row = db
       .select()
       .from(contracts)
-      .where(eq(contracts.id, id))
+      .where(and(eq(contracts.id, id), eq(contracts.householdId, householdId)))
       .get()
 
     return ok(row, 201)

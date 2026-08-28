@@ -18,6 +18,9 @@ export async function POST(req: Request) {
   try {
     const body = (await req.json()) as { messages: MessageParam[] }
     const { messages } = body
+    if (!Array.isArray(messages) || messages.length > 50) {
+      return new Response(JSON.stringify({ error: "Too many messages" }), { status: 400 })
+    }
 
     const currentMonth = new Date().toISOString().slice(0, 7)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
