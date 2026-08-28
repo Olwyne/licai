@@ -1123,3 +1123,18 @@ a.set-action:hover { text-decoration: none; }
 .plac-pct { font-size: 12px; opacity: .8; margin-top: 2px; }
 .plac-td.pos { color: var(--success); }
 .plac-td.neg { color: var(--danger); }
+
+/* ── Impôts ──────────────────────────────────────────────────── */
+.bareme-list { display: flex; flex-direction: column; gap: 10px; }
+.bareme-row { display: grid; grid-template-columns: 180px 1fr 120px; align-items: center; gap: 12px; }
+.bareme-label { font-size: 13px; }
+.bareme-bar { background: var(--border); border-radius: 4px; height: 8px; overflow: hidden; }
+.bareme-fill { background: var(--primary); height: 100%; border-radius: 4px; transition: width .3s ease; min-width: 0; }
+.bareme-amt { font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; color: var(--fg-base); }
+.impots-table { width: 100%; border-collapse: collapse; }
+.impots-th { font-size: 12px; font-weight: 600; color: var(--fg-muted); padding: 6px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.impots-td { font-size: 13.5px; padding: 10px 10px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; font-variant-numeric: tabular-nums; }
+.impots-table tbody tr:last-child .impots-td { border-bottom: none; }
+.impots-synthesis { display: flex; flex-direction: column; gap: 0; }
+.synthesis-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border-subtle); }
+.synthesis-row:last-child { border-bottom: none; }
