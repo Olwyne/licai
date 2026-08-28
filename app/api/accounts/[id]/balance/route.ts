@@ -15,5 +15,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     .where(and(eq(accounts.id, id), eq(accounts.householdId, householdId)))
     .run()
   revalidateTag("accounts", { expire: 0 })
-  return ok(db.select().from(accounts).where(eq(accounts.id, id)).get())
+  const updated = db.select().from(accounts).where(and(eq(accounts.id, id), eq(accounts.householdId, householdId))).get()
+  if (!updated) return err("Not found", 404)
+  return ok(updated)
 }

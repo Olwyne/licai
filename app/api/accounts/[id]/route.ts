@@ -15,16 +15,26 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (k in body) updates[k] = k === "ownerIds" ? JSON.stringify(body[k]) : body[k]
   }
   if (Object.keys(updates).length === 0) return err("Nothing to update")
-  db.update(accounts).set(updates).where(and(eq(accounts.id, id), eq(accounts.householdId, householdId))).run()
+  try {
+    db.update(accounts).set(updates).where(and(eq(accounts.id, id), eq(accounts.householdId, householdId))).run()
+  } catch {
+    return err("Constraint violation or database error", 400)
+  }
   revalidateTag("accounts", { expire: 0 })
-  return ok(db.select().from(accounts).where(eq(accounts.id, id)).get())
+  const updated = db.select().from(accounts).where(and(eq(accounts.id, id), eq(accounts.householdId, householdId))).get()
+  if (!updated) return err("Not found", 404)
+  return ok(updated)
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const householdId = await getHouseholdId()
   if (!householdId) return unauthorized()
   const { id } = await params
-  db.delete(accounts).where(and(eq(accounts.id, id), eq(accounts.householdId, householdId))).run()
+  try {
+    db.delete(accounts).where(and(eq(accounts.id, id), eq(accounts.householdId, householdId))).run()
+  } catch {
+    return err("Constraint violation or database error", 400)
+  }
   revalidateTag("accounts", { expire: 0 })
   return ok({ ok: true })
 }

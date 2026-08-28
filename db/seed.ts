@@ -127,7 +127,7 @@ export function seedDemoData(householdId: string): void {
   db.insert(alerts).values([
     {
       id: randomUUID(), householdId,
-      kind: "budget_exceeded",
+      kind: "budget",
       title: "Budget Loisirs dépassé",
       body: "Vous avez dépensé 210 € sur un budget de 150 € en Loisirs ce mois-ci.",
       tone: "warning",
@@ -136,7 +136,7 @@ export function seedDemoData(householdId: string): void {
     },
     {
       id: randomUUID(), householdId,
-      kind: "budget_alert",
+      kind: "budget",
       title: "Budget Logement presque atteint",
       body: "842 € dépensés sur 850 € de budget Logement — il reste 8 €.",
       tone: "danger",
@@ -145,7 +145,7 @@ export function seedDemoData(householdId: string): void {
     },
     {
       id: randomUUID(), householdId,
-      kind: "recurring_upcoming",
+      kind: "echeance",
       title: "Prélèvement à venir — Mutuelle santé",
       body: "68 € seront prélevés le 5 juillet sur le Compte joint.",
       tone: "info",

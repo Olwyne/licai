@@ -51,21 +51,25 @@ export async function POST(req: Request) {
   }
 
   const id = randomUUID()
-  db.insert(recurring)
-    .values({
-      id,
-      householdId,
-      name,
-      amountCents,
-      frequency: frequency as "monthly" | "quarterly" | "annual",
-      kind: kind as "charge" | "subscription" | "saving",
-      nextDate,
-      accountId: accountId ?? null,
-      categoryId: categoryId ?? null,
-      active: active ?? true,
-      createdAt: new Date(),
-    })
-    .run()
+  try {
+    db.insert(recurring)
+      .values({
+        id,
+        householdId,
+        name,
+        amountCents,
+        frequency: frequency as "monthly" | "quarterly" | "annual",
+        kind: kind as "charge" | "subscription" | "saving",
+        nextDate,
+        accountId: accountId ?? null,
+        categoryId: categoryId ?? null,
+        active: active ?? true,
+        createdAt: new Date(),
+      })
+      .run()
+  } catch {
+    return err("Constraint violation or database error", 400)
+  }
 
   revalidateTag("recurring", { expire: 0 })
   return ok(db.select().from(recurring).where(eq(recurring.id, id)).get(), 201)

@@ -33,9 +33,9 @@ export async function PATCH(
   const updated = db
     .select()
     .from(transactions)
-    .where(eq(transactions.id, id))
+    .where(and(eq(transactions.id, id), eq(transactions.householdId, householdId)))
     .get()
-
+  if (!updated) return err("Not found", 404)
   return ok(updated)
 }
 

@@ -67,7 +67,7 @@ export function BudgetModal({ budget, month, categories, onClose, onSaved }: Pro
             <label className="form-label">Catégorie</label>
             <div className="budget-cat-icon-row">
               {category && (
-                <span style={{ color: category.colorHex }}>{category.icon}</span>
+                <i className={`ti ${category.icon}`} style={{ color: category.colorHex }} />
               )}
               <span>{category?.label ?? budget.categoryId}</span>
             </div>

@@ -35,7 +35,7 @@ export function BulkBar({
     if (!categoryId) return
     setLoading(true)
     try {
-      await Promise.all(
+      const results = await Promise.all(
         ids.map((id) =>
           fetch(`/api/transactions/${id}`, {
             method: "PATCH",
@@ -44,7 +44,8 @@ export function BulkBar({
           })
         )
       )
-      onBulkCategorize(ids, categoryId)
+      const succeededIds = ids.filter((_, i) => results[i].ok)
+      if (succeededIds.length > 0) onBulkCategorize(succeededIds, categoryId)
     } finally {
       setLoading(false)
     }
@@ -53,7 +54,7 @@ export function BulkBar({
   async function handleSetCommon(isCommon: boolean) {
     setLoading(true)
     try {
-      await Promise.all(
+      const results = await Promise.all(
         ids.map((id) =>
           fetch(`/api/transactions/${id}`, {
             method: "PATCH",
@@ -62,7 +63,8 @@ export function BulkBar({
           })
         )
       )
-      onBulkSetCommon(ids, isCommon)
+      const succeededIds = ids.filter((_, i) => results[i].ok)
+      if (succeededIds.length > 0) onBulkSetCommon(succeededIds, isCommon)
     } finally {
       setLoading(false)
     }
@@ -72,12 +74,13 @@ export function BulkBar({
     if (!confirm(`Supprimer ${ids.length} opération(s) ?`)) return
     setLoading(true)
     try {
-      await Promise.all(
+      const results = await Promise.all(
         ids.map((id) =>
           fetch(`/api/transactions/${id}`, { method: "DELETE" })
         )
       )
-      onBulkDelete(ids)
+      const succeededIds = ids.filter((_, i) => results[i].ok)
+      if (succeededIds.length > 0) onBulkDelete(succeededIds)
     } finally {
       setLoading(false)
     }

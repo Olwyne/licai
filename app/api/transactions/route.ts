@@ -44,21 +44,25 @@ export async function POST(req: Request) {
 
   const id = randomUUID()
   const now = new Date()
-  db.insert(transactions)
-    .values({
-      id,
-      householdId,
-      accountId: accountId ?? null,
-      categoryId: categoryId ?? null,
-      name,
-      amountCents,
-      date,
-      note: note ?? "",
-      isCommon: isCommon ?? true,
-      importedAt: null,
-      createdAt: now,
-    })
-    .run()
+  try {
+    db.insert(transactions)
+      .values({
+        id,
+        householdId,
+        accountId: accountId ?? null,
+        categoryId: categoryId ?? null,
+        name,
+        amountCents,
+        date,
+        note: note ?? "",
+        isCommon: isCommon ?? true,
+        importedAt: null,
+        createdAt: now,
+      })
+      .run()
+  } catch {
+    return err("Constraint violation or database error", 400)
+  }
 
   revalidateTag("transactions", { expire: 0 })
   const created = db

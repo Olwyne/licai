@@ -29,7 +29,7 @@ export function BudgetCard({ budget, onEdit }: Props) {
       <div className="budget-card-head">
         <div className="budget-name">
           {category && (
-            <span style={{ color: category.colorHex }}>{category.icon}</span>
+            <i className={`ti ${category.icon}`} style={{ color: category.colorHex }} />
           )}
           <span>{category?.label ?? "Catégorie"}</span>
         </div>

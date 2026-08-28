@@ -217,7 +217,7 @@ export function DashboardClient({ initialData }: Props) {
                     color: tx.categoryColor,
                   }}
                 >
-                  <i className={tx.categoryIcon} />
+                  <i className={`ti ${tx.categoryIcon}`} />
                 </div>
                 <div className="last-tx-info">
                   <div className="last-tx-name">{tx.name}</div>

@@ -8,7 +8,7 @@ export async function GET(req: Request) {
   if (!householdId) return unauthorized()
 
   const url = new URL(req.url)
-  const month = url.searchParams.get("month") ?? "2026-06"
+  const month = url.searchParams.get("month") ?? new Date().toISOString().slice(0, 7)
 
   // All transactions for the month
   const txRows = db.select().from(transactions)

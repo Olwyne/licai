@@ -6,7 +6,7 @@ import { redirect } from "next/navigation"
 import { DashboardClient } from "@/components/features/dashboard/DashboardClient"
 import type { DashboardData } from "@/components/features/dashboard/DashboardClient"
 
-const DEFAULT_MONTH = "2026-06"
+const DEFAULT_MONTH = new Date().toISOString().slice(0, 7)
 
 export default async function DashboardPage() {
   const session = await auth()

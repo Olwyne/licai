@@ -60,7 +60,11 @@ export async function DELETE(
     .get()
   if (!row) return err("Not found", 404)
 
-  db.delete(recurring).where(eq(recurring.id, id)).run()
+  try {
+    db.delete(recurring).where(eq(recurring.id, id)).run()
+  } catch {
+    return err("Constraint violation or database error", 400)
+  }
   revalidateTag("recurring", { expire: 0 })
   return ok({ ok: true })
 }
