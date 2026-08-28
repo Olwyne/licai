@@ -7,7 +7,7 @@ const Ctx = createContext<ThemeCtx>({ theme: "dark", toggle: () => {} })
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<"dark" | "light">("dark")
   useEffect(() => {
-    const saved = (localStorage.getItem("licai-theme") ?? "dark") as "dark" | "light"
+    const saved = (document.documentElement.getAttribute("data-theme") ?? localStorage.getItem("licai-theme") ?? "dark") as "dark" | "light"
     setTheme(saved)
     document.documentElement.setAttribute("data-theme", saved)
   }, [])

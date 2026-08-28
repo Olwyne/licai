@@ -19,9 +19,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Le mot de passe doit contenir au moins 8 caractères" }, { status: 400 })
   }
 
-  const user = db.select().from(users).where(eq(users.email, session.user.email)).get()
+  let user
+  try {
+    user = db.select().from(users).where(eq(users.email, session.user.email)).get()
+  } catch {
+    return NextResponse.json({ error: "Database error" }, { status: 500 })
+  }
   if (!user) {
     return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 })
+  }
+
+  if (user.householdId !== session.user.householdId) {
+    return NextResponse.json({ error: "Accès refusé" }, { status: 403 })
   }
 
   const valid = await bcrypt.compare(body.currentPassword, user.passwordHash)
@@ -30,7 +39,15 @@ export async function POST(req: NextRequest) {
   }
 
   const newHash = await bcrypt.hash(body.newPassword, 12)
-  db.update(users).set({ passwordHash: newHash }).where(eq(users.id, user.id)).run()
+  let result
+  try {
+    result = db.update(users).set({ passwordHash: newHash }).where(eq(users.id, user.id)).run()
+  } catch {
+    return NextResponse.json({ error: "Database error" }, { status: 500 })
+  }
+  if (result.changes === 0) {
+    return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 })
+  }
 
   return NextResponse.json({ ok: true })
 }

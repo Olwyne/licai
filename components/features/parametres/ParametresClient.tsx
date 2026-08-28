@@ -12,6 +12,7 @@ interface Prefs {
   alertEcheance: boolean
   alertReport: boolean
   firstDay: "1" | "paie"
+  currency: string
 }
 
 const PREF_KEY = "licai-prefs"
@@ -32,6 +33,7 @@ function defaultPrefs(): Prefs {
     alertEcheance: true,
     alertReport: false,
     firstDay: "1",
+    currency: "EUR",
   }
 }
 
@@ -134,10 +136,10 @@ function PasswordModal({ onClose }: { onClose: () => void }) {
         </div>
         <div className="modal-body">
           {done ? (
-            <p style={{ color: "var(--success)" }}>Mot de passe mis à jour avec succès.</p>
+            <p className="text-success">Mot de passe mis à jour avec succès.</p>
           ) : (
             <>
-              {error && <p style={{ color: "var(--danger)", fontSize: 13 }}>{error}</p>}
+              {error && <p className="text-danger-sm">{error}</p>}
               <div className="field">
                 <label>Mot de passe actuel</label>
                 <input type="password" value={current} onChange={e => setCurrent(e.target.value)} autoFocus />
@@ -219,14 +221,14 @@ export function ParametresClient() {
           <div className="profile-head">
             <div className="avatar">{initial}</div>
             <div>
-              <div style={{ fontWeight: 600, fontSize: 15 }}>{displayName}</div>
-              <div style={{ fontSize: 12.5, color: "var(--fg-muted)", marginTop: 2 }}>{email}</div>
+              <div className="profile-name">{displayName}</div>
+              <div className="profile-mail">{email}</div>
             </div>
           </div>
-          <div className="field-row" style={{ marginTop: 18 }}>
+          <div className="field-row mt-18">
             <div className="field">
               <label>Devise par défaut</label>
-              <select defaultValue="EUR">
+              <select value={prefs.currency} onChange={e => updatePref("currency", e.target.value)}>
                 <option value="EUR">EUR — Euro</option>
                 <option value="USD" disabled>USD — Dollar (bientôt)</option>
                 <option value="GBP" disabled>GBP — Livre (bientôt)</option>
@@ -252,7 +254,7 @@ export function ParametresClient() {
           </div>
           <div className="set-list">
             <div className="set-row">
-              <div style={{ flex: 1 }}>
+              <div className="flex-1">
                 <div className="set-name">Thème sombre</div>
                 <div className="set-desc">Interface en couleurs sombres</div>
               </div>
@@ -265,7 +267,7 @@ export function ParametresClient() {
               </button>
             </div>
             <div className="set-row">
-              <div style={{ flex: 1 }}>
+              <div className="flex-1">
                 <div className="set-name">Cacher les chiffres</div>
                 <div className="set-desc">Masque les montants sensibles</div>
               </div>
@@ -278,7 +280,7 @@ export function ParametresClient() {
               </button>
             </div>
             <div className="set-row">
-              <div style={{ flex: 1 }}>
+              <div className="flex-1">
                 <div className="set-name">Arrondir les montants</div>
                 <div className="set-desc">Sans décimales dans les listes</div>
               </div>
@@ -300,7 +302,7 @@ export function ParametresClient() {
           </div>
           <div className="set-list">
             <div className="set-row">
-              <div style={{ flex: 1 }}>
+              <div className="flex-1">
                 <div className="set-name">Alerte dépassement de budget</div>
                 <div className="set-desc">À 90 % du plafond</div>
               </div>
@@ -313,7 +315,7 @@ export function ParametresClient() {
               </button>
             </div>
             <div className="set-row">
-              <div style={{ flex: 1 }}>
+              <div className="flex-1">
                 <div className="set-name">Échéances à venir</div>
                 <div className="set-desc">3 jours avant un prélèvement</div>
               </div>
@@ -326,7 +328,7 @@ export function ParametresClient() {
               </button>
             </div>
             <div className="set-row">
-              <div style={{ flex: 1 }}>
+              <div className="flex-1">
                 <div className="set-name">Rapport mensuel</div>
                 <div className="set-desc">Récap le 1er de chaque mois</div>
               </div>
@@ -348,7 +350,7 @@ export function ParametresClient() {
           </div>
           <button className="set-action" onClick={() => setShowPasswordModal(true)}>
             <i className="ti ti-key" />
-            <div style={{ flex: 1 }}>
+            <div className="flex-1">
               <div className="set-name">Changer le mot de passe</div>
             </div>
             <i className="ti ti-chevron-right set-chev" />
@@ -358,7 +360,7 @@ export function ParametresClient() {
             onClick={() => signOut({ callbackUrl: "/login" })}
           >
             <i className="ti ti-logout" />
-            <div style={{ flex: 1 }}>
+            <div className="flex-1">
               <div className="set-name">Se déconnecter</div>
             </div>
             <i className="ti ti-chevron-right set-chev" />
