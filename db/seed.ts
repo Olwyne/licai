@@ -1,7 +1,7 @@
 import { db } from "@/lib/db"
 import {
   members, banks, accounts, categories, transactions,
-  budgets, recurring, alerts, goals,
+  budgets, recurring, alerts, goals, properties, loans,
 } from "@/db/schema"
 import { randomUUID } from "crypto"
 
@@ -140,6 +140,18 @@ export function seedDemoData(householdId: string): void {
     { id: randomUUID(), householdId, name: "Voyage au Japon", emoji: "✈️", targetCents: 350000, currentCents: 127000, deadline: `${n2m}-15`, kind: "court", colorHex: "#378ADD", createdAt: now },
     { id: randomUUID(), householdId, name: "Apport immobilier", emoji: "🏠", targetCents: 5000000, currentCents: 1240000, deadline: null, kind: "long", colorHex: "#1D9E75", createdAt: now },
     { id: randomUUID(), householdId, name: "Fonds d'urgence", emoji: "🛡️", targetCents: 600000, currentCents: 600000, deadline: null, kind: "court", colorHex: "#7C6BD6", createdAt: now },
+  ]).run()
+
+  // Properties
+  db.insert(properties).values([
+    { id: randomUUID(), householdId, name: "Appartement Lyon 3e", kind: "immobilier", valueCents: 28000000, purchasePriceCents: 24000000, purchaseDate: "2019-06-15", note: "Résidence principale", createdAt: now },
+    { id: randomUUID(), householdId, name: "Renault Clio", kind: "vehicule", valueCents: 850000, purchasePriceCents: 1400000, purchaseDate: "2021-03-10", note: "", createdAt: now },
+  ]).run()
+
+  // Loans
+  db.insert(loans).values([
+    { id: randomUUID(), householdId, name: "Crédit immobilier", kind: "immobilier", principalCents: 18000000, remainingCents: 14200000, monthlyPaymentCents: 89000, ratePercent: 2.1, endDate: "2044-06-01", note: "BNP Paribas", createdAt: now },
+    { id: randomUUID(), householdId, name: "Crédit auto", kind: "auto", principalCents: 1200000, remainingCents: 380000, monthlyPaymentCents: 32000, ratePercent: 4.5, endDate: "2026-03-01", note: "Crédit Agricole", createdAt: now },
   ]).run()
 
   // Alerts — a few demo notifications

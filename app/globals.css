@@ -1023,3 +1023,42 @@ a.set-action:hover { text-decoration: none; }
 .prevision-chart { height: 280px; }
 .table-scroll { overflow-x: auto; }
 .fw-600 { font-weight: 600; }
+
+/* ── Patrimoine ─────────────────────────────────────────────── */
+.page-patrimoine { display: flex; flex-direction: column; gap: 0; }
+.pat-list { display: flex; flex-direction: column; gap: 2px; }
+.pat-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; border-radius: var(--radius-md); cursor: pointer;
+  border: 1px solid var(--border-subtle); transition: background .1s;
+}
+.pat-row:hover { background: var(--card-hover); }
+.pat-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.pat-name { font-size: 14px; font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pat-date { font-size: 11.5px; color: var(--fg-muted); white-space: nowrap; }
+.pat-badge {
+  font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 99px;
+  border: 1px solid var(--border); background: var(--card-hover); color: var(--fg-secondary);
+  white-space: nowrap; flex-shrink: 0;
+}
+.pat-amounts { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+.pat-val { font-size: 14px; font-weight: 600; }
+.pat-delta { font-size: 12px; }
+.pat-delta.up { color: var(--primary); }
+.pat-delta.down { color: var(--danger); }
+
+.loan-list { display: flex; flex-direction: column; gap: 10px; }
+.loan-row {
+  padding: 14px; border-radius: var(--radius-md); cursor: pointer;
+  border: 1px solid var(--border-subtle); transition: background .1s;
+}
+.loan-row:hover { background: var(--card-hover); }
+.loan-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; gap: 10px; }
+.loan-title-row { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.loan-name { font-size: 14px; font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.loan-info { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.loan-rate { font-size: 12.5px; font-weight: 600; color: var(--accent); }
+.loan-bar { height: 7px; background: var(--track); border-radius: 99px; overflow: hidden; margin-bottom: 10px; }
+.loan-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), #2bbf8f); transition: width .5s cubic-bezier(.2,.7,.3,1); }
+.loan-foot { display: flex; align-items: center; justify-content: space-between; }
+.loan-monthly { font-size: 13px; font-weight: 600; color: var(--fg-secondary); }

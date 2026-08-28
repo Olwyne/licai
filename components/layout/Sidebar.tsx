@@ -17,6 +17,7 @@ const NAV = [
   { href: "/recurrent",    icon: "ti-repeat",            label: "Récurrent" },
   { href: "/partage",      icon: "ti-scale-outline",     label: "Répartition" },
   { section: "Patrimoine" },
+  { href: "/patrimoine",   icon: "ti-building-estate",   label: "Patrimoine" },
   { href: "/comptes",      icon: "ti-building-bank",     label: "Comptes & foyer" },
   { section: "Réglages" },
   { href: "/parametres",   icon: "ti-settings",          label: "Paramètres" },

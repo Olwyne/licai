@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core"
+import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core"
 
 export const households = sqliteTable("households", {
   id: text("id").primaryKey(),
@@ -120,6 +120,32 @@ export const goals = sqliteTable("goals", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 })
 
+export const properties = sqliteTable("properties", {
+  id: text("id").primaryKey(),
+  householdId: text("household_id").notNull().references(() => households.id),
+  name: text("name").notNull(),
+  kind: text("kind").notNull(), // "immobilier" | "vehicule" | "autre"
+  valueCents: integer("value_cents").notNull(),
+  purchasePriceCents: integer("purchase_price_cents").notNull(),
+  purchaseDate: text("purchase_date"), // "YYYY-MM-DD"
+  note: text("note").notNull().default(""),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+})
+
+export const loans = sqliteTable("loans", {
+  id: text("id").primaryKey(),
+  householdId: text("household_id").notNull().references(() => households.id),
+  name: text("name").notNull(),
+  kind: text("kind").notNull(), // "immobilier" | "auto" | "conso" | "autre"
+  principalCents: integer("principal_cents").notNull(),
+  remainingCents: integer("remaining_cents").notNull(),
+  monthlyPaymentCents: integer("monthly_payment_cents").notNull(),
+  ratePercent: real("rate_percent").notNull(),
+  endDate: text("end_date"), // "YYYY-MM-DD"
+  note: text("note").notNull().default(""),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+})
+
 // Inferred types
 export type Household = typeof households.$inferSelect
 export type User = typeof users.$inferSelect
@@ -132,3 +158,5 @@ export type Budget = typeof budgets.$inferSelect
 export type Recurring = typeof recurring.$inferSelect
 export type Alert = typeof alerts.$inferSelect
 export type Goal = typeof goals.$inferSelect
+export type Property = typeof properties.$inferSelect
+export type Loan = typeof loans.$inferSelect
