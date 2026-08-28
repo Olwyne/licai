@@ -1,0 +1,23 @@
+{
+  "name": "Lǐcái",
+  "short_name": "Lǐcái",
+  "description": "Gestion financière du foyer",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0f0f11",
+  "theme_color": "#5046e5",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
