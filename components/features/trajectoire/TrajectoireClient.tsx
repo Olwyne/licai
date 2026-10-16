@@ -472,7 +472,7 @@ export function TrajectoireClient() {
 
       {/* Chart + Composition */}
       {!loading && data && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 14, alignItems: "start" }}>
+        <div className="traj-split" style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 14, alignItems: "start" }}>
           <div className="card">
             <div className="card-header">
               <div className="card-title">Patrimoine net dans le temps</div>
@@ -588,7 +588,7 @@ export function TrajectoireClient() {
           </div>
 
           {/* Inputs */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 16 }}>
+          <div className="traj-5" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 16 }}>
             {[
               {
                 label: "Dépenses annuelles visées",
@@ -647,7 +647,7 @@ export function TrajectoireClient() {
           </div>
 
           {/* Output KPIs */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 16, padding: "12px 0", borderTop: "1px solid var(--border-subtle)", borderBottom: "1px solid var(--border-subtle)" }}>
+          <div className="traj-5" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 16, padding: "12px 0", borderTop: "1px solid var(--border-subtle)", borderBottom: "1px solid var(--border-subtle)" }}>
             {[
               { label: "Capital nécessaire", value: fmt(sim.capitalCibleCents) },
               { label: "Capital financier actuel", value: fmt(data.capitalFinancierCents) },
@@ -676,7 +676,7 @@ export function TrajectoireClient() {
           </div>
 
           {/* Scenarios */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+          <div className="traj-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
             {sim.scenarios.map(sc => (
               <div key={sc.label} style={{
                 padding: "10px 12px", borderRadius: 8,

@@ -3,6 +3,8 @@ import { db } from "@/lib/db"
 import { households } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { CurrencyInit } from "@/components/layout/CurrencyInit"
+import { NavProvider } from "@/contexts/NavContext"
+import { MobileBar } from "@/components/layout/MobileBar"
 import { PeriodProvider } from "@/contexts/PeriodContext"
 import { PeriodPill } from "@/components/layout/PeriodPill"
 import { Sidebar } from "@/components/layout/Sidebar"
@@ -20,12 +22,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <ThemeProvider>
       <CurrencyInit currency={currency} />
       <PrivacyProvider>
+        <NavProvider>
         <PeriodProvider>
         <AssistantProvider>
           <CmdPaletteWrapper>
             <div className="app">
               <Sidebar />
               <main className="main">
+                <MobileBar />
                 <div className="main-inner"><PeriodPill />{children}</div>
               </main>
             </div>
@@ -34,6 +38,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </CmdPaletteWrapper>
         </AssistantProvider>
       </PeriodProvider>
+        </NavProvider>
       </PrivacyProvider>
     </ThemeProvider>
   )

@@ -7,6 +7,7 @@ import { usePrivacy } from "@/contexts/PrivacyContext"
 import { useTheme } from "@/contexts/ThemeContext"
 import { useSearch } from "@/contexts/SearchContext"
 import { useAssistant } from "@/contexts/AssistantContext"
+import { useNav } from "@/contexts/NavContext"
 
 const NAV = [
   { section: "Pilotage" },
@@ -37,6 +38,7 @@ export function Sidebar() {
   const { theme, toggle: toggleTheme } = useTheme()
   const { openSearch } = useSearch()
   const { openAssistant } = useAssistant()
+  const { open, close } = useNav()
   const [alertCount, setAlertCount] = useState(0)
   useEffect(() => {
     let live = true
@@ -47,7 +49,9 @@ export function Sidebar() {
   const userInitial = (session?.user?.name ?? session?.user?.email ?? "?")[0].toUpperCase()
 
   return (
-    <aside className="sidebar">
+    <>
+    <div className={`nav-overlay${open ? " on" : ""}`} onClick={close} />
+    <aside className={`sidebar${open ? " open" : ""}`}>
       <div className="brand">
         <div className="brand-mark">L</div>
         <div>
@@ -102,5 +106,6 @@ export function Sidebar() {
         <i className="ti ti-settings user-row-ic" />
       </Link>
     </aside>
+    </>
   )
 }
