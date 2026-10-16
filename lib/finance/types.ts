@@ -90,6 +90,7 @@ export interface CtxHolding {
   gain: number | null
 }
 
+export interface CtxFlow { id: string; ym: string; amount: number; match: number; note: string }
 export interface CtxSnapshot { ym: string; value: number; bench: number | null }
 
 export interface FinanceContext {
@@ -107,6 +108,7 @@ export interface FinanceContext {
   fx: Record<string, number> // taux : 1 unité de devise = X €
   fxSource: "demo" | "manual" | "api"
   fxTs: string
+  flows: CtxFlow[] // versements du foyer, du plus ancien au plus récent (6 derniers mois)
   history: CtxSnapshot[] // valorisation mensuelle du portefeuille, du plus ancien au plus récent
 }
 

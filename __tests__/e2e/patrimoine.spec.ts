@@ -18,7 +18,7 @@ test.describe("Patrimoine", () => {
     await expect(modal).toBeVisible()
     await modal.locator(".field", { hasText: /^Nom/ }).locator("input").first().fill("Maison E2E")
     await modal.locator(".field", { hasText: "Prix d'achat" }).locator("input").fill("250000")
-    await modal.locator(".field", { hasText: "Valeur actuelle" }).locator("input").first().fill("300000")
+    await modal.locator(".field", { hasText: "Valeur estimée" }).locator("input").first().fill("300000")
     await modal.getByRole("button", { name: /ajouter le bien/i }).click()
     await expect(page.getByText("Maison E2E").first()).toBeVisible()
 

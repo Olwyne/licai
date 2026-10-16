@@ -70,6 +70,14 @@ const TABLES = [
     alert_id TEXT NOT NULL,
     status TEXT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS investment_flows (
+    id TEXT PRIMARY KEY,
+    household_id TEXT NOT NULL REFERENCES households(id),
+    ym TEXT NOT NULL,
+    amount_cents INTEGER NOT NULL,
+    match_cents INTEGER NOT NULL DEFAULT 0,
+    note TEXT NOT NULL DEFAULT ''
+  )`,
   `CREATE TABLE IF NOT EXISTS password_resets (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id),

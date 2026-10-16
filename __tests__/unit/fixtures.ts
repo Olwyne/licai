@@ -42,5 +42,6 @@ export const ctx: FinanceContext = {
     { id: "h10", acct: "av", name: "SCI", tk: "SCI", cls: "immobilier", zone: "Zone euro", sector: "Immobilier", cur: "EUR", cap: "—", qty: 20, pru: 205, price: 214, prev: 214, ter: 0.85, gain: null },
   ],
   monthlySpend: 3800, savingsBalance: 6000, taxSituation: {}, fx: { EUR: 1, USD: 0.882 }, fxSource: "demo", fxTs: "",
+  flows: [],
   history: [{ ym: "2026-01", value: 100000, bench: 100 }, { ym: "2026-06", value: 110000, bench: 109 }],
 }

@@ -46,7 +46,7 @@ export interface DashboardData {
     annualized: number
   }
   categories: DashCategory[]
-  monthly: { month: string; rev: number; dep: number; saving: number; rate: number; solde: number; varPct: number | null }[]
+  monthly: { month: string; rev: number; dep: number; courant: number; credits: number; saving: number; rate: number; solde: number; varPct: number | null }[]
   series: Series
   daily: { labels: string[]; values: number[] }
   split: { members: DashSplit[]; commun: number; loans: number; recurring: number }
@@ -119,7 +119,8 @@ export function buildDashboardData(hid: string, sessionName: string | null | und
   const monthly = series.labels.map((label, i) => {
     const rev = eurOf(series.rev[i]), dep = eurOf(series.dep[i]), solde = eurOf(series.solde[i])
     const prev = i ? eurOf(series.solde[i - 1]) : null
-    return { month: label, rev, dep, saving: rev - dep, rate: rev > 0 ? ((rev - dep) / rev) * 100 : 0, solde, varPct: prev ? ((solde - prev) / Math.abs(prev)) * 100 : null }
+    const credits = Math.min(mensualites, dep)
+    return { month: label, rev, dep, courant: dep - credits, credits, saving: rev - dep, rate: rev > 0 ? ((rev - dep) / rev) * 100 : 0, solde, varPct: prev ? ((solde - prev) / Math.abs(prev)) * 100 : null }
   })
   const prevSolde = series.solde.length > 1 ? eurOf(series.solde[series.solde.length - 2]) : null
   const cashPrevMonthPct = prevSolde ? ((cash - prevSolde) / Math.abs(prevSolde)) * 100 : null

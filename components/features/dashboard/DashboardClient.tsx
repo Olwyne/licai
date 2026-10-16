@@ -107,7 +107,7 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
   const rangeLabel = period === "c" && custom ? `${dLabel(custom.from)} → ${dLabel(custom.to)}` : series.rangeLabel
   const sumRev = series.rev.reduce((a, b) => a + b, 0) / 100
   const sumDep = series.dep.reduce((a, b) => a + b, 0) / 100
-  const tot = d.monthly.reduce((a, r) => ({ rev: a.rev + r.rev, dep: a.dep + r.dep, saving: a.saving + r.saving }), { rev: 0, dep: 0, saving: 0 })
+  const tot = d.monthly.reduce((a, r) => ({ rev: a.rev + r.rev, courant: a.courant + r.courant, credits: a.credits + r.credits, dep: a.dep + r.dep, saving: a.saving + r.saving }), { rev: 0, courant: 0, credits: 0, dep: 0, saving: 0 })
   const topPlacements = S.cls.slice(0, 3)
   const perf = d.ctx.history.length > 1 && d.ctx.history[0].value > 0 ? (S.total / d.ctx.history[0].value - 1) * 100 : null
   const bench = (() => { const b = d.ctx.history[d.ctx.history.length - 1]?.bench; return b != null ? b - 100 : null })()
@@ -260,13 +260,14 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
         <div className="card-header"><span className="card-title">Détail mensuel</span><span className="card-sub">Revenus, dépenses, épargne et trésorerie</span></div>
         <div className="table-wrap">
           <table className="dtable">
-            <thead><tr><th>Mois</th><th className="r">Revenus</th><th className="r">Dépenses</th><th className="r">Épargne</th><th className="r">Taux</th><th className="r">Trésorerie</th><th className="r">Var.</th></tr></thead>
+            <thead><tr><th>Mois</th><th className="r">Revenus</th><th className="r">Courant</th><th className="r">Crédits</th><th className="r">Épargne</th><th className="r">Taux</th><th className="r">Trésorerie</th><th className="r">Var.</th></tr></thead>
             <tbody>
               {d.monthly.map((r, i) => (
                 <tr key={r.month + i} className={i === d.monthly.length - 1 ? "cur" : undefined}>
                   <td>{r.month}{i === d.monthly.length - 1 ? <> <span className="tag-now">en cours</span></> : null}</td>
                   <td className="r num private">{eur(r.rev)}</td>
-                  <td className="r num private">{eur(r.dep)}</td>
+                  <td className="r num private">{eur(r.courant)}</td>
+                  <td className="r num private">{eur(r.credits)}</td>
                   <td className={`r num private ${r.saving > 0 ? "pos" : "neg"}`}>{r.saving < 0 ? "− " : ""}{eur(Math.abs(r.saving))}</td>
                   <td className="r num">{pc(r.rate, 0)}</td>
                   <td className="r num private">{eur(r.solde)}</td>
@@ -276,7 +277,8 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
               <tr className="tot">
                 <td>Total {d.monthly.length} mois</td>
                 <td className="r num private">{eur(tot.rev)}</td>
-                <td className="r num private">{eur(tot.dep)}</td>
+                <td className="r num private">{eur(tot.courant)}</td>
+                <td className="r num private">{eur(tot.credits)}</td>
                 <td className="r num private pos">{eur(tot.saving)}</td>
                 <td className="r num">{pc(tot.rev ? (tot.saving / tot.rev) * 100 : 0, 0)}</td>
                 <td className="r num private">{eur(d.cash)}</td>

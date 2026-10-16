@@ -130,6 +130,42 @@ function QuoteModal({ ctx, state, onClose, onApply }: {
 
 // ─── Modal : ligne de portefeuille ───────────────────────────────────────────
 
+function FlowModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+  const [f, setF] = useState({ ym: new Date().toISOString().slice(0, 7), amount: "", match: "", note: "" })
+  const [err, setErr] = useState("")
+  const [busy, setBusy] = useState(false)
+  async function save() {
+    if (!f.ym || !num(f.amount)) { setErr("Mois et montant requis."); return }
+    setBusy(true)
+    const res = await fetch("/api/investment-flows", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ym: f.ym, amountCents: Math.round(num(f.amount) * 100), matchCents: Math.round(num(f.match) * 100), note: f.note }),
+    })
+    setBusy(false)
+    if (res.ok) onDone(); else setErr("Erreur lors de l'enregistrement.")
+  }
+  return (
+    <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="modal">
+        <div className="modal-head"><h3>Ajouter un versement</h3><button className="icon-btn" onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button></div>
+        <div className="modal-body">
+          <div className="field"><label>Mois</label><input type="month" value={f.ym} onChange={(e) => setF({ ...f, ym: e.target.value })} /></div>
+          <div className="field-row">
+            <div className="field"><label>Versements (€)</label><input value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} /></div>
+            <div className="field"><label>Abondement employeur (€)</label><input value={f.match} onChange={(e) => setF({ ...f, match: e.target.value })} /></div>
+          </div>
+          <div className="field"><label>Note</label><input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} placeholder="Versement exceptionnel…" /></div>
+          {err && <div className="err on">{err}</div>}
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
+          <button className="btn btn-primary" onClick={save} disabled={busy}>Ajouter le versement</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function LineModal({ ctx, holding, onClose, onDone }: {
   ctx: FinanceContext; holding: CtxHolding | null; onClose: () => void; onDone: () => void
 }) {
@@ -324,6 +360,7 @@ export function PlacementsClient() {
   const [profile, setProfile] = useState<ProfileKey>("equilibre")
   const [quotes, setQuotes] = useState<QuoteState | null>(null)
   const [quoteOpen, setQuoteOpen] = useState(false)
+  const [flowModal, setFlowModal] = useState(false)
   const [lineModal, setLineModal] = useState<{ open: boolean; item: CtxHolding | null }>({ open: false, item: null })
   const [envModal, setEnvModal] = useState<{ open: boolean; item: CtxInvAccount | null }>({ open: false, item: null })
   const themeTick = useThemeTick()
@@ -587,27 +624,34 @@ export function PlacementsClient() {
           <div className="stat-list">{taxRows.map((r) => <StatRow key={r.label} label={r.label} value={r.value} hint={r.hint} />)}</div>
         </div>
         <div className="card">
-          <div className="card-header"><span className="card-title">Versements du foyer</span></div>
+          <div className="card-header">
+            <span className="card-title">Versements du foyer</span>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setFlowModal(true)}><i className="ti ti-plus" /> Ajouter</button>
+          </div>
           <div className="table-wrap">
             <table className="dtable">
-              <thead><tr><th>Enveloppe</th><th className="r">Versement / mois</th><th className="r">Abondement</th><th className="r">Total</th></tr></thead>
+              <thead><tr><th>Mois</th><th className="r">Versements</th><th className="r">Abondement</th><th className="r">Total</th><th>Note</th><th /></tr></thead>
               <tbody>
-                {accts.filter((a) => a.monthly > 0).map((a) => {
-                  const mt = (a.monthly * a.match) / 100
+                {ctx.flows.map((f) => {
+                  const [y, mo] = f.ym.split("-").map(Number)
                   return (
-                    <tr key={a.id}>
-                      <td>{a.name}</td>
-                      <td className="r num private">{eur(a.monthly)}</td>
-                      <td className="r num private">{eur(mt)}</td>
-                      <td className="r num private">{eur(a.monthly + mt)}</td>
+                    <tr key={f.id}>
+                      <td>{new Date(y, mo - 1).toLocaleDateString("fr-FR", { month: "short", year: "2-digit" })}</td>
+                      <td className="r num private">{eur(f.amount)}</td>
+                      <td className="r num private">{eur(f.match)}</td>
+                      <td className="r num private">{eur(f.amount + f.match)}</td>
+                      <td className="flow-note">{f.note}</td>
+                      <td className="r"><button type="button" className="icon-btn" title="Supprimer" onClick={async () => { await fetch(`/api/investment-flows/${f.id}`, { method: "DELETE" }); reload() }}><i className="ti ti-trash" /></button></td>
                     </tr>
                   )
                 })}
+                {!ctx.flows.length && <tr><td colSpan={6} className="flow-note">Aucun versement enregistré.</td></tr>}
                 <tr className="tot">
-                  <td>Par mois</td>
-                  <td className="r num private">{eur(S.monthly)}</td>
-                  <td className="r num private">{eur(S.match)}</td>
-                  <td className="r num private">{eur(S.monthly + S.match)}</td>
+                  <td>{ctx.flows.length} mois</td>
+                  <td className="r num private">{eur(ctx.flows.reduce((x, f) => x + f.amount, 0))}</td>
+                  <td className="r num private">{eur(ctx.flows.reduce((x, f) => x + f.match, 0))}</td>
+                  <td className="r num private">{eur(ctx.flows.reduce((x, f) => x + f.amount + f.match, 0))}</td>
+                  <td colSpan={2} />
                 </tr>
               </tbody>
             </table>
@@ -618,6 +662,7 @@ export function PlacementsClient() {
         </div>
       </div>
 
+      {flowModal && <FlowModal onClose={() => setFlowModal(false)} onDone={() => { setFlowModal(false); reload() }} />}
       {quoteOpen && <QuoteModal ctx={ctx} state={quotes} onClose={() => setQuoteOpen(false)} onApply={applyQuotes} />}
       {lineModal.open && <LineModal ctx={ctx} holding={lineModal.item} onClose={() => setLineModal({ open: false, item: null })} onDone={done} />}
       {envModal.open && <EnvelopeModal ctx={ctx} account={envModal.item} onClose={() => setEnvModal({ open: false, item: null })} onDone={done} />}

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { members, accounts, properties, propertyOwners, loans, investmentAccounts, investments, portfolioSnapshots, transactions, households } from "@/db/schema"
+import { members, accounts, properties, propertyOwners, loans, investmentAccounts, investments, portfolioSnapshots, investmentFlows, transactions, households } from "@/db/schema"
 import { eq, and, gte, inArray, asc } from "drizzle-orm"
 import { randomUUID } from "crypto"
 import type { AssetClass, CtxLoan, CtxProperty, FinanceContext, InvKind, ResidenceType } from "@/lib/finance/types"
@@ -85,8 +85,11 @@ export function buildFinanceContext(householdId: string): FinanceContext {
   }
   const snaps = db.select().from(portfolioSnapshots).where(eq(portfolioSnapshots.householdId, householdId)).orderBy(asc(portfolioSnapshots.ym)).all().slice(-6)
 
+  const flowRows = db.select().from(investmentFlows).where(eq(investmentFlows.householdId, householdId)).orderBy(asc(investmentFlows.ym)).all().slice(-6)
+
   return {
     fx, fxSource: (["demo", "manual", "api"].includes(hh?.fxSource ?? "") ? hh!.fxSource : "demo") as FinanceContext["fxSource"], fxTs: hh?.fxTs ?? "",
+    flows: flowRows.map((f) => ({ id: f.id, ym: f.ym, amount: f.amountCents / 100, match: f.matchCents / 100, note: f.note })),
     history: snaps.map((s) => ({ ym: s.ym, value: s.valueCents / 100, bench: s.benchIndex })),
     year: now.getFullYear(), month: now.getMonth() + 1,
     members: mem.map((m) => ({

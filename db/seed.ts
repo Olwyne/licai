@@ -1,7 +1,7 @@
 import { db } from "@/lib/db"
 import {
   members, banks, accounts, categories, transactions,
-  budgets, recurring, alerts, goals, properties, propertyOwners, loans, investments, investmentAccounts, portfolioSnapshots, contracts,
+  budgets, recurring, alerts, goals, properties, propertyOwners, loans, investments, investmentAccounts, portfolioSnapshots, investmentFlows, contracts,
 } from "@/db/schema"
 import { randomUUID } from "crypto"
 import { fxRate } from "@/lib/finance/invest"
@@ -231,6 +231,13 @@ export function seedDemoData(householdId: string): void {
   db.insert(portfolioSnapshots).values(histValues.map((v, i) => {
     const dt = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
     return { id: randomUUID(), householdId, ym: `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`, valueCents: v * 100, benchIndex: histBench[i] }
+  })).run()
+
+  // Versements du foyer, 6 derniers mois (hors abondement employeur)
+  const flowAmounts = [1370, 1370, 2870, 1370, 1370, 1370]
+  db.insert(investmentFlows).values(flowAmounts.map((a, i) => {
+    const dt = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
+    return { id: randomUUID(), householdId, ym: `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`, amountCents: a * 100, matchCents: 7200, note: a > 2000 ? "Versement exceptionnel PEA (1 500 €)" : "" }
   })).run()
 
   // Contracts (prévoyance)

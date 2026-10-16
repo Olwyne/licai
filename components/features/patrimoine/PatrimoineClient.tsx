@@ -366,7 +366,7 @@ function PropertyModal({ property, members, loans, onClose, onSaved, onDeleted }
             {/* Section 1 — Identification */}
             <div className="modal-section-title">Bien</div>
             <div className="field">
-              <label>Nom</label>
+              <label>Nom du bien</label>
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Appartement Lyon 3e" required />
             </div>
             <div className="field">
@@ -400,11 +400,11 @@ function PropertyModal({ property, members, loans, onClose, onSaved, onDeleted }
               <>
                 <div className="modal-section-title">Adresse &amp; surface</div>
                 <div className="field">
-                  <label>Adresse</label>
+                  <label>Ville / secteur</label>
                   <AddressInput value={address} onChange={setAddress} />
                 </div>
                 <div className="field">
-                  <label>Surface habitable (m²)</label>
+                  <label>Surface (m²)</label>
                   <input type="number" min="1" step="any" value={surfaceSqm} onChange={(e) => setSurfaceSqm(e.target.value)} placeholder="65" />
                 </div>
               </>
@@ -413,7 +413,7 @@ function PropertyModal({ property, members, loans, onClose, onSaved, onDeleted }
             {/* Section 3 — Valorisation */}
             <div className="modal-section-title">Valorisation</div>
             <div className="field">
-              <label>Prix d&apos;achat (€)</label>
+              <label>Prix d&apos;achat</label>
               <input value={purchasePriceEuros} onChange={(e) => setPurchasePriceEuros(e.target.value)} placeholder="240 000" />
             </div>
             <div className="field">
@@ -421,7 +421,7 @@ function PropertyModal({ property, members, loans, onClose, onSaved, onDeleted }
               <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} />
             </div>
             <div className="field">
-              <label>Valeur actuelle (€)</label>
+              <label>Valeur estimée</label>
               <div className="input-row">
                 <input value={valueEuros} onChange={(e) => setValueEuros(e.target.value)} placeholder="280 000" />
                 {isImmo && (
@@ -599,7 +599,7 @@ function PropertyModal({ property, members, loans, onClose, onSaved, onDeleted }
             {/* Section 6 — Propriétaires */}
             {members.length > 0 && (
               <>
-                <div className="modal-section-title">Propriétaires</div>
+                <div className="modal-section-title">Quotes-parts</div>
                 <div className="owners-list">
                   {members.map((m) => {
                     const entry = owners.find((o) => o.memberId === m.id)

@@ -252,6 +252,16 @@ export const portfolioSnapshots = sqliteTable("portfolio_snapshots", {
   benchIndex: real("bench_index"),
 })
 
+// Historique des versements du foyer sur les enveloppes (un enregistrement par mois ; match = abondement employeur)
+export const investmentFlows = sqliteTable("investment_flows", {
+  id: text("id").primaryKey(),
+  householdId: text("household_id").notNull().references(() => households.id),
+  ym: text("ym").notNull(), // YYYY-MM
+  amountCents: integer("amount_cents").notNull(),
+  matchCents: integer("match_cents").notNull().default(0),
+  note: text("note").notNull().default(""),
+})
+
 export const investments = sqliteTable("investments", {
   id: text("id").primaryKey(),
   householdId: text("household_id").notNull().references(() => households.id),

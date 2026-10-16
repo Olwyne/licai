@@ -1,3 +1,4 @@
+import { PeriodPill } from "@/components/layout/PeriodPill"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { PrivacyProvider } from "@/contexts/PrivacyContext"
 import { ThemeProvider } from "@/contexts/ThemeContext"
@@ -15,7 +16,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="app">
               <Sidebar />
               <main className="main">
-                <div className="main-inner">{children}</div>
+                <div className="main-inner"><PeriodPill />{children}</div>
               </main>
             </div>
             <AssistantChat />
