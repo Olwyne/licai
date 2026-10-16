@@ -34,6 +34,10 @@ export function AuthShell({ title, text, items, children }: Props) {
       </aside>
       <main className="auth-main">
         <div className="auth-card">
+          <div className="brand auth-brand-mobile">
+            <div className="brand-mark">L</div>
+            <div><div className="brand-name">Lǐcái</div><div className="brand-sub">Finances personnelles</div></div>
+          </div>
           {children}
           <div className="disclaimer">
             <i className="ti ti-alert-triangle" />

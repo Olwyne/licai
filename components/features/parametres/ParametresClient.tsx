@@ -446,7 +446,7 @@ export function ParametresClient() {
               </select>
             </div>
           </div>
-          <div className="field-hint" style={{ marginTop: 8 }}>Tous les montants sont affichés en euro. Chaque compte conserve sa devise d&apos;origine.</div>
+          <div className="field-hint" style={{ marginTop: 8 }}>Tous les montants sont affichés dans la devise de référence. Chaque compte conserve sa devise d&apos;origine.</div>
           <div className="field" style={{ marginTop: 14 }}>
             <label>Profil d&apos;investisseur</label>
             <div className="chips" style={{ margin: 0 }}>

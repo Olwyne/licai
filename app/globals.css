@@ -795,6 +795,7 @@ a.set-action:hover { text-decoration: none; }
 .auth-aside { background: linear-gradient(180deg, #12211c 0%, #0E0F11 70%); border-right: 1px solid var(--border); padding: 48px 52px; display: flex; flex-direction: column; }
 .auth-main { display: flex; align-items: center; justify-content: center; padding: 48px 32px; overflow-y: auto; }
 .auth-card { width: 100%; max-width: 420px; }
+.auth-brand-mobile { display: none; margin-bottom: 28px; }
 .auth .brand { display: flex; align-items: center; gap: 12px; }
 .auth .brand-mark { width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center; background: var(--primary); color: #fff; font-weight: 700; font-size: 17px; clip-path: polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%); }
 .auth .brand-name { font-size: 19px; font-weight: 600; letter-spacing: -.3px; color: var(--fg); }
@@ -832,7 +833,7 @@ h1.auth-h { font-size: 23px; font-weight: 600; letter-spacing: -.5px; }
 .disclaimer { display: flex; gap: 9px; align-items: flex-start; margin-top: 22px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--card-hover); font-size: 12px; line-height: 1.55; color: var(--fg-secondary); text-wrap: pretty; }
 .disclaimer i { font-size: 15px; color: #EF9F27; margin-top: 1px; flex-shrink: 0; }
 .disclaimer b { color: var(--fg); font-weight: 600; }
-@media (max-width: 900px) { .auth { grid-template-columns: 1fr; } .auth-aside { display: none; } }
+@media (max-width: 900px) { .auth { grid-template-columns: 1fr; } .auth-aside { display: none; } .auth-brand-mobile { display: flex; } }
 
 /* ── Next.js app shell ──────────────────────────────────────── */
 .app { display: grid; grid-template-columns: 248px 1fr; height: 100vh; overflow: hidden; }

@@ -1,4 +1,5 @@
 "use client"
+import { getBaseCurrency } from "@/lib/finance/fx"
 import { useEffect, useMemo, useState } from "react"
 import { computePortfolio } from "@/lib/finance/invest"
 import {
@@ -164,7 +165,7 @@ export function ImpotsClient() {
       <div className="toolbar">
         <div className="chips" style={{ margin: 0 }}>
           <span className="budget-hint">{sub}</span>
-          <span className="budget-hint">· montants en euro</span>
+          <span className="budget-hint">· montants en {getBaseCurrency()}</span>
         </div>
         <div style={{ flex: 1 }} />
         <span className="card-link" role="button" onClick={() => setOpen(true)}>Modifier la situation fiscale</span>

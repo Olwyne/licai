@@ -156,7 +156,7 @@ export function AccountsClient({ household, members, banks, accounts, childGoals
                 </div>
               ))}
             </div>
-            <div className="inv-note">Les opérations importées sur un compte en devise sont converties en euro au taux du jour de l&apos;import ; les soldes restent affichés dans leur devise d&apos;origine.</div>
+            <div className="inv-note">Les opérations importées sur un compte en devise sont converties en {base} au taux du jour de l&apos;import ; les soldes restent affichés dans leur devise d&apos;origine.</div>
           </div>
         )}
 
