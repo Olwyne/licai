@@ -14,6 +14,9 @@ down:
 restart:
 	docker compose restart web
 
+mail:
+	@open https://mail.licai.localhost
+
 logs:
 	docker compose logs -f --tail=100 web
 
