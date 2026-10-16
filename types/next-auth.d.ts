@@ -7,11 +7,14 @@ declare module "next-auth" {
   }
   interface User {
     householdId: string
+    keep?: boolean
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     householdId: string
+    keep?: boolean
+    loginAt?: number
   }
 }

@@ -1,3 +1,4 @@
+import { passwordIssue } from "@/lib/password"
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
@@ -15,9 +16,8 @@ export async function POST(req: NextRequest) {
   if (!body.currentPassword || !body.newPassword) {
     return NextResponse.json({ error: "Champs manquants" }, { status: 400 })
   }
-  if (body.newPassword.length < 8) {
-    return NextResponse.json({ error: "Le mot de passe doit contenir au moins 8 caractères" }, { status: 400 })
-  }
+  const issue = passwordIssue(body.newPassword)
+  if (issue) return NextResponse.json({ error: issue }, { status: 400 })
 
   let user
   try {

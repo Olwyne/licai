@@ -7,7 +7,7 @@ const { auth } = NextAuth(authConfig)
 export default auth((req) => {
   const isAuth = !!req.auth
   const path = req.nextUrl.pathname
-  const isAuthPage = path.startsWith("/login") || path.startsWith("/setup")
+  const isAuthPage = ["/login", "/setup", "/forgot-password", "/reset-password", "/legal"].some((p) => path.startsWith(p))
 
   if (!isAuth && !isAuthPage) {
     return NextResponse.redirect(new URL("/login", req.url))
