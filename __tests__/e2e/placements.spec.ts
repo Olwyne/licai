@@ -1,12 +1,9 @@
 import { test, expect } from "@playwright/test"
+import { loginOk } from "./helpers"
 
 test.describe("Placements", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/login")
-    await page.getByLabel(/email/i).fill("sophie@lambert.fr")
-    await page.getByLabel(/mot de passe/i).fill("demo1234")
-    await page.getByRole("button", { name: /connexion/i }).click()
-    await expect(page).toHaveURL(/dashboard/)
+    await loginOk(page)
   })
 
   test("placements page renders", async ({ page }) => {
@@ -14,59 +11,38 @@ test.describe("Placements", () => {
     await expect(page.getByRole("heading", { name: /placements/i })).toBeVisible()
   })
 
-  test("add placement → appears in table", async ({ page }) => {
+  test("page shows the portfolio blocks of the design", async ({ page }) => {
     await page.goto("/placements")
-    await page.getByRole("button", { name: /ajouter/i }).click()
-
-    await expect(page.locator("[role='dialog']")).toBeVisible()
-    await page.getByLabel(/nom/i).fill("LVMH")
-    await page.getByLabel(/ticker|symbole/i).fill("MC.PA")
-    const kindSelect = page.getByLabel(/type|catégorie|kind/i)
-    await kindSelect.selectOption({ label: "action" }).catch(async () => {
-      await page.getByRole("option", { name: /action/i }).click()
-    })
-    await page.getByLabel(/quantité|qté/i).fill("10")
-    await page.getByLabel(/prix unitaire|prix actuel/i).fill("800")
-    await page.getByLabel(/prix d.achat|purchase/i).fill("750")
-    await page.getByRole("button", { name: /enregistrer|sauvegarder|ajouter/i }).click()
-
-    await expect(page.getByText("LVMH")).toBeVisible()
-  })
-
-  test("KPIs show valeur totale and P&L", async ({ page }) => {
-    await page.goto("/placements")
-    // At least one KPI block with "valeur" or "P&L" text
-    await expect(
-      page.getByText(/valeur totale|valeur|p&l|plus.value|gain/i).first()
-    ).toBeVisible()
-  })
-
-  test("delete placement → disappears", async ({ page }) => {
-    // Add a placement to delete
-    await page.goto("/placements")
-    await page.getByRole("button", { name: /ajouter/i }).click()
-    await expect(page.locator("[role='dialog']")).toBeVisible()
-    await page.getByLabel(/nom/i).fill("Action à Supprimer")
-    await page.getByLabel(/ticker|symbole/i).fill("TEST.PA")
-    const kindSelect = page.getByLabel(/type|catégorie|kind/i)
-    await kindSelect.selectOption({ label: "action" }).catch(async () => {
-      await page.getByRole("option", { name: /action/i }).click()
-    })
-    await page.getByLabel(/quantité|qté/i).fill("5")
-    await page.getByLabel(/prix unitaire|prix actuel/i).fill("100")
-    await page.getByLabel(/prix d.achat|purchase/i).fill("90")
-    await page.getByRole("button", { name: /enregistrer|sauvegarder|ajouter/i }).click()
-    await expect(page.getByText("Action à Supprimer")).toBeVisible()
-
-    // Delete
-    const row = page.locator("tr, li").filter({ hasText: "Action à Supprimer" }).first()
-    await row.getByRole("button", { name: /supprimer|effacer|delete/i }).click()
-
-    const confirmBtn = page.getByRole("button", { name: /confirmer|oui|supprimer/i })
-    if (await confirmBtn.isVisible()) {
-      await confirmBtn.click()
+    for (const t of [/portefeuille vs indice/i, /allocation vs cible/i, /conseils & rééquilibrage/i, /lignes du portefeuille/i, /simulation fiscale/i]) {
+      await expect(page.getByText(t).first()).toBeVisible()
     }
+  })
 
-    await expect(page.getByText("Action à Supprimer")).not.toBeVisible()
+  test("KPIs show valorisation and plus-value latente", async ({ page }) => {
+    await page.goto("/placements")
+    await expect(page.locator(".metric-label", { hasText: "Valorisation" })).toBeVisible()
+    await expect(page.locator(".metric-label", { hasText: "Plus-value latente" })).toBeVisible()
+  })
+
+  test("add a line → appears in the table, then delete it", async ({ page }) => {
+    await page.goto("/placements")
+    await page.getByText("Ajouter une ligne", { exact: true }).click()
+    const modal = page.locator(".modal")
+    await expect(modal).toBeVisible()
+    await modal.locator(".field", { hasText: "Nom du support" }).locator("input").fill("Ligne E2E")
+    await modal.locator(".field", { hasText: "Quantité" }).locator("input").fill("5")
+    await modal.locator(".field", { hasText: "Cours actuel" }).locator("input").fill("100")
+    await modal.getByRole("button", { name: /ajouter la ligne/i }).click()
+    await expect(page.getByText("Ligne E2E")).toBeVisible()
+
+    await page.getByText("Ligne E2E").click()
+    await page.locator(".modal").getByRole("button", { name: /supprimer/i }).click()
+    await expect(page.getByText("Ligne E2E")).not.toBeVisible()
+  })
+
+  test("quote source modal opens", async ({ page }) => {
+    await page.goto("/placements")
+    await page.getByRole("button", { name: /cours/i }).first().click()
+    await expect(page.getByRole("heading", { name: /cours des supports/i })).toBeVisible()
   })
 })

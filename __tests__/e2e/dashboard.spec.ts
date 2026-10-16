@@ -1,39 +1,48 @@
 import { test, expect } from "@playwright/test"
+import { loginOk } from "./helpers"
 
 test.describe("Dashboard", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/login")
-    await page.getByLabel(/email/i).fill("sophie@lambert.fr")
-    await page.getByLabel(/mot de passe/i).fill("demo1234")
-    await page.getByRole("button", { name: /connexion/i }).click()
-    await expect(page).toHaveURL(/dashboard/)
+    await loginOk(page)
   })
 
-  test("dashboard shows KPI cards", async ({ page }) => {
-    await expect(page.locator(".kpi-card")).toHaveCount(4)
-    // Revenus, Dépenses, Solde, Taux d'épargne
-    await expect(page.getByText(/revenus/i)).toBeVisible()
-    await expect(page.getByText(/dépenses/i)).toBeVisible()
+  test("greets the user in the page title", async ({ page }) => {
+    await expect(page.getByRole("heading", { name: /bonjour/i })).toBeVisible()
+    await expect(page.getByText(/tableau de bord & rapports du foyer/i)).toBeVisible()
   })
 
-  test("KPI values are non-zero for seeded data", async ({ page }) => {
-    const firstKpi = page.locator(".kpi-value").first()
-    await expect(firstKpi).toBeVisible()
-    const text = await firstKpi.textContent()
-    expect(text).not.toBe("0")
-    expect(text).not.toBe("")
+  test("shows the 8 KPI cards", async ({ page }) => {
+    await expect(page.locator(".metric")).toHaveCount(8)
+    await expect(page.getByText("Revenus du foyer", { exact: true })).toBeVisible()
+    await expect(page.getByText("Patrimoine net", { exact: true }).first()).toBeVisible()
   })
 
-  test("month chips allow switching period", async ({ page }) => {
-    // Month chips visible
-    await expect(page.locator(".chip").first()).toBeVisible()
-    // Click a different month
-    await page.locator(".chip").nth(1).click()
-    // KPI cards still visible after switch
-    await expect(page.locator(".kpi-card")).toHaveCount(4)
+  test("shows every block of the design", async ({ page }) => {
+    for (const t of [
+      "Placements financiers", "Revenus vs dépenses", "Chiffres clés", "Détail mensuel", "Évolution de la trésorerie",
+      "Répartition du foyer", "Budget du mois", "Plus grosses dépenses", "Objectifs à court terme", "Prochaines échéances",
+      "Patrimoine & dettes", "Signaux du mois", "Dernières transactions",
+    ]) {
+      await expect(page.getByText(t, { exact: true }).first()).toBeVisible()
+    }
+  })
+
+  test("period chips update the range label", async ({ page }) => {
+    await page.getByRole("button", { name: "1 semaine" }).click()
+    await expect(page.locator(".ov-range-label")).toContainText("→")
+    await page.getByRole("button", { name: "Trimestres" }).click()
+    await expect(page.locator(".ov-range-label")).toContainText(/trimestres/i)
+  })
+
+  test("custom period modal applies a range", async ({ page }) => {
+    await page.getByRole("button", { name: /période/i }).click()
+    await expect(page.getByRole("heading", { name: /choisir une période/i })).toBeVisible()
+    await page.getByRole("button", { name: "30 jours" }).click()
+    await page.getByRole("button", { name: /appliquer/i }).click()
+    await expect(page.locator(".ov-range-label")).toContainText("→")
   })
 
   test("last transactions section shows rows", async ({ page }) => {
-    await expect(page.locator(".last-tx-item").first()).toBeVisible()
+    await expect(page.locator(".tx-row").first()).toBeVisible()
   })
 })

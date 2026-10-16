@@ -1,23 +1,20 @@
 import { test, expect } from "@playwright/test"
+import { loginOk } from "./helpers"
 
 test.describe("Partage", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/login")
-    await page.getByLabel(/email/i).fill("sophie@lambert.fr")
-    await page.getByLabel(/mot de passe/i).fill("demo1234")
-    await page.getByRole("button", { name: /connexion/i }).click()
-    await expect(page).toHaveURL(/dashboard/)
+    await loginOk(page)
   })
 
   test("partage page renders", async ({ page }) => {
     await page.goto("/partage")
-    await expect(page.getByRole("heading", { name: /partage|foyer|membres/i })).toBeVisible()
+    await expect(page.getByRole("heading", { name: /répartition du foyer/i })).toBeVisible()
   })
 
   test("page shows members section with at least 1 member", async ({ page }) => {
     await page.goto("/partage")
     // Members section heading
-    await expect(page.getByText(/membres|member/i).first()).toBeVisible()
+    await expect(page.getByText(/revenus du foyer/i).first()).toBeVisible()
     // At least one member item visible (Sophie Lambert is seeded)
     const members = page.locator(
       "[class*='member'], [class*='user'], tr, li"

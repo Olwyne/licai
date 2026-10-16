@@ -1,62 +1,49 @@
 import { test, expect } from "@playwright/test"
+import { loginOk } from "./helpers"
 
 test.describe("Prévoyance", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/login")
-    await page.getByLabel(/email/i).fill("sophie@lambert.fr")
-    await page.getByLabel(/mot de passe/i).fill("demo1234")
-    await page.getByRole("button", { name: /connexion/i }).click()
-    await expect(page).toHaveURL(/dashboard/)
+    await loginOk(page)
   })
 
   test("prevoyance page renders", async ({ page }) => {
     await page.goto("/prevoyance")
-    await expect(page.getByRole("heading", { name: /prévoyance/i })).toBeVisible()
+    await expect(page.getByRole("heading", { name: /prévoyance & transmission/i })).toBeVisible()
   })
 
-  test("add contract → row appears", async ({ page }) => {
+  test("page shows succession, IFI and capital-gains blocks", async ({ page }) => {
     await page.goto("/prevoyance")
-    await page.getByRole("button", { name: /ajouter/i }).click()
-
-    await expect(page.locator("[role='dialog']")).toBeVisible()
-    await page.getByLabel(/nom/i).fill("Assurance Vie")
-    await page.getByLabel(/assureur|compagnie/i).fill("AXA")
-    const kindSelect = page.getByLabel(/type|catégorie|kind/i)
-    await kindSelect.selectOption({ label: "vie" }).catch(async () => {
-      await page.getByRole("option", { name: /vie/i }).click()
-    })
-    await page.getByLabel(/valeur|capital/i).fill("50000")
-    await page.getByLabel(/prime|cotisation|monthly|mensuel/i).fill("200")
-    await page.getByRole("button", { name: /enregistrer|sauvegarder|ajouter/i }).click()
-
-    await expect(page.getByText("Assurance Vie")).toBeVisible()
-  })
-
-  test("delete contract → row disappears", async ({ page }) => {
-    // Add a contract first
-    await page.goto("/prevoyance")
-    await page.getByRole("button", { name: /ajouter/i }).click()
-    await expect(page.locator("[role='dialog']")).toBeVisible()
-    await page.getByLabel(/nom/i).fill("Contrat à Supprimer")
-    await page.getByLabel(/assureur|compagnie/i).fill("MAIF")
-    const kindSelect = page.getByLabel(/type|catégorie|kind/i)
-    await kindSelect.selectOption({ label: "vie" }).catch(async () => {
-      await page.getByRole("option", { name: /vie/i }).click()
-    })
-    await page.getByLabel(/valeur|capital/i).fill("10000")
-    await page.getByLabel(/prime|cotisation|monthly|mensuel/i).fill("100")
-    await page.getByRole("button", { name: /enregistrer|sauvegarder|ajouter/i }).click()
-    await expect(page.getByText("Contrat à Supprimer")).toBeVisible()
-
-    // Delete
-    const row = page.locator("tr, li").filter({ hasText: "Contrat à Supprimer" }).first()
-    await row.getByRole("button", { name: /supprimer|effacer|delete/i }).click()
-
-    const confirmBtn = page.getByRole("button", { name: /confirmer|oui|supprimer/i })
-    if (await confirmBtn.isVisible()) {
-      await confirmBtn.click()
+    for (const t of [/transmission/i, /impôt sur la fortune immobilière/i, /plus-values latentes & fiscalité de sortie/i, /suivi du prix de revient/i]) {
+      await expect(page.getByText(t).first()).toBeVisible()
     }
+  })
 
-    await expect(page.getByText("Contrat à Supprimer")).not.toBeVisible()
+  test("switching the deceased member updates the heirs table", async ({ page }) => {
+    await page.goto("/prevoyance")
+    const chips = page.locator(".chips .chip", { hasText: /^Décès de/ })
+    await expect(chips.first()).toBeVisible()
+    if ((await chips.count()) > 1) {
+      await chips.nth(1).click()
+      await expect(chips.nth(1)).toHaveClass(/active/)
+    }
+  })
+
+  test("add contract → row appears, then delete it", async ({ page }) => {
+    await page.goto("/prevoyance")
+    await page.locator("button", { hasText: /^\s*Ajouter\s*$/ }).first().click()
+    const modal = page.locator(".modal")
+    await expect(modal).toBeVisible()
+    await modal.locator(".field", { hasText: "Nom du contrat" }).locator("input").fill("Contrat E2E")
+    await modal.locator(".field", { hasText: "Assureur" }).locator("input").fill("AXA")
+    await modal.locator(".field", { hasText: "Valeur actuelle" }).locator("input").fill("50000")
+    await modal.locator(".field", { hasText: "Cotisation mensuelle" }).locator("input").fill("200")
+    await modal.getByRole("button", { name: /^ajouter$/i }).click()
+    await expect(page.getByText("Contrat E2E").first()).toBeVisible()
+
+    await page.getByText("Contrat E2E").first().click()
+    await page.locator(".modal").getByRole("button", { name: /supprimer/i }).click()
+    const confirmBtn = page.locator(".modal").getByRole("button", { name: /confirmer|oui|supprimer/i })
+    if (await confirmBtn.isVisible().catch(() => false)) await confirmBtn.click()
+    await expect(page.getByText("Contrat E2E")).toHaveCount(0)
   })
 })
