@@ -1,4 +1,5 @@
 "use client"
+import { fmtCurrency } from "@/lib/finance/fx"
 import { useRef, useEffect } from "react"
 import { usePrivacy } from "@/contexts/PrivacyContext"
 import { formatCents, maskAmount } from "@/lib/money"
@@ -122,6 +123,9 @@ export function TransactionList({
                   </div>
                   <span className={`tx-amt${tx.kind === "transfer" ? " transfer" : tx.amountCents >= 0 ? " pos" : " neg"}${isPrivate ? " private" : ""}`}>
                     {isPrivate ? maskAmount("") : (tx.kind === "transfer" ? `⇄ ${formatCents(tx.amountCents)}` : formatCents(tx.amountCents))}
+                    {!isPrivate && tx.originalCurrency && tx.originalCents != null && (
+                      <small style={{ display: "block", fontSize: 11, color: "var(--fg-muted)", fontWeight: 400 }}>{fmtCurrency(tx.originalCents / 100, tx.originalCurrency)}</small>
+                    )}
                   </span>
                 </div>
               )

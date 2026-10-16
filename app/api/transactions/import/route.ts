@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
 import { transactions } from "@/db/schema"
+import { toBaseAmount } from "@/lib/server/fx-convert"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
 import { randomUUID } from "crypto"
 import { revalidateTag } from "next/cache"
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
         accountId,
         categoryId: row.categoryId ?? null,
         name: row.name,
-        amountCents: row.amountCents,
+        ...toBaseAmount(householdId, accountId, row.amountCents),
         date: row.date,
         note: row.note ?? "",
         isCommon: ownerIds.length !== 1,

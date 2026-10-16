@@ -1,8 +1,10 @@
-// Formatage en euros entiers (calculs fiscaux / patrimoniaux) — mêmes conventions que le prototype.
+import { baseSym } from "./fx"
+
+// Formatage dans la devise de référence du foyer (euro par défaut), montants entiers pour les calculs fiscaux / patrimoniaux — mêmes conventions que le prototype.
 
 const nf0 = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 })
 
-export const eur = (n: number): string => nf0.format(Math.round(Math.abs(n) < 0.5 ? 0 : n)).replace(/[  ]/g, " ") + " €"
+export const eur = (n: number): string => nf0.format(Math.round(Math.abs(n) < 0.5 ? 0 : n)).replace(/[  ]/g, " ") + " " + baseSym()
 export const eurS = (n: number): string => (n < 0 ? "− " : "+ ") + eur(Math.abs(n))
 export const pc = (n: number, d = 1): string =>
   (isFinite(n) ? n : 0).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).replace(/[  ]/g, " ") + " %"

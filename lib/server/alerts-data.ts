@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { baseBalanceCents, householdFx } from "@/lib/server/fx-convert"
 import { alerts, alertStates, budgets, categories, goals, goalPockets, accounts, recurring, transactions } from "@/db/schema"
 import { and, eq, gte, inArray } from "drizzle-orm"
 import { buildFinanceContext } from "@/lib/server/finance-context"
@@ -42,7 +43,7 @@ export function buildAlertsData(householdId: string): AlertsPageData {
 
   const gl = db.select().from(goals).where(eq(goals.householdId, householdId)).all()
   const pk = gl.length ? db.select().from(goalPockets).where(inArray(goalPockets.goalId, gl.map((g) => g.id))).all() : []
-  const acc = new Map(db.select().from(accounts).where(eq(accounts.householdId, householdId)).all().map((a) => [a.id, a.balanceCents]))
+  const acc = new Map(db.select().from(accounts).where(eq(accounts.householdId, householdId)).all().map((a) => [a.id, baseBalanceCents(a, householdFx(householdId).fx)]))
   const goalsIn = gl.map((g) => {
     const mine = pk.filter((p) => p.goalId === g.id)
     const current = mine.length ? mine.reduce((s, p) => s + ((acc.get(p.accountId) ?? 0) / 100) * (p.pct / 100), 0) : g.currentCents / 100

@@ -40,11 +40,11 @@ export function HouseholdCard({
 }: Props) {
   const { private: isPrivate } = usePrivacy()
 
-  const totalBalance = accounts.reduce((sum, a) => sum + a.balanceCents, 0)
+  const totalBalance = accounts.reduce((sum, a) => sum + a.balanceBaseCents, 0)
 
   const memberStats = members.map((m) => {
     const memberAccounts = accounts.filter((a) => a.ownerIds.includes(m.id))
-    const memberBalance = memberAccounts.reduce((sum, a) => sum + a.balanceCents, 0)
+    const memberBalance = memberAccounts.reduce((sum, a) => sum + a.balanceBaseCents, 0)
     const age = calcAge(m.birthYear)
     const goals = childGoals[m.id] ?? []
     return { ...m, accountCount: memberAccounts.length, balance: memberBalance, age, goals }

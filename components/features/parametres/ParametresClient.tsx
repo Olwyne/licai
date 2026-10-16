@@ -1,11 +1,11 @@
 "use client"
+import { CURRENCIES, FIAT_CODES, getBaseCurrency } from "@/lib/finance/fx"
 import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { signOut } from "next-auth/react"
 import { usePrivacy } from "@/contexts/PrivacyContext"
 import { useTheme } from "@/contexts/ThemeContext"
 import Link from "next/link"
-import { CURRENCIES } from "@/lib/finance/fx"
 import { PROFILES, type ProfileKey } from "@/lib/finance/invest"
 import { loadProfile, saveProfile } from "@/components/features/finance/quotes"
 
@@ -378,6 +378,13 @@ export function ParametresClient() {
     setProfile(loadProfile())
   }, [])
 
+  async function changeCurrency(cur: string) {
+    if (cur === getBaseCurrency()) return
+    if (!window.confirm(`Passer la devise de référence en ${cur} ? Les montants déjà saisis ne sont pas convertis : ils seront simplement affichés en ${cur}. Les taux de change sont recalculés.`)) return
+    const res = await fetch("/api/fx", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currency: cur }) })
+    if (res.ok) window.location.reload()
+  }
+
   const updatePref = useCallback(<K extends keyof Prefs>(key: K, value: Prefs[K]) => {
     setPrefs(prev => {
       const next = { ...prev, [key]: value }
@@ -420,12 +427,13 @@ export function ParametresClient() {
           </div>
           <div className="field-row mt-18">
             <div className="field">
-              <label>Devise par défaut</label>
-              <select value={prefs.currency} onChange={e => updatePref("currency", e.target.value)}>
-                {Object.entries(CURRENCIES).map(([k, c]) => (
-                  <option key={k} value={k} disabled={k !== "EUR"}>{k} — {c.name} ({c.sym}){k !== "EUR" ? " · bientôt" : ""}</option>
+              <label>Devise de référence</label>
+              <select value={getBaseCurrency()} onChange={e => changeCurrency(e.target.value)}>
+                {FIAT_CODES.map(k => (
+                  <option key={k} value={k}>{k} — {CURRENCIES[k].name} ({CURRENCIES[k].sym})</option>
                 ))}
               </select>
+              <div className="field-hint">Les totaux sont exprimés dans cette devise. Les comptes et placements en devises étrangères (yen, crypto…) y sont convertis aux taux du foyer.</div>
             </div>
             <div className="field">
               <label>Premier jour du mois</label>

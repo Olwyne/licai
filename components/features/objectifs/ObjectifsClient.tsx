@@ -329,7 +329,7 @@ export default function ObjectifsClient() {
       }
       if (aRes.ok) {
         const aJson = (await aRes.json()) as { data: AccountRow[] }
-        setAccounts(aJson.data)
+        setAccounts(aJson.data.map((a) => ({ ...a, balanceCents: (a as AccountRow & { balanceBaseCents?: number }).balanceBaseCents ?? a.balanceCents })))
       }
       if (mRes.ok) {
         const mJson = (await mRes.json()) as { data: MemberRow[] }

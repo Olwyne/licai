@@ -107,6 +107,8 @@ export const transactions = sqliteTable("transactions", {
   goalId: text("goal_id"), // FK to goals added after goals table
   projectId: text("project_id").references(() => projects.id),
   memberId: text("member_id"), // personne à qui l'opération est attribuée
+  originalCents: integer("original_cents"), // montant saisi dans la devise du compte, si différente de la devise de référence
+  originalCurrency: text("original_currency"),
 })
 
 export const budgets = sqliteTable("budgets", {

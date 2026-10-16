@@ -1,5 +1,6 @@
 "use client"
-import { useState } from "react"
+import { usePeriod } from "@/contexts/PeriodContext"
+import { useEffect, useState } from "react"
 import { BudgetCard } from "./BudgetCard"
 import { CategoryModal } from "./CategoryModal"
 import { formatCents } from "@/lib/money"
@@ -38,6 +39,9 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
   const totalLimit = budgetList.reduce((s, b) => s + b.limitCents, 0)
   const totalSpent = budgetList.reduce((s, b) => s + b.spentCents, 0)
   const overallPct = totalLimit > 0 ? Math.round((totalSpent / totalLimit) * 100) : 0
+
+  const { month: pMonth, setMonth: setPMonth } = usePeriod()
+  useEffect(() => { if (pMonth !== currentMonth) void switchMonth(pMonth) }, [pMonth]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function switchMonth(m: string) {
     setCurrentMonth(m)
@@ -80,7 +84,7 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
             <button
               className="btn btn-ghost btn-sm"
               type="button"
-              onClick={() => switchMonth(offsetMonth(currentMonth, -1))}
+              onClick={() => setPMonth(offsetMonth(currentMonth, -1))}
               disabled={loading}
               title="Mois précédent"
             >
@@ -93,7 +97,7 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
             <button
               className="btn btn-ghost btn-sm"
               type="button"
-              onClick={() => switchMonth(offsetMonth(currentMonth, 1))}
+              onClick={() => setPMonth(offsetMonth(currentMonth, 1))}
               disabled={loading}
               title="Mois suivant"
             >

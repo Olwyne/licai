@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { CURRENCIES, currencySym } from "@/lib/finance/fx"
+import { CURRENCIES, currencySym, getBaseCurrency } from "@/lib/finance/fx"
 import type { EnrichedAccount, Member, Bank } from "./types"
 import type { Account } from "@/db/schema"
 
@@ -24,7 +24,7 @@ interface Props {
   banks: Bank[]
   account?: EnrichedAccount | null
   onClose: () => void
-  onSaved: (account: EnrichedAccount) => void
+  onSaved: (account: Omit<EnrichedAccount, "balanceBaseCents">) => void
   onDeleted?: (id: string) => void
   onBankCreated?: (bank: Bank) => void
 }
@@ -35,7 +35,7 @@ export function AccountModal({ members, banks, account, onClose, onSaved, onDele
   const [type, setType] = useState<"checking" | "savings" | "investment" | "card" | "other">(account?.type ?? "checking")
   const [bankId, setBankId] = useState(account?.bankId ?? banks[0]?.id ?? "")
   const [balance, setBalance] = useState(account ? String(account.balanceCents / 100) : "")
-  const [currency, setCurrency] = useState(account?.currency ?? "EUR")
+  const [currency, setCurrency] = useState(account?.currency ?? getBaseCurrency())
   const [last4, setLast4] = useState(account?.last4 ?? "")
   const [purpose, setPurpose] = useState(account?.purpose ?? "")
   const [iban, setIban] = useState(account?.iban ?? "")
@@ -119,7 +119,7 @@ export function AccountModal({ members, banks, account, onClose, onSaved, onDele
 
       const parsedOwnerIds: string[] = JSON.parse(raw.ownerIds as unknown as string)
       const memberMap = new Map(members.map((m) => [m.id, m.name]))
-      const enriched: EnrichedAccount = {
+      const enriched: Omit<EnrichedAccount, "balanceBaseCents"> = {
         ...raw,
         ownerIds: parsedOwnerIds,
         ownerNames: parsedOwnerIds.map((id) => memberMap.get(id) ?? id),

@@ -94,6 +94,7 @@ export interface CtxFlow { id: string; ym: string; amount: number; match: number
 export interface CtxSnapshot { ym: string; value: number; bench: number | null }
 
 export interface FinanceContext {
+  currency: string // devise de référence du foyer
   year: number
   month: number // 1-12
   members: CtxMember[]

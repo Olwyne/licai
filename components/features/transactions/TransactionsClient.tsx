@@ -1,4 +1,5 @@
 "use client"
+import { usePeriod } from "@/contexts/PeriodContext"
 import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/Button"
 import { usePrivacy } from "@/contexts/PrivacyContext"
@@ -35,9 +36,10 @@ const isIncome = (t: Transaction) => t.kind !== "transfer" && t.amountCents > 0
 const isExpense = (t: Transaction) => t.kind !== "transfer" && t.amountCents < 0
 const num = (v: string): number | null => { const n = parseFloat(v.replace(/\s/g, "").replace(",", ".")); return isNaN(n) ? null : n }
 
-function applyFilters(txs: Transaction[], f: Filters): Transaction[] {
+function applyFilters(txs: Transaction[], f: Filters, month: string | null): Transaction[] {
   const min = num(f.min), max = num(f.max)
   const out = txs.filter((tx) => {
+    if (month && !tx.date.startsWith(month)) return false
     if (f.q && !tx.name.toLowerCase().includes(f.q.toLowerCase())) return false
     if (f.accountId && tx.accountId !== f.accountId && tx.toAccountId !== f.accountId) return false
     if (f.memberId && tx.memberId !== f.memberId) return false
@@ -60,7 +62,7 @@ function applyFilters(txs: Transaction[], f: Filters): Transaction[] {
     return true
   })
   const by: Record<Filters["sort"], (a: Transaction, b: Transaction) => number> = {
-    date: (a, b) => b.date.localeCompare(a.date) || b.createdAt.getTime() - a.createdAt.getTime(),
+    date: (a, b) => b.date.localeCompare(a.date) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     "date-asc": (a, b) => a.date.localeCompare(b.date),
     amount: (a, b) => Math.abs(b.amountCents) - Math.abs(a.amountCents),
     "amount-asc": (a, b) => Math.abs(a.amountCents) - Math.abs(b.amountCents),
@@ -90,7 +92,8 @@ export function TransactionsClient({
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const [page, setPage] = useState(0)
 
-  const filteredTx = useMemo(() => applyFilters(txList, filters), [txList, filters])
+  const { month: pMonth, touched: pTouched } = usePeriod()
+  const filteredTx = useMemo(() => applyFilters(txList, filters, pTouched ? pMonth : null), [txList, filters, pTouched, pMonth])
   const totalPages = Math.max(1, Math.ceil(filteredTx.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages - 1)
   const pagedTx = useMemo(

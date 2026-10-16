@@ -17,8 +17,12 @@ export async function POST(req: Request) {
       expiresAt: new Date(Date.now() + 60 * 60 * 1000),
     }).run()
     const origin = process.env.NEXTAUTH_URL ?? new URL(req.url).origin
-    await sendMail(user.email, "Réinitialisation de votre mot de passe Lǐcái",
-      `Pour choisir un nouveau mot de passe (lien valable 1 heure) :\n${origin}/reset-password?token=${token}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.`)
+    try {
+      await sendMail(user.email, "Réinitialisation de votre mot de passe Lǐcái",
+        `Pour choisir un nouveau mot de passe (lien valable 1 heure) :\n${origin}/reset-password?token=${token}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message.`)
+    } catch (e) {
+      console.error("[forgot] envoi impossible", (e as Error).message) // réponse inchangée : pas d'énumération
+    }
   }
   return NextResponse.json({ data: { ok: true } })
 }

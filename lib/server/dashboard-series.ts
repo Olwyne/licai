@@ -36,8 +36,9 @@ function buckets(from: string, to: string, step: "day" | "week" | "month"): Buck
 
 export function cashNowCents(householdId: string): number {
   let stored: unknown = {}
-  try { stored = JSON.parse(db.select().from(households).where(eq(households.id, householdId)).get()?.fxRates ?? "{}") } catch { /* taux par défaut */ }
-  const fx = mergeFx(stored)
+  const hh = db.select().from(households).where(eq(households.id, householdId)).get()
+  try { stored = JSON.parse(hh?.fxRates ?? "{}") } catch { /* taux par défaut */ }
+  const fx = mergeFx(stored, hh?.currency ?? "EUR")
   return db.select().from(accounts).where(eq(accounts.householdId, householdId)).all()
     .filter((a) => a.type !== "investment")
     .reduce((s, a) => s + Math.round(a.balanceCents * fxRate(a.currency, fx)), 0)

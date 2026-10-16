@@ -44,6 +44,6 @@ export function buildAssistantSnapshot(householdId: string) {
       taux_moyen_pct: +T.tauxMoyen.toFixed(1), prelevements_totaux: Math.round(T.totalPrel), regime_foncier: T.s.foncier,
       foncier_net: Math.round(T.foncier), per_verse: Math.round(T.perVerse), plafond_per_restant: Math.round(T.plafondPer - T.perVerse),
     },
-    date_du_jour: new Date().toISOString().slice(0, 10), devise: "EUR",
+    date_du_jour: new Date().toISOString().slice(0, 10), devise: ctx.currency,
   }
 }

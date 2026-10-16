@@ -1,3 +1,4 @@
+import { baseBalanceCents, householdFx } from "@/lib/server/fx-convert"
 import { db } from "@/lib/db"
 import {
   transactions,
@@ -158,7 +159,7 @@ export async function GET(req: Request) {
       month,
       household: { name: householdRow?.name ?? null },
       members: memberRows,
-      accounts: accountRows,
+      accounts: accountRows.map((a) => ({ ...a, balanceCents: baseBalanceCents(a, householdFx(householdId).fx) })),
       transactions: txWithCategory,
       budgets: budgetsWithSpent,
       expensesByCategory,

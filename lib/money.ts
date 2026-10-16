@@ -1,10 +1,12 @@
+import { baseSym } from "@/lib/finance/fx"
+
 export function formatCents(cents: number): string {
   const abs = Math.abs(cents) / 100
   const formatted = abs.toLocaleString("fr-FR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })
-  const symbol = " €"
+  const symbol = " " + baseSym()
   // Normalize narrow no-break space (U+202F) used by fr-FR to regular space
   const normalized = formatted.replace(/ /g, " ")
   return cents < 0 ? `−${normalized}${symbol}` : `${normalized}${symbol}`
@@ -18,7 +20,7 @@ export function parseCents(str: string): number {
 }
 
 export function maskAmount(_str: string): string {
-  return "•••• €"
+  return "•••• " + baseSym()
 }
 
 export function signedFormatCents(cents: number): string {

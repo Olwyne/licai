@@ -2,7 +2,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { CURRENCIES, currencySym, exposure, fmtCurrency, fxRate, type FxSource, type FxTable } from "@/lib/finance/fx"
+import { CURRENCIES, currencySym, exposure, fmtCurrency, fxRate, getBaseCurrency, baseSym, type FxSource, type FxTable } from "@/lib/finance/fx"
 import { eur, pc } from "@/lib/finance/format"
 import { FxModal, FX_DEMO_TS } from "./FxModal"
 import { HouseholdCard } from "./HouseholdCard"
@@ -45,7 +45,8 @@ export function AccountsClient({ household, members, banks, accounts, childGoals
     setShowMemberModal(false)
   }
 
-  function handleAccountSaved(account: EnrichedAccount) {
+  function handleAccountSaved(saved: Omit<EnrichedAccount, "balanceBaseCents">) {
+    const account: EnrichedAccount = { ...saved, balanceBaseCents: Math.round(saved.balanceCents * fxRate(saved.currency || getBaseCurrency(), fx.rates)) }
     setAccountList((prev) => {
       const idx = prev.findIndex((a) => a.id === account.id)
       if (idx >= 0) {
@@ -70,11 +71,12 @@ export function AccountsClient({ household, members, banks, accounts, childGoals
 
   const uniqueBankIds = new Set(accountList.map((a) => a.bankId).filter(Boolean))
 
+  const base = getBaseCurrency()
   const expo = exposure(
-    accountList.map((a) => ({ cur: a.currency || "EUR", native: (a.balanceCents ?? 0) / 100, balance: ((a.balanceCents ?? 0) / 100) * fxRate(a.currency || "EUR", fx.rates) })),
+    accountList.map((a) => ({ cur: a.currency || base, native: (a.balanceCents ?? 0) / 100, balance: ((a.balanceCents ?? 0) / 100) * fxRate(a.currency || base, fx.rates) })),
     fx.positions,
   )
-  const foreign = expo.rows.filter((r) => r.cur !== "EUR")
+  const foreign = expo.rows.filter((r) => r.cur !== base)
   const foreignEur = foreign.reduce((s, r) => s + r.eur, 0)
   const fxSourceLabel = fx.source === "api" ? "Fournisseur externe" : fx.source === "manual" ? "Taux manuels" : "Taux de référence"
 
@@ -134,9 +136,9 @@ export function AccountsClient({ household, members, banks, accounts, childGoals
             </div>
             <div className="fx-top">
               <div><div className="inv-lbl">Contre-valeur totale</div><div className="fx-val num private">{eur(expo.total)}</div><div className="metric-sub neutral">comptes {eur(expo.cash)} + placements {eur(expo.total - expo.cash)}</div></div>
-              <div><div className="inv-lbl">Exposition hors euro</div><div className="fx-val num private">{eur(foreignEur)}</div>
+              <div><div className="inv-lbl">Exposition hors {base}</div><div className="fx-val num private">{eur(foreignEur)}</div>
                 <div className={`metric-sub ${expo.total && foreignEur / expo.total > 0.3 ? "down" : "neutral"}`}>{pc(expo.total ? (foreignEur / expo.total) * 100 : 0)} du total · {foreign.length} devise{foreign.length > 1 ? "s" : ""}</div></div>
-              <div><div className="inv-lbl">Impact d&apos;un euro +5 %</div><div className="fx-val num private">− {eur(foreignEur * 0.05)}</div><div className="metric-sub neutral">et + {eur(foreignEur * 0.05)} si l&apos;euro baisse de 5 %</div></div>
+              <div><div className="inv-lbl">Impact d&apos;un {base} +5 %</div><div className="fx-val num private">− {eur(foreignEur * 0.05)}</div><div className="metric-sub neutral">et + {eur(foreignEur * 0.05)} si le {base} baisse de 5 %</div></div>
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "flex-end" }}>
                 <button className="btn btn-ghost" type="button" onClick={() => setFxOpen(true)}><i className="ti ti-currency-euro" /> Taux &amp; devises</button>
               </div>
@@ -146,9 +148,9 @@ export function AccountsClient({ household, members, banks, accounts, childGoals
                 <div className="fx-row" key={r.cur}>
                   <span className="fx-cur">{r.cur} <span className="fx-sym">{currencySym(r.cur)}</span></span>
                   <span className="fx-name">{CURRENCIES[r.cur]?.name ?? r.cur}</span>
-                  <div className="cat-track"><div className="cat-fill" style={{ width: `${r.w}%`, background: r.cur === "EUR" ? "#1D9E75" : "#EF9F27" }} /></div>
+                  <div className="cat-track"><div className="cat-fill" style={{ width: `${r.w}%`, background: r.cur === base ? "#1D9E75" : "#EF9F27" }} /></div>
                   <span className="fx-nat num private">{fmtCurrency(r.nat, r.cur)}</span>
-                  <span className="fx-rate num">{r.cur === "EUR" ? "—" : `1 ${r.cur} = ${fxRate(r.cur, fx.rates).toLocaleString("fr-FR", { maximumFractionDigits: 4 })} €`}</span>
+                  <span className="fx-rate num">{r.cur === base ? "—" : `1 ${r.cur} = ${fxRate(r.cur, fx.rates).toLocaleString("fr-FR", { maximumFractionDigits: 4 })} ${baseSym()}`}</span>
                   <span className="fx-eur num private">{eur(r.eur)}</span>
                   <span className="fx-w num">{pc(r.w, 0)}</span>
                 </div>

@@ -205,7 +205,7 @@ a.set-action:hover { text-decoration: none; }
 
 /* ── Main ──────────────────────────────────────────────────── */
 .main { overflow-y: auto; background: var(--bg); }
-.period-row { display: flex; justify-content: flex-end; margin: -6px 0 10px; }
+.period-row { display: flex; justify-content: flex-end; gap: 6px; margin: -6px 0 10px; }
 .main-inner { max-width: 1180px; margin: 0 auto; padding: 26px 34px 60px; }
 
 .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }

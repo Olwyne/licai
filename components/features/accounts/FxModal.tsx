@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { CURRENCIES, DEFAULT_FX, type FxSource, type FxTable } from "@/lib/finance/fx"
+import { CURRENCIES, getBaseCurrency, baseSym, rebase, DEFAULT_FX, type FxSource, type FxTable } from "@/lib/finance/fx"
 
 export const FX_DEMO_TS = "taux de référence (démonstration)"
 const API_KEY = "licai-fx-api"
@@ -13,6 +13,8 @@ const readApi = (): { endpoint: string; key: string } => {
 export function FxModal({ rates, source, ts, onClose, onSaved }: {
   rates: FxTable; source: FxSource; ts: string; onClose: () => void; onSaved: () => void
 }) {
+  const base = getBaseCurrency()
+  const demoFx = rebase(DEFAULT_FX, base)
   const [src, setSrc] = useState<FxSource>(source)
   const [table, setTable] = useState<FxTable>(rates)
   const [inputs, setInputs] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(rates).map(([k, v]) => [k, String(v)])))
@@ -28,8 +30,8 @@ export function FxModal({ rates, source, ts, onClose, onSaved }: {
     if (!api.endpoint) { setStatus("Aucun fournisseur de taux configuré"); return }
     setStatus("Requête en cours…")
     try {
-      const list = Object.keys(CURRENCIES).filter((c) => c !== "EUR")
-      const url = api.endpoint + (api.endpoint.includes("?") ? "&" : "?") + "base=EUR&symbols=" + list.join(",")
+      const list = Object.keys(CURRENCIES).filter((c) => c !== base)
+      const url = api.endpoint + (api.endpoint.includes("?") ? "&" : "?") + "base=" + base + "&symbols=" + list.join(",")
       const res = await fetch(url, api.key ? { headers: { Authorization: "Bearer " + api.key } } : undefined)
       if (!res.ok) throw new Error("HTTP " + res.status)
       const j = (await res.json()) as { rates?: Record<string, number> } & Record<string, number>
@@ -51,10 +53,10 @@ export function FxModal({ rates, source, ts, onClose, onSaved }: {
     let ts2 = stamp
     if (src === "manual") {
       rows = { ...table }
-      Object.entries(inputs).forEach(([k, v]) => { const n = parseFloat(v.replace(",", ".")); if (n > 0 && k in CURRENCIES && k !== "EUR") rows[k] = n })
+      Object.entries(inputs).forEach(([k, v]) => { const n = parseFloat(v.replace(",", ".")); if (n > 0 && k in CURRENCIES && k !== base) rows[k] = n })
       ts2 = "taux saisis manuellement"
     }
-    if (src === "demo") { rows = { ...DEFAULT_FX }; ts2 = FX_DEMO_TS }
+    if (src === "demo") { rows = { ...demoFx }; ts2 = FX_DEMO_TS }
     persistApi()
     const res = await fetch("/api/fx", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rates: rows, source: src, ts: ts2 }) })
     setBusy(false)
@@ -78,7 +80,7 @@ export function FxModal({ rates, source, ts, onClose, onSaved }: {
               ))}
             </div>
             <div className="field-hint">
-              En mode fournisseur : <code>GET {"{endpoint}"}?base=EUR&amp;symbols=USD,CHF</code> renvoyant <code>{`{ "rates": { "USD": 1.134 } }`}</code>. L&apos;app inverse le taux pour obtenir la contre-valeur en euro.
+              En mode fournisseur : <code>GET {"{endpoint}"}?base={base}&amp;symbols=USD,CHF</code> renvoyant <code>{`{ "rates": { "USD": 1.134 } }`}</code>. L&apos;app inverse le taux pour obtenir la contre-valeur dans la devise de référence.
             </div>
           </div>
           {src === "api" && (
@@ -93,13 +95,13 @@ export function FxModal({ rates, source, ts, onClose, onSaved }: {
               <div className="q-row" key={k}>
                 <span className="q-tk num">{k}</span><span className="q-name">{c.name}</span>
                 <span className="q-src">1 {k} =</span>
-                <input className="q-input num" type="text" inputMode="decimal" value={src === "demo" ? String(DEFAULT_FX[k]) : inputs[k] ?? ""}
-                  disabled={k === "EUR" || src !== "manual"} onChange={(e) => setInputs((p) => ({ ...p, [k]: e.target.value }))} />
-                <span className="q-cur">€</span>
+                <input className="q-input num" type="text" inputMode="decimal" value={src === "demo" ? String(demoFx[k]) : inputs[k] ?? ""}
+                  disabled={k === base || src !== "manual"} onChange={(e) => setInputs((p) => ({ ...p, [k]: e.target.value }))} />
+                <span className="q-cur">{baseSym()}</span>
               </div>
             ))}
           </div>
-          <div className="field-hint">La devise de référence du foyer est l&apos;euro : tous les totaux, budgets et impôts sont exprimés en euro.</div>
+          <div className="field-hint">La devise de référence du foyer est le {base} : tous les totaux, budgets et impôts sont exprimés dans cette devise.</div>
         </div>
         <div className="modal-foot">
           <button className="btn btn-ghost" onClick={refresh}><i className="ti ti-refresh" /> Rafraîchir via le fournisseur</button>

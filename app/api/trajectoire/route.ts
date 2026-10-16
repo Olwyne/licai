@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { baseBalanceCents, householdFx } from "@/lib/server/fx-convert"
 import { members, accounts, recurring, properties, loans, goals, goalPockets, investments } from "@/db/schema"
 import { eq, and, inArray } from "drizzle-orm"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
@@ -131,12 +132,12 @@ export async function GET() {
     // ── Composition ───────────────────────────────────────────────────────────
     const liquiditesCents = allAccounts
       .filter(a => a.type === "checking" || a.type === "other")
-      .reduce((s, a) => s + a.balanceCents, 0)
+      .reduce((s, a) => s + baseBalanceCents(a, householdFx(householdId).fx), 0)
 
     const investmentStocksCents = allInvestments.reduce((s, i) => s + Math.round(i.quantity * i.unitPriceCents), 0)
     const placementsCents = allAccounts
       .filter(a => a.type === "savings" || a.type === "investment")
-      .reduce((s, a) => s + a.balanceCents, 0)
+      .reduce((s, a) => s + baseBalanceCents(a, householdFx(householdId).fx), 0)
       + investmentStocksCents
 
     const immobilierCents = allProperties.reduce((s, p) => s + p.valueCents, 0)

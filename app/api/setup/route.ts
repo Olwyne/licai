@@ -5,9 +5,9 @@ import { households, members, users } from "@/db/schema"
 import bcrypt from "bcryptjs"
 import { randomUUID } from "crypto"
 import { seedDemoData } from "@/db/seed"
+import { FIAT_CODES } from "@/lib/finance/fx"
 import { passwordIssue } from "@/lib/password"
 
-const CURRENCIES = ["EUR", "CHF", "USD", "GBP"]
 
 export async function GET() {
   const h = db.select().from(households).get()
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   const email = String(body.email ?? "").trim().toLowerCase()
   const password = String(body.password ?? "")
   const city = body.city ? String(body.city).trim() : null
-  const currency = CURRENCIES.includes(body.currency) ? body.currency : "EUR"
+  const currency = FIAT_CODES.includes(body.currency) ? body.currency : "EUR"
 
   if (!householdName || !email.includes("@")) {
     return NextResponse.json({ error: "Renseignez le nom du foyer et une adresse e-mail valide." }, { status: 400 })

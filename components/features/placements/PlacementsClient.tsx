@@ -1,4 +1,5 @@
 "use client"
+import { getBaseCurrency } from "@/lib/finance/fx"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { Line } from "react-chartjs-2"
@@ -173,7 +174,7 @@ function LineModal({ ctx, holding, onClose, onDone }: {
   const [f, setF] = useState({
     acct: holding?.acct ?? ctx.invAccounts[0]?.id ?? "",
     name: holding?.name ?? "", tk: holding?.tk ?? "", cls: (holding?.cls ?? "actions") as AssetClass,
-    zone: holding?.zone ?? "Monde", sector: holding?.sector ?? "", cur: holding?.cur ?? "EUR",
+    zone: holding?.zone ?? "Monde", sector: holding?.sector ?? "", cur: holding?.cur ?? getBaseCurrency(),
     qty: holding ? String(holding.qty) : "", pru: holding ? String(holding.pru) : "", price: holding ? String(holding.price) : "",
     ter: holding ? String(holding.ter) : "", cap: holding?.cap ?? "Grandes",
   })

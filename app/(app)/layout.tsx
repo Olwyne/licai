@@ -1,3 +1,9 @@
+import { auth } from "@/lib/auth"
+import { db } from "@/lib/db"
+import { households } from "@/db/schema"
+import { eq } from "drizzle-orm"
+import { CurrencyInit } from "@/components/layout/CurrencyInit"
+import { PeriodProvider } from "@/contexts/PeriodContext"
 import { PeriodPill } from "@/components/layout/PeriodPill"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { PrivacyProvider } from "@/contexts/PrivacyContext"
@@ -7,10 +13,14 @@ import { CmdPaletteWrapper } from "@/components/features/search/CmdPaletteWrappe
 import { AnonSync } from "@/components/features/parametres/AnonSync"
 import { AssistantChat } from "@/components/features/assistant/AssistantChat"
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const hid = (await auth())?.user?.householdId
+  const currency = (hid && db.select().from(households).where(eq(households.id, hid)).get()?.currency) || "EUR"
   return (
     <ThemeProvider>
+      <CurrencyInit currency={currency} />
       <PrivacyProvider>
+        <PeriodProvider>
         <AssistantProvider>
           <CmdPaletteWrapper>
             <div className="app">
@@ -23,6 +33,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <AnonSync />
           </CmdPaletteWrapper>
         </AssistantProvider>
+      </PeriodProvider>
       </PrivacyProvider>
     </ThemeProvider>
   )

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { transactions } from "@/db/schema"
 import { eq, and, like, desc } from "drizzle-orm"
+import { toBaseAmount } from "@/lib/server/fx-convert"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
 import { revalidateTag } from "next/cache"
 import { randomUUID } from "crypto"
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
         accountId: accountId ?? null,
         categoryId: resolvedKind === "transfer" ? null : (categoryId ?? null),
         name,
-        amountCents,
+        ...toBaseAmount(householdId, accountId, amountCents),
         date,
         note: note ?? "",
         isCommon: isCommon ?? true,

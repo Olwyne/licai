@@ -3,6 +3,7 @@ import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { passwordIssue, passwordStrength } from "@/lib/password"
+import { CURRENCIES, FIAT_CODES } from "@/lib/finance/fx"
 import { AuthShell } from "@/components/features/auth/AuthShell"
 
 export default function SetupPage() {
@@ -69,10 +70,7 @@ export default function SetupPage() {
           <div className="field">
             <label htmlFor="cur">Devise de référence</label>
             <select id="cur" value={form.currency} onChange={set("currency")}>
-              <option value="EUR">EUR — Euro (€)</option>
-              <option value="CHF">CHF — Franc suisse</option>
-              <option value="USD">USD — Dollar US</option>
-              <option value="GBP">GBP — Livre sterling</option>
+              {FIAT_CODES.map((k) => <option key={k} value={k}>{k} — {CURRENCIES[k].name} ({CURRENCIES[k].sym})</option>)}
             </select>
           </div>
         </div>

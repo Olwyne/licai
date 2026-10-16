@@ -1,3 +1,4 @@
-export const DEMO_EMAIL = "demo@licai.app"
-// Compte de démonstration partagé : mot de passe public volontairement.
-export const DEMO_PASSWORD = "Demo-Licai-2026"
+// Foyers de démonstration : un foyer isolé et jetable par visiteur, purgé après DEMO_TTL_HOURS.
+export const DEMO_DOMAIN = "licai.demo"
+export const DEMO_TTL_HOURS = Number(process.env.DEMO_TTL_HOURS) > 0 ? Number(process.env.DEMO_TTL_HOURS) : 24
+export const DEMO_MAX_HOUSEHOLDS = 200

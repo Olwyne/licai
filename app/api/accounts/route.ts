@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { accounts, members, banks } from "@/db/schema"
 import { eq } from "drizzle-orm"
+import { baseBalanceCents, householdFx } from "@/lib/server/fx-convert"
 import { getHouseholdId, ok, unauthorized, err } from "@/lib/api"
 import { randomUUID } from "crypto"
 import { revalidateTag } from "next/cache"
@@ -13,11 +14,12 @@ export async function GET() {
   const bankRows = db.select().from(banks).where(eq(banks.householdId, householdId)).all()
   const memberMap = new Map(memberRows.map((m) => [m.id, m.name]))
   const bankMap = new Map(bankRows.map((b) => [b.id, b.name]))
+  const { fx } = householdFx(householdId)
   const enriched = rows.map((a) => {
     const ownerIds: string[] = JSON.parse(a.ownerIds)
     const ownerNames = ownerIds.map((id) => memberMap.get(id) ?? id)
     const bankName = a.bankId ? (bankMap.get(a.bankId) ?? null) : null
-    return { ...a, ownerNames, bankName }
+    return { ...a, ownerNames, bankName, balanceBaseCents: baseBalanceCents(a, fx) }
   })
   return ok(enriched)
 }

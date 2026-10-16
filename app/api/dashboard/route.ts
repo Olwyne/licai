@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { baseBalanceCents, householdFx } from "@/lib/server/fx-convert"
 import { transactions, categories, accounts, budgets, recurring, loans, properties, investments } from "@/db/schema"
 import { eq, and, like, desc } from "drizzle-orm"
 import { getHouseholdId, ok, unauthorized } from "@/lib/api"
@@ -47,7 +48,7 @@ export async function GET(req: Request) {
   const prevExpenseCents = Math.abs(prevTxRows.filter(t => t.kind === "expense").reduce((s, t) => s + t.amountCents, 0))
 
   // Trésorerie: sum of all account balances
-  const tresorerieCents = acctRows.reduce((s, a) => s + (a.balanceCents ?? 0), 0)
+  const tresorerieCents = acctRows.reduce((s, a) => s + baseBalanceCents(a, householdFx(householdId).fx), 0)
 
   // Recurring: charges fixes (non-saving, active)
   const activeRecurring = recurringRows.filter(r => r.active)

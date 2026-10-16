@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { baseBalanceCents, householdFx } from "@/lib/server/fx-convert"
 import { recurring, transactions, accounts, budgets, categories } from "@/db/schema"
 import { eq, and, gte } from "drizzle-orm"
 import { frequencyToMonthlyCents } from "@/lib/finance/recurring"
@@ -70,7 +71,7 @@ export function buildPrevisions(householdId: string, horizon: number): Prevision
   ]
 
   const catMap = new Map(catRows.map(c => [c.id, c]))
-  const tresorerieCents = acctRows.reduce((s, a) => s + (a.balanceCents ?? 0), 0)
+  const tresorerieCents = acctRows.reduce((s, a) => s + baseBalanceCents(a, householdFx(householdId).fx), 0)
 
   // Historical avg from past 3 months (variable expenses only — non-recurring)
   const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString().slice(0, 10)

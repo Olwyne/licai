@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { baseBalanceCents, householdFx } from "@/lib/server/fx-convert"
 import { properties, loans, accounts, propertyOwners, members } from "@/db/schema"
 import { eq, inArray } from "drizzle-orm"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
@@ -43,7 +44,7 @@ export async function GET() {
       .where(eq(accounts.householdId, householdId))
       .all()
 
-    const totalAccountsCents = accts.reduce((s, a) => s + a.balanceCents, 0)
+    const totalAccountsCents = accts.reduce((s, a) => s + baseBalanceCents(a, householdFx(householdId).fx), 0)
     const actifBrut = props.reduce((s, p) => s + p.valueCents, 0) + totalAccountsCents
     const passif = loanRows.reduce((s, l) => s + l.remainingCents, 0)
     const patrimoineNet = actifBrut - passif

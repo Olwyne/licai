@@ -1,7 +1,7 @@
 import type { AssetClass, CtxHolding, CtxInvAccount, CtxMember, FinanceContext, InvKind } from "./types"
 import { eur, eurS, pc, pcS, type Advice } from "./format"
 
-import { fxRate, type FxTable, DEFAULT_FX } from "./fx"
+import { fxRate, getBaseCurrency, type FxTable, DEFAULT_FX } from "./fx"
 export { fxRate }
 
 export interface KindDef {
@@ -158,7 +158,7 @@ export function investAdvice(S: PortfolioState, ctx: FinanceContext): Advice[] {
   const zw = (name: string) => zones.find((z) => z.k === name)?.w ?? 0
   const top3 = pos.slice(0, 3).reduce((s, p) => s + p.w, 0)
   const hhi = pos.reduce((s, p) => s + p.w ** 2, 0)
-  const nonEur = curs.filter((c) => c.k !== "EUR").reduce((s, c) => s + c.w, 0)
+  const nonEur = curs.filter((c) => c.k !== getBaseCurrency()).reduce((s, c) => s + c.w, 0)
   const cher = pos.filter((p) => p.ter >= 1).sort((a, b) => b.ter * b.value - a.ter * a.value)
   const peaLeft = 150000 - usedCeiling(ctx.invAccounts, "pea")
   const spend = ctx.monthlySpend || 1

@@ -1,4 +1,5 @@
 "use client"
+import { fmtCurrency } from "@/lib/finance/fx"
 import Link from "next/link"
 import { LoanModal } from "@/components/features/credits/LoanModal"
 import { PatrimoineInsights } from "./PatrimoineInsights"
@@ -104,7 +105,7 @@ function dateLabel(date: string | null | undefined): string {
 }
 
 function formatEuros(euros: number): string {
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(euros)
+  return fmtCurrency(Math.round(euros))
 }
 
 // ─── Address Autocomplete ─────────────────────────────────────────────────────
@@ -659,7 +660,7 @@ function PropertyModal({ property, members, loans, onClose, onSaved, onDeleted }
                           />
                           <span className="owner-name">{l.name}</span>
                           <span className="pat-date" style={{ marginLeft: "auto" }}>
-                            {new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(l.remainingCents / 100)}
+                            {fmtCurrency(Math.round(l.remainingCents / 100))}
                           </span>
                         </label>
                       </div>

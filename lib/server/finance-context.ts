@@ -35,7 +35,8 @@ export function buildFinanceContext(householdId: string): FinanceContext {
     .where(and(eq(transactions.householdId, householdId), eq(transactions.kind, "expense"), gte(transactions.date, cutoff))).all()
   const monthlySpend = spent.reduce((s, t) => s + Math.abs(t.a), 0) / 100 / 3
 
-  const fx = mergeFx(parseObj(hh?.fxRates ?? "{}"))
+  const currency = hh?.currency ?? "EUR"
+  const fx = mergeFx(parseObj(hh?.fxRates ?? "{}"), currency)
   const cash = accs.filter((a) => a.type !== "investment").map((a) => ({
     id: a.id, name: a.name, type: a.type, currency: a.currency, native: a.balanceCents / 100,
     balance: (a.balanceCents / 100) * fxRate(a.currency, fx),
@@ -88,6 +89,7 @@ export function buildFinanceContext(householdId: string): FinanceContext {
   const flowRows = db.select().from(investmentFlows).where(eq(investmentFlows.householdId, householdId)).orderBy(asc(investmentFlows.ym)).all().slice(-6)
 
   return {
+    currency,
     fx, fxSource: (["demo", "manual", "api"].includes(hh?.fxSource ?? "") ? hh!.fxSource : "demo") as FinanceContext["fxSource"], fxTs: hh?.fxTs ?? "",
     flows: flowRows.map((f) => ({ id: f.id, ym: f.ym, amount: f.amountCents / 100, match: f.matchCents / 100, note: f.note })),
     history: snaps.map((s) => ({ ym: s.ym, value: s.valueCents / 100, bench: s.benchIndex })),

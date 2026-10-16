@@ -1,4 +1,5 @@
 "use client"
+import { currencySym, getBaseCurrency } from "@/lib/finance/fx"
 import { useState } from "react"
 import { formatCents } from "@/lib/money"
 import type { Transaction, Account, Category, Goal, Project, Member } from "@/db/schema"
@@ -27,7 +28,7 @@ export function TransactionModal({ editingTx, accounts, categories, goals, proje
   const initType: TxKind = editingTx?.kind === "transfer" ? "transfer" : editingTx && editingTx.amountCents > 0 ? "income" : "expense"
 
   const [name, setName] = useState(editingTx?.name ?? "")
-  const [amount, setAmount] = useState(editingTx ? centsToEurStr(editingTx.amountCents) : "")
+  const [amount, setAmount] = useState(editingTx ? centsToEurStr(editingTx.originalCents ?? editingTx.amountCents) : "")
   const [txType, setTxType] = useState<TxKind>(initType)
   const [date, setDate] = useState(editingTx?.date ?? today)
   const [accountId, setAccountId] = useState(editingTx?.accountId ?? accounts[0]?.id ?? "")
@@ -41,6 +42,7 @@ export function TransactionModal({ editingTx, accounts, categories, goals, proje
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
+  const accCur = accounts.find((a) => a.id === accountId)?.currency || getBaseCurrency()
   const isTransfer = txType === "transfer"
   const adults = members.filter((m) => !m.isChild)
   const cat = categories.find((c) => c.id === editingTx?.categoryId)
@@ -131,10 +133,10 @@ export function TransactionModal({ editingTx, accounts, categories, goals, proje
                 <input id="tx-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="ex. Carrefour, Loyer, Netflix…" required />
               </div>
               <div className="field">
-                <label htmlFor="tx-amt">Montant</label>
+                <label htmlFor="tx-amt">Montant{accCur !== getBaseCurrency() ? ` (${accCur})` : ""}</label>
                 <div className="field-amount">
                   <input id="tx-amt" type="text" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" required />
-                  <span className="cur">€</span>
+                  <span className="cur">{currencySym(accCur)}</span>
                 </div>
               </div>
             </div>

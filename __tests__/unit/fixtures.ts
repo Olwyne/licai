@@ -43,5 +43,6 @@ export const ctx: FinanceContext = {
   ],
   monthlySpend: 3800, savingsBalance: 6000, taxSituation: {}, fx: { EUR: 1, USD: 0.882 }, fxSource: "demo", fxTs: "",
   flows: [],
+  currency: "EUR",
   history: [{ ym: "2026-01", value: 100000, bench: 100 }, { ym: "2026-06", value: 110000, bench: 109 }],
 }

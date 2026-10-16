@@ -1,4 +1,5 @@
 "use client"
+import { fmtCurrency, getBaseCurrency } from "@/lib/finance/fx"
 import { formatCents } from "@/lib/money"
 import { usePrivacy } from "@/contexts/PrivacyContext"
 import { Chip } from "@/components/ui/Chip"
@@ -102,7 +103,7 @@ export function AccountGroups({
         const bank = bankId ? bankMap.get(bankId) : undefined
         const bankName = bank?.name ?? "Sans banque"
         const bankColor = bank?.colorHex ?? "#888888"
-        const bankSum = bankAccounts.reduce((sum, a) => sum + a.balanceCents, 0)
+        const bankSum = bankAccounts.reduce((sum, a) => sum + a.balanceBaseCents, 0)
 
         return (
           <div key={bankId ?? "__none"} className="bank-group">
@@ -175,7 +176,8 @@ export function AccountGroups({
                       </div>
                     </div>
                     <div className={`acct-balance${isPrivate ? " private" : ""}`}>
-                      {formatCents(account.balanceCents)}
+                      {account.currency !== getBaseCurrency() ? fmtCurrency(account.balanceCents / 100, account.currency) : formatCents(account.balanceCents)}
+                      {account.currency !== getBaseCurrency() && <small style={{ display: "block", fontSize: 11, color: "var(--fg-muted)", fontWeight: 400 }}>≈ {formatCents(account.balanceBaseCents)}</small>}
                     </div>
                     <div className="acct-foot">
                       <span className="acct-sync">

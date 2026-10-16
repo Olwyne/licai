@@ -7,6 +7,8 @@ import type Database from "better-sqlite3"
 type ColumnStep = { table: string; column: string; ddl: string }
 
 const COLUMNS: ColumnStep[] = [
+  { table: "transactions", column: "original_cents", ddl: "INTEGER" },
+  { table: "transactions", column: "original_currency", ddl: "TEXT" },
   { table: "households", column: "currency", ddl: "TEXT NOT NULL DEFAULT 'EUR'" },
   { table: "users", column: "first_name", ddl: "TEXT" },
   { table: "users", column: "last_name", ddl: "TEXT" },

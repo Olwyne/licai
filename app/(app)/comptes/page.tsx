@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { fxRate } from "@/lib/finance/fx"
 import { accounts, members, banks, households, goals, transactions } from "@/db/schema"
 import { eq, and, gte } from "drizzle-orm"
 import { auth } from "@/lib/auth"
@@ -40,10 +41,11 @@ export default async function ComptesPage() {
 
   const memberMap = new Map(memberRows.map((m) => [m.id, m]))
 
+  const fctx = buildFinanceContext(hid)
   const enrichedAccounts: EnrichedAccount[] = accountRows.map((a) => {
     const ownerIds: string[] = JSON.parse(a.ownerIds)
     const ownerNames = ownerIds.map((id) => memberMap.get(id)?.name ?? id)
-    return { ...a, ownerIds, ownerNames }
+    return { ...a, ownerIds, ownerNames, balanceBaseCents: Math.round(a.balanceCents * fxRate(a.currency, fctx.fx)) }
   })
 
   // Goals grouped by memberId for child members
@@ -102,7 +104,6 @@ export default async function ComptesPage() {
     }
   }
 
-  const fctx = buildFinanceContext(hid)
   const portfolio = computePortfolio(fctx, "equilibre")
   const fx = {
     rates: fctx.fx, source: fctx.fxSource, ts: fctx.fxTs,
