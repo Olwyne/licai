@@ -1,10 +1,8 @@
 node_modules
 .next
-.env*.local
+.git
+.env*
 data/*.db
 data/*.db-shm
 data/*.db-wal
-.git
-__tests__
-*.spec.ts
-*.test.ts
+coverage
