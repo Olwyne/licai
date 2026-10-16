@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { transactions, accounts, members, categories, banks } from "@/db/schema"
+import { transactions, accounts, members, categories, banks, goals, projects } from "@/db/schema"
 import { eq, desc } from "drizzle-orm"
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
@@ -21,6 +21,8 @@ export default async function TransactionsPage() {
   const memberRows = db.select().from(members).where(eq(members.householdId, hid)).all()
   const categoryRows = db.select().from(categories).where(eq(categories.householdId, hid)).all()
   const bankRows = db.select().from(banks).where(eq(banks.householdId, hid)).all()
+  const goalRows = db.select().from(goals).where(eq(goals.householdId, hid)).all()
+  const projectRows = db.select().from(projects).where(eq(projects.householdId, hid)).all()
 
   return (
     <TransactionsClient
@@ -29,6 +31,8 @@ export default async function TransactionsPage() {
       members={memberRows}
       categories={categoryRows}
       banks={bankRows}
+      goals={goalRows}
+      projects={projectRows}
     />
   )
 }

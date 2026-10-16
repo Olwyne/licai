@@ -5,7 +5,7 @@ import { frequencyToMonthlyCents } from "@/lib/finance/recurring"
 import { usePrivacy } from "@/contexts/PrivacyContext"
 import type { Recurring, Account, Category, Bank } from "@/db/schema"
 
-type KindFilter = "all" | "charge" | "subscription" | "saving" | "paused"
+type KindFilter = "all" | "charge" | "subscription" | "insurance" | "saving" | "paused"
 
 interface Props {
   items: Recurring[]
@@ -21,18 +21,21 @@ interface Props {
 const KIND_COLORS: Record<string, string> = {
   charge: "#D85A30",
   subscription: "#EF9F27",
+  insurance: "#378ADD",
   saving: "#1D9E75",
 }
 
 const KIND_ICONS: Record<string, string> = {
   charge: "ti-calendar-repeat",
   subscription: "ti-device-tv",
+  insurance: "ti-shield-check",
   saving: "ti-pig-money",
 }
 
 const KIND_LABELS: Record<string, string> = {
   charge: "Charge",
   subscription: "Abonnement",
+  insurance: "Assurance",
   saving: "Épargne",
 }
 
@@ -46,6 +49,7 @@ const FILTERS: { value: KindFilter; label: string }[] = [
   { value: "all", label: "Tout" },
   { value: "charge", label: "Charges" },
   { value: "subscription", label: "Abonnements" },
+  { value: "insurance", label: "Assurances" },
   { value: "saving", label: "Épargne" },
   { value: "paused", label: "En pause" },
 ]
@@ -84,7 +88,7 @@ export function RecurringList({
 
   return (
     <div>
-      <div className="rec-metrics">
+      <div className="metrics">
         <div className="metric">
           <div className="metric-top">
             <span className="metric-label">Charges fixes / mois</span>

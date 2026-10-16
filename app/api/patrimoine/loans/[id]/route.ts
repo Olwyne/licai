@@ -28,6 +28,7 @@ export async function PATCH(
       ratePercent?: number
       endDate?: string | null
       note?: string
+      propertyId?: string | null
     }
 
     const patch: Partial<typeof row> = {}
@@ -39,6 +40,7 @@ export async function PATCH(
     if (body.ratePercent !== undefined) patch.ratePercent = body.ratePercent
     if (body.endDate !== undefined) patch.endDate = body.endDate
     if (body.note !== undefined) patch.note = body.note
+    if (body.propertyId !== undefined) patch.propertyId = body.propertyId
 
     db.update(loans).set(patch).where(and(eq(loans.id, id), eq(loans.householdId, householdId))).run()
 

@@ -1,9 +1,10 @@
 import { db } from "@/lib/db"
 import {
   members, banks, accounts, categories, transactions,
-  budgets, recurring, alerts, goals, properties, loans, investments, contracts,
+  budgets, recurring, alerts, goals, properties, propertyOwners, loans, investments, investmentAccounts, portfolioSnapshots, contracts,
 } from "@/db/schema"
 import { randomUUID } from "crypto"
+import { fxRate } from "@/lib/finance/invest"
 
 export function seedDemoData(householdId: string): void {
   const now = new Date()
@@ -15,7 +16,7 @@ export function seedDemoData(householdId: string): void {
   db.insert(members).values([
     { id: sophieId, householdId, name: "Sophie Lambert", short: "Sophie", role: "Administratrice", colorHex: "#1D9E75", monthlyIncomeCents: 240000, birthYear: 1988, retireYear: 2052 },
     { id: thomasId, householdId, name: "Thomas Roux", short: "Thomas", role: "Membre", colorHex: "#378ADD", monthlyIncomeCents: 205000, birthYear: 1985, retireYear: 2049 },
-    { id: leaId, householdId, name: "Léa Lambert", short: "Léa", role: "Enfant (lecture)", colorHex: "#7C6BD6", monthlyIncomeCents: 0, birthYear: 2016 },
+    { id: leaId, householdId, name: "Léa Lambert", short: "Léa", role: "Enfant (lecture)", colorHex: "#7C6BD6", monthlyIncomeCents: 0, birthYear: 2016, isChild: true, allowanceCents: 5000 },
   ]).run()
 
   // Banks
@@ -140,27 +141,97 @@ export function seedDemoData(householdId: string): void {
     { id: randomUUID(), householdId, name: "Voyage au Japon", emoji: "✈️", targetCents: 350000, currentCents: 127000, deadline: `${n2m}-15`, kind: "court", colorHex: "#378ADD", createdAt: now },
     { id: randomUUID(), householdId, name: "Apport immobilier", emoji: "🏠", targetCents: 5000000, currentCents: 1240000, deadline: null, kind: "long", colorHex: "#1D9E75", createdAt: now },
     { id: randomUUID(), householdId, name: "Fonds d'urgence", emoji: "🛡️", targetCents: 600000, currentCents: 600000, deadline: null, kind: "court", colorHex: "#7C6BD6", createdAt: now },
+    { id: randomUUID(), householdId, name: "Console de jeux", emoji: "🎮", targetCents: 50000, currentCents: 34000, deadline: null, kind: "court", colorHex: "#EF9F27", memberId: leaId, linkedAccountId: acctLeaId, createdAt: now },
+    { id: randomUUID(), householdId, name: "Voyage scolaire", emoji: "🎒", targetCents: 80000, currentCents: 14000, deadline: `${n2m}-01`, kind: "court", colorHex: "#D4537E", memberId: leaId, linkedAccountId: acctLeaId, createdAt: now },
   ]).run()
 
   // Properties
+  const lyonId = randomUUID()
+  const studioId = randomUUID()
   db.insert(properties).values([
-    { id: randomUUID(), householdId, name: "Appartement Lyon 3e", kind: "immobilier", valueCents: 28000000, purchasePriceCents: 24000000, purchaseDate: "2019-06-15", note: "Résidence principale", createdAt: now },
+    { id: lyonId, householdId, name: "Appartement Lyon 3e", kind: "immobilier", valueCents: 28000000, purchasePriceCents: 24000000, purchaseDate: "2019-06-15", note: "Résidence principale", address: "Lyon 3e", surfaceSqm: 78, residenceType: "principale", taxeFonciereCents: 90000, costs: JSON.stringify({ copro: 1200, assur: 180, notaire: 18000 }), createdAt: now },
+    { id: studioId, householdId, name: "Studio Villeurbanne", kind: "immobilier", valueCents: 13000000, purchasePriceCents: 11000000, purchaseDate: "2021-09-01", note: "Locatif meublé", address: "Villeurbanne", surfaceSqm: 24, residenceType: "locatif", rentMonthlyCents: 64000, taxeFonciereCents: 80000, costs: JSON.stringify({ copro: 600, assur: 150, gestion: 400, travaux: 200, vacance: 5, notaire: 8000 }), createdAt: now },
     { id: randomUUID(), householdId, name: "Renault Clio", kind: "vehicule", valueCents: 850000, purchasePriceCents: 1400000, purchaseDate: "2021-03-10", note: "", createdAt: now },
+  ]).run()
+  db.insert(propertyOwners).values([
+    { id: randomUUID(), propertyId: lyonId, memberId: sophieId, sharePercent: 50 },
+    { id: randomUUID(), propertyId: lyonId, memberId: thomasId, sharePercent: 50 },
+    { id: randomUUID(), propertyId: studioId, memberId: sophieId, sharePercent: 100 },
   ]).run()
 
   // Loans
   db.insert(loans).values([
-    { id: randomUUID(), householdId, name: "Crédit immobilier", kind: "immobilier", principalCents: 18000000, remainingCents: 14200000, monthlyPaymentCents: 89000, ratePercent: 2.1, endDate: "2044-06-01", note: "BNP Paribas", createdAt: now },
-    { id: randomUUID(), householdId, name: "Crédit auto", kind: "auto", principalCents: 1200000, remainingCents: 380000, monthlyPaymentCents: 32000, ratePercent: 4.5, endDate: "2026-03-01", note: "Crédit Agricole", createdAt: now },
+    { id: randomUUID(), householdId, name: "Crédit immobilier", kind: "immobilier", principalCents: 18000000, remainingCents: 14200000, monthlyPaymentCents: 89000, ratePercent: 2.1, endDate: "2044-06-01", propertyId: lyonId, note: "BNP Paribas", createdAt: now },
+    { id: randomUUID(), householdId, name: "Crédit studio", kind: "immobilier", principalCents: 9000000, remainingCents: 7400000, monthlyPaymentCents: 43000, ratePercent: 1.9, endDate: "2041-09-01", propertyId: studioId, note: "Crédit Agricole", createdAt: now },
+    { id: randomUUID(), householdId, name: "Crédit auto", kind: "auto", principalCents: 1200000, remainingCents: 380000, monthlyPaymentCents: 32000, ratePercent: 4.5, endDate: "2027-03-01", note: "Crédit Agricole", createdAt: now },
   ]).run()
 
-  // Investments
-  db.insert(investments).values([
-    { id: randomUUID(), householdId, name: "MSCI World ETF", ticker: "CW8", kind: "etf", quantity: 47.5, unitPriceCents: 42300, purchasePriceCents: 38100, note: "Boursobank PEA", createdAt: now },
-    { id: randomUUID(), householdId, name: "S&P 500 ETF", ticker: "PE500", kind: "etf", quantity: 23, unitPriceCents: 58900, purchasePriceCents: 51200, note: "BNP PEA", createdAt: now },
-    { id: randomUUID(), householdId, name: "LVMH", ticker: "MC", kind: "action", quantity: 2, unitPriceCents: 68500, purchasePriceCents: 72000, note: "CTO", createdAt: now },
-    { id: randomUUID(), householdId, name: "Bitcoin", ticker: "BTC", kind: "crypto", quantity: 0.12, unitPriceCents: 6230000, purchasePriceCents: 4150000, note: "Ledger", createdAt: now },
-  ]).run()
+  // Enveloppes de placement + lignes (portées du prototype)
+  const A = (kind: string, name: string, bank: string, owners: string[], since: number, paid: number, monthly: number, fees: number, extra: { match?: number; benefs?: string[] } = {}) => {
+    const id = randomUUID()
+    db.insert(investmentAccounts).values({
+      id, householdId, kind, name, bank, ownerIds: JSON.stringify(owners), benefIds: JSON.stringify(extra.benefs ?? []),
+      sinceYear: since, paidCents: paid * 100, monthlyCents: monthly * 100, feesPct: fees, matchPct: extra.match ?? 0, createdAt: now,
+    }).run()
+    return id
+  }
+  const avLinxea = A("av", "Linxea Spirit 2", "Spirica", [sophieId], 2019, 26400, 250, 0.5, { benefs: [thomasId, leaId] })
+  const avBourso = A("av", "Boursorama Vie", "BoursoBank", [thomasId], 2020, 17800, 150, 0.75, { benefs: [sophieId] })
+  const peaBourso = A("pea", "PEA BoursoBank", "BoursoBank", [sophieId], 2018, 19600, 300, 0)
+  const peaFortuneo = A("pea", "PEA Fortuneo", "Fortuneo", [thomasId], 2021, 15400, 200, 0)
+  const peaPme = A("peapme", "PEA-PME Crédit Agricole", "Crédit Agricole", [thomasId], 2022, 3300, 0, 0)
+  const ctoDegiro = A("cto", "Compte-titres Degiro", "Degiro", [sophieId], 2020, 15900, 100, 0)
+  const perSophie = A("per", "PER Linxea Suravenir", "Suravenir", [sophieId], 2021, 10200, 150, 0.6)
+  const perThomas = A("per", "PER Boursorama", "BoursoBank", [thomasId], 2022, 6600, 100, 0.6)
+  const peeThomas = A("pee", "PEE — Groupe Sanofi", "Amundi ESR", [thomasId], 2019, 7100, 120, 1.1, { match: 60 })
+  const cryptoKra = A("crypto", "Kraken", "Kraken", [sophieId], 2021, 4300, 0, 0)
+
+  // [acct, name, ticker, class, zone, sector, currency, cap, qty, pru, price, prev, ter, gain, kindLegacy]
+  const holdings: [string, string, string, string, string, string, string, string, number, number, number, number, number, number | null][] = [
+    [avLinxea, "Fonds euro Spirica", "EURO-SPI", "euro", "Zone euro", "Diversifié", "EUR", "—", 18000, 1, 1, 1, 0.5, 1420],
+    [avLinxea, "iShares MSCI World", "IWDA", "actions", "Monde", "Diversifié", "USD", "Grandes", 105, 92.4, 114.2, 113.05, 0.2, null],
+    [avBourso, "Fonds euro Generali", "EURO-GEN", "euro", "Zone euro", "Diversifié", "EUR", "—", 9000, 1, 1, 1, 0.75, 610],
+    [avBourso, "SCI Capimmo", "CAPIMMO", "immobilier", "Zone euro", "Immobilier", "EUR", "—", 21, 205, 214.6, 214.6, 0.85, null],
+    [avBourso, "Amundi S&P 500", "500", "actions", "États-Unis", "Diversifié", "USD", "Grandes", 132, 42.1, 49.85, 49.31, 0.15, null],
+    [peaBourso, "Amundi MSCI World", "CW8", "actions", "Monde", "Diversifié", "EUR", "Grandes", 23, 468, 612.4, 608.1, 0.38, null],
+    [peaBourso, "BNPP S&P 500", "ESE", "actions", "États-Unis", "Diversifié", "EUR", "Grandes", 320, 15.9, 21.35, 21.12, 0.12, null],
+    [peaBourso, "Amundi PEA Émergents", "PAEEM", "actions", "Émergents", "Diversifié", "EUR", "Grandes", 92, 24.4, 27.9, 28.15, 0.2, null],
+    [peaBourso, "Air Liquide", "AI", "actions", "Europe", "Industrie", "EUR", "Grandes", 18, 158, 178.4, 177.2, 0, null],
+    [peaFortuneo, "Amundi CAC 40", "CAC", "actions", "France", "Diversifié", "EUR", "Grandes", 92, 74.2, 87.6, 87.1, 0.25, null],
+    [peaFortuneo, "LVMH", "MC", "actions", "France", "Luxe", "EUR", "Grandes", 7, 612, 586.3, 592.4, 0, null],
+    [peaFortuneo, "TotalEnergies", "TTE", "actions", "France", "Énergie", "EUR", "Grandes", 48, 54.1, 61.2, 60.4, 0, null],
+    [peaFortuneo, "Sanofi", "SAN", "actions", "France", "Santé", "EUR", "Grandes", 24, 88.4, 92.1, 92.8, 0, null],
+    [peaPme, "Sycomore Sélection PME", "SYC-PME", "actions", "Europe", "Diversifié", "EUR", "Petites", 34, 96, 101.2, 100.4, 1.9, null],
+    [ctoDegiro, "Apple", "AAPL", "actions", "États-Unis", "Technologie", "USD", "Grandes", 22, 168, 231.4, 229.8, 0, null],
+    [ctoDegiro, "ASML", "ASML", "actions", "Europe", "Technologie", "EUR", "Grandes", 4, 620, 812, 820, 0, null],
+    [ctoDegiro, "Alphabet", "GOOGL", "actions", "États-Unis", "Technologie", "USD", "Grandes", 13, 142, 196.5, 194.2, 0, null],
+    [ctoDegiro, "Invesco Nasdaq 100", "EQQQ", "actions", "États-Unis", "Technologie", "USD", "Grandes", 21, 198, 261.4, 259, 0.3, null],
+    [ctoDegiro, "iShares € Corp Bond", "IEAC", "obligations", "Zone euro", "Obligations", "EUR", "—", 42, 122, 126.8, 126.5, 0.2, null],
+    [perSophie, "Fonds euro Suravenir", "EURO-SUR", "euro", "Zone euro", "Diversifié", "EUR", "—", 6200, 1, 1, 1, 0.6, 285],
+    [perSophie, "Amundi MSCI World", "CW8", "actions", "Monde", "Diversifié", "EUR", "Grandes", 9, 512, 612.4, 608.1, 0.38, null],
+    [perThomas, "Fonds euro Boursorama", "EURO-BRS", "euro", "Zone euro", "Diversifié", "EUR", "—", 4100, 1, 1, 1, 0.6, 190],
+    [perThomas, "Amundi MSCI World", "CW8", "actions", "Monde", "Diversifié", "EUR", "Grandes", 5, 545, 612.4, 608.1, 0.38, null],
+    [peeThomas, "FCPE Actions Monde", "FCPE-AM", "actions", "Monde", "Diversifié", "EUR", "Grandes", 340, 17.2, 20.1, 19.95, 1.1, null],
+    [peeThomas, "FCPE Monétaire", "FCPE-MO", "monetaire", "Zone euro", "Monétaire", "EUR", "—", 2400, 1, 1, 1, 0.4, 42],
+    [cryptoKra, "Bitcoin", "BTC", "crypto", "Monde", "Crypto", "USD", "—", 0.052, 51000, 74500, 72900, 0, null],
+    [cryptoKra, "Ethereum", "ETH", "crypto", "Monde", "Crypto", "USD", "—", 0.62, 2450, 2680, 2610, 0, null],
+  ]
+  const legacyKind = (cls: string, name: string) => (cls === "crypto" ? "crypto" : cls === "euro" || name.startsWith("FCPE") ? "fonds" : name.match(/MSCI|S&P|CAC|Nasdaq|Émergents|Bond|PME/) ? "etf" : "action")
+  db.insert(investments).values(holdings.map(([acct, name, tk, cls, zone, sector, cur, cap, qty, pru, price, prev, ter, gain]) => ({
+    id: randomUUID(), householdId, name, ticker: tk, kind: legacyKind(cls, name), quantity: qty,
+    unitPriceCents: Math.round(price * 100), purchasePriceCents: Math.round(pru * 100), prevPriceCents: Math.round(prev * 100),
+    note: "", createdAt: now, accountId: acct, assetClass: cls, zone, sector, currency: cur, cap, terPct: ter,
+    gainCents: gain != null ? Math.round(gain * 100) : null,
+  }))).run()
+
+  // Historique de valorisation (6 mois) vs indice de référence (base 100 il y a 5 mois)
+  const totalNow = holdings.reduce((sum, h) => sum + h[8] * h[10] * fxRate(h[6]), 0)
+  const histValues = [134800, 138400, 136100, 142900, 145700, Math.round(totalNow)]
+  const histBench = [100, 102.4, 100.9, 105.8, 107.9, 109.6]
+  db.insert(portfolioSnapshots).values(histValues.map((v, i) => {
+    const dt = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
+    return { id: randomUUID(), householdId, ym: `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`, valueCents: v * 100, benchIndex: histBench[i] }
+  })).run()
 
   // Contracts (prévoyance)
   db.insert(contracts).values([

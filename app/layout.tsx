@@ -17,6 +17,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" data-theme="dark" suppressHydrationWarning>
       <body className={`${geist.variable} ${geistMono.variable}`}>
+        {process.env.NODE_ENV === "development" && (
+          <script dangerouslySetInnerHTML={{ __html: `
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(regs => {
+                regs.forEach(r => r.unregister());
+              });
+            }
+          `}} />
+        )}
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>

@@ -1,95 +1,81 @@
 "use client"
 import { useState } from "react"
-import { Button } from "@/components/ui/Button"
 import { formatCents } from "@/lib/money"
-import type { Transaction, Account, Category } from "@/db/schema"
+import type { Transaction, Account, Category, Goal, Project, Member } from "@/db/schema"
 
 interface Props {
   editingTx: Transaction | null
   accounts: Account[]
   categories: Category[]
+  goals: Goal[]
+  projects: Project[]
+  members: Member[]
   onSaved: (tx: Transaction) => void
   onDeleted: (id: string) => void
   onClose: () => void
 }
 
-interface ApiResponse {
-  data: Transaction
-}
+type TxKind = "expense" | "income" | "transfer"
 
-function centsToEurStr(cents: number): string {
-  return (Math.abs(cents) / 100).toFixed(2).replace(".", ",")
-}
+const centsToEurStr = (cents: number) => (Math.abs(cents) / 100).toFixed(2).replace(".", ",")
+const MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."]
+const dateLabel = (d: string) => { const [, m, day] = d.split("-").map(Number); return `${day} ${MONTHS[m - 1] ?? ""}` }
 
-export function TransactionModal({
-  editingTx,
-  accounts,
-  categories,
-  onSaved,
-  onDeleted,
-  onClose,
-}: Props) {
+export function TransactionModal({ editingTx, accounts, categories, goals, projects, members, onSaved, onDeleted, onClose }: Props) {
   const isEdit = editingTx !== null
   const today = new Date().toISOString().slice(0, 10)
-
-  const initType: "expense" | "income" =
-    editingTx && editingTx.amountCents > 0 ? "income" : "expense"
+  const initType: TxKind = editingTx?.kind === "transfer" ? "transfer" : editingTx && editingTx.amountCents > 0 ? "income" : "expense"
 
   const [name, setName] = useState(editingTx?.name ?? "")
-  const [amount, setAmount] = useState(
-    editingTx ? centsToEurStr(editingTx.amountCents) : ""
-  )
-  const [txType, setTxType] = useState<"expense" | "income">(initType)
+  const [amount, setAmount] = useState(editingTx ? centsToEurStr(editingTx.amountCents) : "")
+  const [txType, setTxType] = useState<TxKind>(initType)
   const [date, setDate] = useState(editingTx?.date ?? today)
-  const [accountId, setAccountId] = useState(editingTx?.accountId ?? "")
+  const [accountId, setAccountId] = useState(editingTx?.accountId ?? accounts[0]?.id ?? "")
+  const [toAccountId, setToAccountId] = useState(editingTx?.toAccountId ?? "")
   const [categoryId, setCategoryId] = useState(editingTx?.categoryId ?? "")
+  const [memberId, setMemberId] = useState(editingTx?.memberId ?? "")
+  const [isCommon, setIsCommon] = useState(editingTx?.isCommon ?? true)
+  const [goalId, setGoalId] = useState(editingTx?.goalId ?? "")
+  const [projectId, setProjectId] = useState(editingTx?.projectId ?? "")
   const [note, setNote] = useState(editingTx?.note ?? "")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
+  const isTransfer = txType === "transfer"
+  const adults = members.filter((m) => !m.isChild)
+  const cat = categories.find((c) => c.id === editingTx?.categoryId)
+  const acct = accounts.find((a) => a.id === editingTx?.accountId)
+
   function parseAmountCents(): number {
-    const normalized = amount.replace(/\s/g, "").replace(",", ".")
-    const abs = Math.round(parseFloat(normalized) * 100)
+    const abs = Math.round(parseFloat(amount.replace(/\s/g, "").replace(",", ".")) * 100)
     if (isNaN(abs)) return 0
+    if (isTransfer) return abs
     return txType === "expense" ? -abs : abs
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim()) { setError("Le nom est requis."); return }
+    if (!name.trim()) { setError("Le libellé est requis."); return }
     if (!amount.trim()) { setError("Le montant est requis."); return }
     if (!date) { setError("La date est requise."); return }
-
-    const amountCents = parseAmountCents()
+    if (isTransfer && !toAccountId) { setError("Le compte destinataire est requis."); return }
     setLoading(true)
     setError("")
-
     try {
       const body = {
-        name: name.trim(),
-        amountCents,
-        date,
+        name: name.trim(), amountCents: parseAmountCents(), date,
         accountId: accountId || null,
-        categoryId: categoryId || null,
-        note: note.trim(),
+        categoryId: isTransfer ? null : categoryId || null,
+        note: note.trim(), kind: txType,
+        toAccountId: isTransfer ? toAccountId || null : null,
+        goalId: goalId || null, projectId: projectId || null,
+        memberId: memberId || null, isCommon: isTransfer ? true : isCommon,
       }
-
-      const url = isEdit ? `/api/transactions/${editingTx.id}` : "/api/transactions"
-      const method = isEdit ? "PATCH" : "POST"
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+      const res = await fetch(isEdit ? `/api/transactions/${editingTx.id}` : "/api/transactions", {
+        method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       })
-
-      if (!res.ok) {
-        setError("Erreur lors de l'enregistrement.")
-        return
-      }
-
-      const json = (await res.json()) as ApiResponse
-      onSaved(json.data)
+      if (!res.ok) { setError("Erreur lors de l'enregistrement."); return }
+      onSaved(((await res.json()) as { data: Transaction }).data)
     } catch {
       setError("Erreur réseau.")
     } finally {
@@ -112,132 +98,133 @@ export function TransactionModal({
   }
 
   return (
-    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="modal tx-modal">
-        <div className="modal-header">
-          <h2>{isEdit ? "Modifier l'opération" : "Nouvelle opération"}</h2>
-          <button className="modal-close" type="button" onClick={onClose}>✕</button>
+    <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className={`modal${isEdit ? " modal-md" : ""}`}>
+        <div className="modal-head">
+          <h3>{isEdit ? "Détail de l'opération" : "Nouvelle transaction"}</h3>
+          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
         </div>
-
         <form onSubmit={(e) => void handleSubmit(e)}>
           <div className="modal-body">
-            {/* Type toggle */}
-            <div className="field">
-              <label>Type</label>
-              <div className="amode-btns">
-                <button
-                  type="button"
-                  className={`amode-btn${txType === "expense" ? " active" : ""}`}
-                  onClick={() => setTxType("expense")}
-                >
-                  Dépense
-                </button>
-                <button
-                  type="button"
-                  className={`amode-btn${txType === "income" ? " active" : ""}`}
-                  onClick={() => setTxType("income")}
-                >
-                  Revenu
-                </button>
-              </div>
-            </div>
+            {error && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {error}</div>}
 
-            <div className="field">
-              <label htmlFor="tx-name">Nom *</label>
-              <input
-                id="tx-name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Libellé de l'opération"
-                required
-              />
-            </div>
-
-            <div className="field">
-              <label htmlFor="tx-amt">Montant (€) *</label>
-              <input
-                id="tx-amt"
-                type="text"
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0,00"
-                required
-              />
-            </div>
-
-            <div className="field">
-              <label htmlFor="tx-date">Date *</label>
-              <input
-                id="tx-date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="field">
-              <label htmlFor="tx-account">Compte</label>
-              <select id="tx-account" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-                <option value="">— Aucun —</option>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>{a.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="field">
-              <label htmlFor="tx-cat">Catégorie</label>
-              <select id="tx-cat" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-                <option value="">— Aucune —</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="field">
-              <label htmlFor="tx-note">Note</label>
-              <textarea
-                id="tx-note"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Optionnel…"
-                rows={2}
-                className="tx-modal-note"
-              />
-            </div>
-
-            {isEdit && (
-              <div className="tx-modal-hint">
-                Solde actuel : {formatCents(editingTx.amountCents)}
+            {isEdit && editingTx && (
+              <div className="txm-head">
+                <div className="tx-icon" style={{ background: `${cat?.colorHex ?? "#888780"}22`, color: cat?.colorHex ?? "#888780" }}><i className={`ti ${cat?.icon ?? (isTransfer ? "ti-arrows-exchange" : "ti-tag")}`} /></div>
+                <div className="txm-head-info">
+                  <div className="txm-head-name">{editingTx.name}</div>
+                  <div className="txm-head-sub">{dateLabel(editingTx.date)}{acct ? ` · ${acct.name}` : ""}</div>
+                </div>
+                <div className={`txm-head-amt num ${editingTx.amountCents >= 0 ? "pos" : "neg"}`}>{editingTx.amountCents >= 0 ? "+" : ""}{formatCents(editingTx.amountCents)}</div>
               </div>
             )}
 
-            {error && <div className="err on">{error}</div>}
+            <div className="type-toggle">
+              <button type="button" className={`type-opt exp${txType === "expense" ? " active" : ""}`} onClick={() => setTxType("expense")}><i className="ti ti-arrow-up-right" /> Dépense</button>
+              <button type="button" className={`type-opt inc${txType === "income" ? " active" : ""}`} onClick={() => setTxType("income")}><i className="ti ti-arrow-down-left" /> Revenu</button>
+              <button type="button" className={`type-opt${txType === "transfer" ? " active" : ""}`} onClick={() => setTxType("transfer")}><i className="ti ti-arrows-exchange" /> Transfert</button>
+            </div>
+
+            <div className="field-row">
+              <div className="field">
+                <label htmlFor="tx-name">Libellé</label>
+                <input id="tx-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="ex. Carrefour, Loyer, Netflix…" required />
+              </div>
+              <div className="field">
+                <label htmlFor="tx-amt">Montant</label>
+                <div className="field-amount">
+                  <input id="tx-amt" type="text" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" required />
+                  <span className="cur">€</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="field-row">
+              {isTransfer ? (
+                <div className="field">
+                  <label htmlFor="tx-to-account">Compte destinataire</label>
+                  <select id="tx-to-account" value={toAccountId} onChange={(e) => setToAccountId(e.target.value)} required>
+                    <option value="">— Choisir —</option>
+                    {accounts.filter((a) => a.id !== accountId).map((a) => <option key={a.id} value={a.id}>{a.name}{a.type === "savings" ? " 💰" : ""}</option>)}
+                  </select>
+                </div>
+              ) : (
+                <div className="field">
+                  <label htmlFor="tx-cat">Catégorie</label>
+                  <select id="tx-cat" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+                    <option value="">— Aucune —</option>
+                    {categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+                  </select>
+                </div>
+              )}
+              <div className="field">
+                <label htmlFor="tx-date">Date</label>
+                <input id="tx-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+              </div>
+            </div>
+
+            <div className="field-row">
+              <div className="field">
+                <label htmlFor="tx-account">{isTransfer ? "Compte source" : "Compte"}</label>
+                <select id="tx-account" value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                  <option value="">— Aucun —</option>
+                  {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              </div>
+              {!isTransfer && (
+                <div className="field">
+                  <label htmlFor="tx-payer">Attribué à</label>
+                  <select id="tx-payer" value={memberId} onChange={(e) => setMemberId(e.target.value)}>
+                    <option value="">— Non attribué —</option>
+                    {adults.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {!isTransfer && (
+              <div className="field">
+                <label>Type de dépense</label>
+                <div className="type-toggle">
+                  <button type="button" className={`type-opt${!isCommon ? " active" : ""}`} onClick={() => setIsCommon(false)}><i className="ti ti-user" /> Personnelle</button>
+                  <button type="button" className={`type-opt${isCommon ? " active" : ""}`} onClick={() => setIsCommon(true)}><i className="ti ti-users" /> Commune au foyer</button>
+                </div>
+              </div>
+            )}
+
+            <div className="field-row">
+              <div className="field">
+                <label htmlFor="tx-goal">Enveloppe</label>
+                <select id="tx-goal" value={goalId} onChange={(e) => setGoalId(e.target.value)}>
+                  <option value="">— Aucune —</option>
+                  {goals.map((g) => <option key={g.id} value={g.id}>{g.emoji} {g.name}</option>)}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="tx-note">Note {!isEdit && <span style={{ color: "var(--fg-muted)", fontWeight: 400 }}>(optionnel)</span>}</label>
+                <input id="tx-note" type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ajouter une note…" />
+              </div>
+            </div>
+
+            {isTransfer && projects.length > 0 && (
+              <div className="field">
+                <label htmlFor="tx-project">Projet (optionnel)</label>
+                <select id="tx-project" value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+                  <option value="">— Aucun —</option>
+                  {projects.map((p) => <option key={p.id} value={p.id}>{p.emoji} {p.name}</option>)}
+                </select>
+              </div>
+            )}
           </div>
 
-          <div className="modal-footer">
+          <div className="modal-foot">
             {isEdit && (
-              <Button
-                variant="danger"
-                type="button"
-                size="sm"
-                onClick={() => void handleDelete()}
-                disabled={loading}
-                className="tx-modal-del-spacer"
-              >
-                Supprimer
-              </Button>
+              <button type="button" className="btn btn-ghost" style={{ marginRight: "auto", color: "#D85A30" }} onClick={() => void handleDelete()} disabled={loading}>
+                <i className="ti ti-trash" /> Supprimer
+              </button>
             )}
-            <Button variant="ghost" type="button" onClick={onClose} disabled={loading}>
-              Annuler
-            </Button>
-            <Button variant="primary" type="submit" disabled={loading}>
-              {loading ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer"}
-            </Button>
+            <button type="button" className="btn btn-ghost" onClick={onClose} disabled={loading}>Annuler</button>
+            <button type="submit" className="btn btn-primary" disabled={loading}><i className="ti ti-check" /> {loading ? "Enregistrement…" : "Enregistrer"}</button>
           </div>
         </form>
       </div>

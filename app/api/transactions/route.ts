@@ -36,10 +36,17 @@ export async function POST(req: Request) {
   if (!householdId) return unauthorized()
 
   const body = await req.json()
-  const { name, amountCents, date, accountId, categoryId, note, isCommon } = body
+  const { name, amountCents, date, accountId, categoryId, note, isCommon, kind, toAccountId, goalId, projectId, memberId } = body
 
   if (!name || typeof amountCents !== "number" || !date) {
     return err("name, amountCents, date are required")
+  }
+
+  const resolvedKind: "expense" | "income" | "transfer" =
+    kind === "transfer" ? "transfer" : kind === "income" ? "income" : "expense"
+
+  if (resolvedKind === "transfer" && !toAccountId) {
+    return err("toAccountId is required for transfers", 400)
   }
 
   const id = randomUUID()
@@ -50,7 +57,7 @@ export async function POST(req: Request) {
         id,
         householdId,
         accountId: accountId ?? null,
-        categoryId: categoryId ?? null,
+        categoryId: resolvedKind === "transfer" ? null : (categoryId ?? null),
         name,
         amountCents,
         date,
@@ -58,6 +65,11 @@ export async function POST(req: Request) {
         isCommon: isCommon ?? true,
         importedAt: null,
         createdAt: now,
+        kind: resolvedKind,
+        toAccountId: toAccountId ?? null,
+        goalId: goalId ?? null,
+        projectId: projectId ?? null,
+        memberId: memberId ?? null,
       })
       .run()
   } catch {

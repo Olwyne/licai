@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
-import { properties, loans, accounts } from "@/db/schema"
-import { eq } from "drizzle-orm"
+import { properties, loans, accounts, propertyOwners, members } from "@/db/schema"
+import { eq, inArray } from "drizzle-orm"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
 
 export async function GET() {
@@ -13,6 +13,23 @@ export async function GET() {
       .from(properties)
       .where(eq(properties.householdId, householdId))
       .all()
+
+    const propIds = props.map((p) => p.id)
+    const owners = propIds.length
+      ? db.select().from(propertyOwners).where(inArray(propertyOwners.propertyId, propIds)).all()
+      : []
+
+    const allMembers = db.select().from(members).where(eq(members.householdId, householdId)).all()
+
+    const propsWithOwners = props.map((p) => ({
+      ...p,
+      owners: owners
+        .filter((o) => o.propertyId === p.id)
+        .map((o) => {
+          const m = allMembers.find((m) => m.id === o.memberId)
+          return { memberId: o.memberId, sharePercent: o.sharePercent, name: m?.name ?? "", short: m?.short ?? "", colorHex: m?.colorHex ?? "#888" }
+        }),
+    }))
 
     const loanRows = db
       .select()
@@ -34,9 +51,10 @@ export async function GET() {
     const mensualitesTotales = loanRows.reduce((s, l) => s + l.monthlyPaymentCents, 0)
 
     return ok({
-      properties: props,
+      properties: propsWithOwners,
       loans: loanRows,
       accounts: { totalCents: totalAccountsCents },
+      members: allMembers,
       kpis: { actifBrut, passif, patrimoineNet, plusValue, mensualitesTotales },
     })
   } catch {

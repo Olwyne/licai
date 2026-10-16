@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect, useCallback } from "react"
 import { formatCents } from "@/lib/money"
+import { PrevoyanceAnalysis } from "@/components/features/prevoyance/PrevoyanceAnalysis"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -199,6 +200,7 @@ function ContractModal({ contract, onClose, onSaved, onDeleted }: ContractModalP
 export function PrevoyanceClient() {
   const [data, setData] = useState<PrevoyanceData | null>(null)
   const [loadError, setLoadError] = useState("")
+  const [reloadKey, setReloadKey] = useState(0)
   const [modal, setModal] = useState<{ open: boolean; item: ContractRow | null }>({ open: false, item: null })
 
   const load = useCallback(async () => {
@@ -217,6 +219,7 @@ export function PrevoyanceClient() {
   function onSaved(_c: ContractRow) {
     setModal({ open: false, item: null })
     void load()
+    setReloadKey((k) => k + 1)
   }
 
   function onDeleted(id: string) {
@@ -228,30 +231,17 @@ export function PrevoyanceClient() {
     void load()
   }
 
-  if (loadError) {
-    return (
-      <div className="page-prevoyance">
-        <div className="page-header"><h1 className="page-title">Prévoyance</h1></div>
-        <div className="empty"><i className="ti ti-alert-circle" />{loadError}</div>
-      </div>
-    )
-  }
-
-  if (!data) {
-    return (
-      <div className="page-prevoyance">
-        <div className="page-header"><h1 className="page-title">Prévoyance</h1></div>
-        <div className="empty"><i className="ti ti-loader" />Chargement…</div>
-      </div>
-    )
-  }
-
-  const { contracts: rows, kpis } = data
+  const { contracts: rows, kpis } = data ?? { contracts: [] as ContractRow[], kpis: { totalValueCents: 0, totalMonthlyPremiumCents: 0, count: 0, byKind: {} } }
 
   return (
     <div className="page-prevoyance">
-      <div className="page-header">
-        <h1 className="page-title">Prévoyance</h1>
+      <PrevoyanceAnalysis reloadKey={reloadKey} />
+
+      <div className="page-header" style={{ marginTop: "var(--gap-lg)" }}>
+        <div>
+          <h2 className="page-title" style={{ fontSize: 17 }}>Contrats de prévoyance</h2>
+          <div className="page-sub">Assurance-vie, retraite, santé et prévoyance suivis dans le foyer</div>
+        </div>
         <button
           className="btn btn-primary btn-sm"
           onClick={() => setModal({ open: true, item: null })}
@@ -259,6 +249,9 @@ export function PrevoyanceClient() {
           <i className="ti ti-plus" /> Ajouter
         </button>
       </div>
+
+      {loadError && <div className="empty"><i className="ti ti-alert-circle" />{loadError}</div>}
+      {!data && !loadError && <div className="empty"><i className="ti ti-loader" />Chargement…</div>}
 
       {/* KPI cards */}
       <div className="metrics metrics-3">
@@ -306,7 +299,6 @@ export function PrevoyanceClient() {
       </div>
 
       {/* Contracts list */}
-      <div className="section-title" style={{ marginTop: "var(--gap-lg)" }}>Contrats</div>
       {rows.length === 0 ? (
         <div className="empty"><i className="ti ti-shield-off" />Aucun contrat. Ajoutez-en un !</div>
       ) : (

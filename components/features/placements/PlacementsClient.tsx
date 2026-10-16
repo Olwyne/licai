@@ -1,399 +1,626 @@
 "use client"
-import { useState, useEffect, useCallback } from "react"
-import { formatCents } from "@/lib/money"
-import { DonutChart } from "@/components/charts/DonutChart"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import Link from "next/link"
+import { Line } from "react-chartjs-2"
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from "chart.js"
+import type { AssetClass, CtxHolding, CtxInvAccount, FinanceContext, InvKind } from "@/lib/finance/types"
+import {
+  ASSETS, INV_KINDS, PROFILES, ZONES, allocationRows, byAcct, computePortfolio, feeRows, group, investAdvice, investTaxRows, usedCeiling,
+  type PortfolioState, type ProfileKey,
+} from "@/lib/finance/invest"
+import { computeTax, situationFor, taxInputs } from "@/lib/finance/tax"
+import { eur, eurS, num2, pc, pcS } from "@/lib/finance/format"
+import {
+  loadProfile, loadQuotes, overrides, quoteTickers, refreshLive, saveProfile, saveQuotes, srcLabel, type QuoteMode, type QuoteState,
+} from "@/components/features/finance/quotes"
+import { useThemeTick } from "@/components/features/finance/useThemeTick"
+import { useFinanceContext } from "@/components/features/finance/useFinanceContext"
+import { AdviceRow, Disclaimer, Kpi, LoadingOrError, MiniAv, PageHeader, StatRow } from "@/components/features/finance/ui"
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
 
-interface InvestmentRow {
-  id: string
-  householdId: string
-  name: string
-  ticker: string
-  kind: string
-  quantity: number
-  unitPriceCents: number
-  purchasePriceCents: number
-  note: string
-  createdAt: string
-  currentValueCents: number
-  purchaseValueCents: number
-  gainCents: number
-  gainPct: number
+const PAL = ["#1D9E75", "#378ADD", "#7C6BD6", "#EF9F27", "#D4537E", "#D85A30", "#888780"]
+const hash = (s: string) => PAL[[...s].reduce((a, c) => a + c.charCodeAt(0), 0) % PAL.length]
+const num = (v: string) => parseFloat((v || "0").replace(/\s/g, "").replace(",", ".")) || 0
+
+// ─── Petits blocs ────────────────────────────────────────────────────────────
+
+function Bars({ rows, color }: { rows: { k: string; v: number; w: number }[]; color: (k: string) => string }) {
+  const max = Math.max(1, ...rows.map((r) => r.v))
+  if (!rows.length) return <div className="empty" style={{ padding: 20 }}>Aucune donnée</div>
+  return (
+    <>
+      {rows.map((r) => (
+        <div className="bd-row" key={r.k}>
+          <span className="bd-name">{r.k}</span>
+          <div className="cat-track"><div className="cat-fill" style={{ width: `${(r.v / max) * 100}%`, background: color(r.k) }} /></div>
+          <span className="bd-pc num">{pc(r.w, 0)}</span>
+          <span className="bd-val num private">{eur(r.v)}</span>
+        </div>
+      ))}
+    </>
+  )
 }
 
-interface AllocationItem {
-  kind: string
-  valueCents: number
-  pct: number
-}
+// ─── Modal : cours des supports ──────────────────────────────────────────────
 
-interface Totals {
-  totalValueCents: number
-  totalPurchaseCents: number
-  totalGainCents: number
-  totalGainPct: number
-}
+function QuoteModal({ ctx, state, onClose, onApply }: {
+  ctx: FinanceContext; state: QuoteState; onClose: () => void; onApply: (q: QuoteState) => void
+}) {
+  const [q, setQ] = useState<QuoteState>(state)
+  const tickers = quoteTickers(ctx.holdings)
+  const [inputs, setInputs] = useState<Record<string, string>>(() =>
+    Object.fromEntries(tickers.map((tk) => [tk, String(state.manual[tk] ?? ctx.holdings.find((h) => h.tk === tk)?.price ?? "")])))
 
-interface PlacementsData {
-  investments: InvestmentRow[]
-  totals: Totals
-  allocation: AllocationItem[]
-}
+  const priceOf = (tk: string) => (q.mode === "manual" && q.manual[tk] != null ? q.manual[tk] : q.mode === "api" && q.live?.[tk] ? q.live[tk].price : ctx.holdings.find((h) => h.tk === tk)?.price ?? 0)
+  const srcOf = (tk: string) => (q.mode === "manual" && q.manual[tk] != null ? "manuel" : q.mode === "api" && q.live?.[tk] ? "api" : "enregistré")
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const KIND_LABELS: Record<string, string> = {
-  etf: "ETF",
-  action: "Action",
-  fonds: "Fonds",
-  crypto: "Crypto",
-  autre: "Autre",
-}
-
-const KIND_COLORS: Record<string, string> = {
-  etf: "#1D9E75",
-  action: "#378ADD",
-  fonds: "#7C6BD6",
-  crypto: "#EF9F27",
-  autre: "#888780",
-}
-
-const KIND_OPTIONS = Object.entries(KIND_LABELS).map(([value, label]) => ({ value, label }))
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function parseEuros(str: string): number {
-  const n = parseFloat(str.replace(/\s/g, "").replace(",", "."))
-  return isNaN(n) ? 0 : Math.round(n * 100)
-}
-
-function centsToEuros(cents: number): string {
-  return (cents / 100).toFixed(2)
-}
-
-function fmtPct(pct: number): string {
-  const s = pct.toFixed(1) + "%"
-  return pct >= 0 ? "+" + s : s
-}
-
-// ─── Investment Modal ─────────────────────────────────────────────────────────
-
-interface InvestmentModalProps {
-  investment: InvestmentRow | null
-  onClose: () => void
-  onSaved: (inv: InvestmentRow) => void
-  onDeleted: (id: string) => void
-}
-
-function InvestmentModal({ investment, onClose, onSaved, onDeleted }: InvestmentModalProps) {
-  const isEdit = investment !== null
-  const [name, setName] = useState(investment?.name ?? "")
-  const [ticker, setTicker] = useState(investment?.ticker ?? "")
-  const [kind, setKind] = useState(investment?.kind ?? "etf")
-  const [quantityStr, setQuantityStr] = useState(investment ? String(investment.quantity) : "")
-  const [unitPriceStr, setUnitPriceStr] = useState(investment ? centsToEuros(investment.unitPriceCents) : "")
-  const [purchasePriceStr, setPurchasePriceStr] = useState(investment ? centsToEuros(investment.purchasePriceCents) : "")
-  const [note, setNote] = useState(investment?.note ?? "")
-  const [loading, setLoading] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-  const [error, setError] = useState("")
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!name.trim()) { setError("Le nom est requis."); return }
-    setLoading(true)
-    setError("")
-    try {
-      const payload = {
-        name: name.trim(),
-        ticker: ticker.trim(),
-        kind,
-        quantity: parseFloat(quantityStr.replace(",", ".")) || 0,
-        unitPriceCents: parseEuros(unitPriceStr),
-        purchasePriceCents: parseEuros(purchasePriceStr),
-        note,
-      }
-      const res = await fetch(
-        isEdit ? `/api/placements/${investment.id}` : "/api/placements",
-        { method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }
-      )
-      if (!res.ok) { setError("Erreur lors de l'enregistrement."); return }
-      const json = (await res.json()) as { data: InvestmentRow }
-      onSaved(json.data)
-    } finally {
-      setLoading(false)
-    }
+  async function refresh() {
+    setQ((p) => ({ ...p, status: "Requête en cours…" }))
+    const next = await refreshLive({ ...q }, tickers)
+    setQ(next)
   }
 
-  async function handleDelete() {
-    if (!investment) return
-    setDeleting(true)
-    try {
-      const res = await fetch(`/api/placements/${investment.id}`, { method: "DELETE" })
-      if (!res.ok) { setError("Erreur lors de la suppression."); return }
-      onDeleted(investment.id)
-    } finally {
-      setDeleting(false)
+  function apply() {
+    const next = { ...q }
+    if (q.mode === "manual") {
+      const manual: Record<string, number> = {}
+      tickers.forEach((tk) => { const v = num(inputs[tk] ?? ""); if (v > 0) manual[tk] = v })
+      next.manual = manual
+      next.ts = `saisie du ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`
     }
+    onApply(next)
   }
 
   return (
     <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="modal">
+      <div className="modal modal-lg">
         <div className="modal-head">
-          <h3>{isEdit ? "Modifier le placement" : "Ajouter un placement"}</h3>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}><i className="ti ti-x" /></button>
+          <h3>Cours des supports</h3>
+          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
         </div>
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            {error && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {error}</div>}
-            <div className="field">
-              <label>Nom</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="MSCI World ETF" required />
+        <div className="modal-body">
+          <div className="field">
+            <label>Source des cours</label>
+            <div className="type-toggle">
+              {([["demo", "ti-flask", "Enregistrés"], ["manual", "ti-pencil", "Saisie manuelle"], ["api", "ti-cloud-data-connection", "Fournisseur"]] as [QuoteMode, string, string][]).map(([m, ic, label]) => (
+                <button key={m} className={`type-opt ${q.mode === m ? "active" : ""}`} onClick={() => setQ((p) => ({ ...p, mode: m }))}><i className={`ti ${ic}`} /> {label}</button>
+              ))}
             </div>
-            <div className="field">
-              <label>Ticker</label>
-              <input value={ticker} onChange={(e) => setTicker(e.target.value)} placeholder="CW8" />
-            </div>
-            <div className="field">
-              <label>Type</label>
-              <div className="select w-full">
-                <select className="w-full" value={kind} onChange={(e) => setKind(e.target.value)}>
-                  {KIND_OPTIONS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="field">
-              <label>Quantité</label>
-              <input value={quantityStr} onChange={(e) => setQuantityStr(e.target.value)} placeholder="10" />
-            </div>
-            <div className="field">
-              <label>Prix unitaire actuel (€)</label>
-              <input value={unitPriceStr} onChange={(e) => setUnitPriceStr(e.target.value)} placeholder="423.00" />
-            </div>
-            <div className="field">
-              <label>Prix d&apos;achat moyen (€)</label>
-              <input value={purchasePriceStr} onChange={(e) => setPurchasePriceStr(e.target.value)} placeholder="381.00" />
-            </div>
-            <div className="field">
-              <label>Note</label>
-              <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Boursobank PEA…" />
+            <div className="field-hint">
+              En mode fournisseur, l&apos;app appelle <code>GET {"{endpoint}"}?symbols=A,B</code> depuis votre navigateur et attend <code>{`{ "A": { "price": 1.23, "prev": 1.20 } }`}</code>.
             </div>
           </div>
-          <div className="modal-foot">
-            {isEdit && (
-              <button type="button" className="btn btn-danger btn-sm" onClick={handleDelete} disabled={deleting}>
-                {deleting ? "Suppression…" : "Supprimer"}
-              </button>
-            )}
-            <div className="obj-modal-foot-right">
-              <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>Annuler</button>
-              <button type="submit" className="btn btn-primary btn-sm" disabled={loading}>
-                {loading ? "Enregistrement…" : isEdit ? "Enregistrer" : "Ajouter"}
-              </button>
+          {q.mode === "api" && (
+            <div className="field-row">
+              <div className="field"><label>Endpoint</label><input type="text" placeholder="https://api.exemple.com/quotes" value={q.api.endpoint} onChange={(e) => setQ((p) => ({ ...p, api: { ...p.api, endpoint: e.target.value } }))} /></div>
+              <div className="field"><label>Clé d&apos;API</label><input type="text" placeholder="Bearer token" value={q.api.key} onChange={(e) => setQ((p) => ({ ...p, api: { ...p.api, key: e.target.value } }))} /></div>
             </div>
+          )}
+          <div className="q-status">
+            {q.status ? <><i className="ti ti-info-circle" /> {q.status}</> : <><i className="ti ti-clock" /> Dernière mise à jour : {q.ts || "cours enregistrés"}</>}
           </div>
-        </form>
+          <div className="q-list">
+            {tickers.map((tk) => {
+              const h = ctx.holdings.find((x) => x.tk === tk)!
+              return (
+                <div className="q-row" key={tk}>
+                  <span className="q-tk num">{tk}</span>
+                  <span className="q-name">{h.name}</span>
+                  <span className="q-src">{srcOf(tk)}</span>
+                  {q.mode === "manual"
+                    ? <input className="q-input num" type="text" inputMode="decimal" value={inputs[tk] ?? ""} onChange={(e) => setInputs((p) => ({ ...p, [tk]: e.target.value }))} />
+                    : <input className="q-input num" type="text" value={priceOf(tk)} disabled readOnly />}
+                  <span className="q-cur">{h.cur === "USD" ? "$" : "€"}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-ghost" style={{ marginRight: "auto" }} onClick={() => onApply({ ...q, mode: "demo", manual: {}, live: null, ts: "", status: "" })}>Revenir aux cours enregistrés</button>
+          <button className="btn btn-ghost" onClick={refresh}><i className="ti ti-refresh" /> Rafraîchir via le fournisseur</button>
+          <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
+          <button className="btn btn-primary" onClick={apply}><i className="ti ti-check" /> Appliquer</button>
+        </div>
       </div>
     </div>
   )
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Modal : ligne de portefeuille ───────────────────────────────────────────
+
+function LineModal({ ctx, holding, onClose, onDone }: {
+  ctx: FinanceContext; holding: CtxHolding | null; onClose: () => void; onDone: () => void
+}) {
+  const isEdit = !!holding
+  const [f, setF] = useState({
+    acct: holding?.acct ?? ctx.invAccounts[0]?.id ?? "",
+    name: holding?.name ?? "", tk: holding?.tk ?? "", cls: (holding?.cls ?? "actions") as AssetClass,
+    zone: holding?.zone ?? "Monde", sector: holding?.sector ?? "", cur: holding?.cur ?? "EUR",
+    qty: holding ? String(holding.qty) : "", pru: holding ? String(holding.pru) : "", price: holding ? String(holding.price) : "",
+    ter: holding ? String(holding.ter) : "", cap: holding?.cap ?? "Grandes",
+  })
+  const [err, setErr] = useState("")
+  const [busy, setBusy] = useState(false)
+  const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }))
+
+  async function save() {
+    if (!f.name.trim() || !num(f.qty) || !num(f.price)) { setErr("Nom, quantité et cours actuel sont requis."); return }
+    setBusy(true)
+    const body = {
+      name: f.name.trim(), ticker: (f.tk.trim() || f.name.trim().slice(0, 6)).toUpperCase(),
+      kind: f.cls === "crypto" ? "crypto" : f.cls === "euro" ? "fonds" : "etf",
+      quantity: num(f.qty), unitPriceCents: Math.round(num(f.price) * 100), purchasePriceCents: Math.round((num(f.pru) || num(f.price)) * 100),
+      accountId: f.acct || null, assetClass: f.cls, zone: f.zone, sector: f.sector.trim() || "Diversifié", currency: f.cur, cap: f.cap, terPct: num(f.ter),
+    }
+    const res = await fetch(isEdit ? `/api/placements/${holding!.id}` : "/api/placements", {
+      method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    })
+    setBusy(false)
+    if (!res.ok) { setErr("Erreur lors de l'enregistrement."); return }
+    onDone()
+  }
+
+  async function remove() {
+    if (!holding) return
+    setBusy(true)
+    const res = await fetch(`/api/placements/${holding.id}`, { method: "DELETE" })
+    setBusy(false)
+    if (!res.ok) { setErr("Erreur lors de la suppression."); return }
+    onDone()
+  }
+
+  return (
+    <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="modal modal-md">
+        <div className="modal-head">
+          <h3>{isEdit ? "Modifier la ligne" : "Ajouter une ligne au portefeuille"}</h3>
+          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+        </div>
+        <div className="modal-body">
+          {err && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {err}</div>}
+          <div className="field">
+            <label>Enveloppe</label>
+            <select value={f.acct} onChange={(e) => set("acct")(e.target.value)}>
+              {ctx.invAccounts.length === 0 && <option value="">Aucune enveloppe — créez-en une d&apos;abord</option>}
+              {ctx.invAccounts.map((a) => <option key={a.id} value={a.id}>{INV_KINDS[a.kind].short} · {a.name}</option>)}
+            </select>
+          </div>
+          <div className="field-row">
+            <div className="field"><label>Nom du support</label><input type="text" placeholder="ex. Amundi MSCI World" value={f.name} onChange={(e) => set("name")(e.target.value)} autoFocus /></div>
+            <div className="field"><label>Code / ticker</label><input type="text" placeholder="CW8" value={f.tk} onChange={(e) => set("tk")(e.target.value)} /></div>
+          </div>
+          <div className="field-row">
+            <div className="field"><label>Classe d&apos;actifs</label>
+              <select value={f.cls} onChange={(e) => set("cls")(e.target.value)}>{(Object.keys(ASSETS) as AssetClass[]).map((k) => <option key={k} value={k}>{ASSETS[k].label}</option>)}</select></div>
+            <div className="field"><label>Zone</label>
+              <select value={f.zone} onChange={(e) => set("zone")(e.target.value)}>{ZONES.map((z) => <option key={z}>{z}</option>)}</select></div>
+          </div>
+          <div className="field-row">
+            <div className="field"><label>Secteur</label><input type="text" placeholder="Diversifié" value={f.sector} onChange={(e) => set("sector")(e.target.value)} /></div>
+            <div className="field"><label>Devise</label>
+              <select value={f.cur} onChange={(e) => set("cur")(e.target.value)}><option>EUR</option><option>USD</option><option>CHF</option><option>GBP</option></select></div>
+          </div>
+          <div className="field-row">
+            <div className="field"><label>Quantité</label><input type="text" inputMode="decimal" placeholder="23" value={f.qty} onChange={(e) => set("qty")(e.target.value)} /></div>
+            <div className="field"><label>Prix de revient (PRU)</label><input type="text" inputMode="decimal" placeholder="468" value={f.pru} onChange={(e) => set("pru")(e.target.value)} /></div>
+          </div>
+          <div className="field-row">
+            <div className="field"><label>Cours actuel</label><input type="text" inputMode="decimal" placeholder="612,40" value={f.price} onChange={(e) => set("price")(e.target.value)} /></div>
+            <div className="field"><label>Frais du support (TER %)</label><input type="text" inputMode="decimal" placeholder="0,38" value={f.ter} onChange={(e) => set("ter")(e.target.value)} /></div>
+          </div>
+          <div className="field"><label>Capitalisation</label>
+            <select value={f.cap} onChange={(e) => set("cap")(e.target.value)}><option>Grandes</option><option>Moyennes</option><option>Petites</option><option>—</option></select></div>
+        </div>
+        <div className="modal-foot">
+          {isEdit && <button className="btn btn-danger" style={{ marginRight: "auto" }} onClick={remove} disabled={busy}>Supprimer</button>}
+          <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
+          <button className="btn btn-primary" onClick={save} disabled={busy || ctx.invAccounts.length === 0}><i className="ti ti-check" /> {isEdit ? "Enregistrer" : "Ajouter la ligne"}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Modal : enveloppe ───────────────────────────────────────────────────────
+
+function EnvelopeModal({ ctx, account, onClose, onDone }: {
+  ctx: FinanceContext; account: CtxInvAccount | null; onClose: () => void; onDone: () => void
+}) {
+  const isEdit = !!account
+  const [f, setF] = useState({
+    kind: (account?.kind ?? "pea") as InvKind, name: account?.name ?? "", bank: account?.bank ?? "",
+    since: String(account?.since ?? ctx.year), paid: account ? String(account.paid) : "", monthly: account ? String(account.monthly) : "",
+    fees: account ? String(account.fees) : "", match: account ? String(account.match) : "",
+  })
+  const [owners, setOwners] = useState<string[]>(account?.ownerIds ?? [])
+  const [benefs, setBenefs] = useState<string[]>(account?.benefIds ?? [])
+  const [err, setErr] = useState("")
+  const [busy, setBusy] = useState(false)
+  const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }))
+  const toggle = (list: string[], id: string, fn: (l: string[]) => void) => fn(list.includes(id) ? list.filter((x) => x !== id) : [...list, id])
+
+  async function save() {
+    if (!f.name.trim()) { setErr("Le nom est requis."); return }
+    setBusy(true)
+    const body = {
+      kind: f.kind, name: f.name.trim(), bank: f.bank.trim(), ownerIds: owners, benefIds: f.kind === "av" ? benefs : [],
+      sinceYear: Math.round(num(f.since)) || ctx.year, paidCents: Math.round(num(f.paid) * 100), monthlyCents: Math.round(num(f.monthly) * 100),
+      feesPct: num(f.fees), matchPct: num(f.match),
+    }
+    const res = await fetch(isEdit ? `/api/investment-accounts/${account!.id}` : "/api/investment-accounts", {
+      method: isEdit ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    })
+    setBusy(false)
+    if (!res.ok) { setErr("Erreur lors de l'enregistrement."); return }
+    onDone()
+  }
+
+  async function remove() {
+    if (!account) return
+    setBusy(true)
+    await fetch(`/api/investment-accounts/${account.id}`, { method: "DELETE" })
+    setBusy(false)
+    onDone()
+  }
+
+  const people = ctx.members.filter((m) => !m.isChild)
+  return (
+    <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="modal modal-md">
+        <div className="modal-head">
+          <h3>{isEdit ? "Modifier l'enveloppe" : "Ajouter une enveloppe"}</h3>
+          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+        </div>
+        <div className="modal-body">
+          {err && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {err}</div>}
+          <div className="field-row">
+            <div className="field"><label>Type</label>
+              <select value={f.kind} onChange={(e) => set("kind")(e.target.value)}>{(Object.keys(INV_KINDS) as InvKind[]).map((k) => <option key={k} value={k}>{INV_KINDS[k].label}</option>)}</select></div>
+            <div className="field"><label>Ouverte en</label><input type="text" inputMode="numeric" value={f.since} onChange={(e) => set("since")(e.target.value)} /></div>
+          </div>
+          <div className="field-row">
+            <div className="field"><label>Nom</label><input type="text" placeholder="PEA BoursoBank" value={f.name} onChange={(e) => set("name")(e.target.value)} autoFocus /></div>
+            <div className="field"><label>Établissement</label><input type="text" placeholder="BoursoBank" value={f.bank} onChange={(e) => set("bank")(e.target.value)} /></div>
+          </div>
+          <div className="field-row">
+            <div className="field"><label>Total versé</label><div className="field-amount"><input type="text" inputMode="decimal" placeholder="19 600" value={f.paid} onChange={(e) => set("paid")(e.target.value)} /><span className="cur">€</span></div></div>
+            <div className="field"><label>Versement mensuel</label><div className="field-amount"><input type="text" inputMode="decimal" placeholder="300" value={f.monthly} onChange={(e) => set("monthly")(e.target.value)} /><span className="cur">€</span></div></div>
+          </div>
+          <div className="field-row">
+            <div className="field"><label>Frais de gestion annuels (%)</label><input type="text" inputMode="decimal" placeholder="0,5" value={f.fees} onChange={(e) => set("fees")(e.target.value)} /></div>
+            <div className="field"><label>Abondement employeur (%)</label><input type="text" inputMode="decimal" placeholder="0" value={f.match} onChange={(e) => set("match")(e.target.value)} /></div>
+          </div>
+          <div className="field">
+            <label>Titulaire(s)</label>
+            <div className="chips">
+              {people.map((m) => <button type="button" key={m.id} className={`chip ${owners.includes(m.id) ? "active" : ""}`} onClick={() => toggle(owners, m.id, setOwners)}>{m.short}</button>)}
+            </div>
+          </div>
+          {f.kind === "av" && (
+            <div className="field">
+              <label>Bénéficiaire(s) du contrat</label>
+              <div className="chips">
+                {ctx.members.map((m) => <button type="button" key={m.id} className={`chip ${benefs.includes(m.id) ? "active" : ""}`} onClick={() => toggle(benefs, m.id, setBenefs)}>{m.short}</button>)}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="modal-foot">
+          {isEdit && <button className="btn btn-danger" style={{ marginRight: "auto" }} onClick={remove} disabled={busy}>Supprimer</button>}
+          <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
+          <button className="btn btn-primary" onClick={save} disabled={busy}><i className="ti ti-check" /> {isEdit ? "Enregistrer" : "Ajouter l'enveloppe"}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
 
 export function PlacementsClient() {
-  const [data, setData] = useState<PlacementsData | null>(null)
-  const [loadError, setLoadError] = useState("")
-  const [modal, setModal] = useState<{ open: boolean; item: InvestmentRow | null }>({ open: false, item: null })
+  const { ctx, error, reload } = useFinanceContext()
+  const [profile, setProfile] = useState<ProfileKey>("equilibre")
+  const [quotes, setQuotes] = useState<QuoteState | null>(null)
+  const [quoteOpen, setQuoteOpen] = useState(false)
+  const [lineModal, setLineModal] = useState<{ open: boolean; item: CtxHolding | null }>({ open: false, item: null })
+  const [envModal, setEnvModal] = useState<{ open: boolean; item: CtxInvAccount | null }>({ open: false, item: null })
+  const themeTick = useThemeTick()
+  const chartWrap = useRef<HTMLDivElement>(null)
 
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch("/api/placements")
-      if (!res.ok) { setLoadError("Impossible de charger les placements."); return }
-      const json = (await res.json()) as { data: PlacementsData }
-      setData(json.data)
-    } catch {
-      setLoadError("Erreur réseau.")
-    }
-  }, [])
+  useEffect(() => { setProfile(loadProfile()); setQuotes(loadQuotes()) }, [])
 
-  useEffect(() => { void load() }, [load])
+  const changeProfile = (p: ProfileKey) => { setProfile(p); saveProfile(p) }
+  const applyQuotes = (q: QuoteState) => { setQuotes(q); saveQuotes(q); setQuoteOpen(false) }
+  const done = useCallback(() => { setLineModal({ open: false, item: null }); setEnvModal({ open: false, item: null }); void reload() }, [reload])
 
-  function onSaved(inv: InvestmentRow) {
-    setModal({ open: false, item: null })
-    void load()
-  }
+  const m = useMemo(() => {
+    if (!ctx || !quotes) return null
+    const S: PortfolioState = computePortfolio(ctx, profile, overrides(quotes))
+    const T = computeTax(taxInputs(ctx), situationFor(ctx))
+    return { S, T }
+  }, [ctx, profile, quotes])
 
-  function onDeleted(id: string) {
-    setModal({ open: false, item: null })
-    setData((prev) => {
-      if (!prev) return prev
-      return { ...prev, investments: prev.investments.filter((x) => x.id !== id) }
-    })
-    void load()
-  }
+  if (!ctx || !quotes || !m) return <LoadingOrError title="Placements" sub="Enveloppes, lignes, diversification et fiscalité" error={error} />
 
-  if (loadError) {
-    return (
-      <div className="page-placements">
-        <div className="page-header"><h1 className="page-title">Placements</h1></div>
-        <div className="empty"><i className="ti ti-alert-circle" />{loadError}</div>
-      </div>
-    )
-  }
+  const { S, T } = m
+  const accts = ctx.invAccounts
+  const kindOf = (id: string | null) => INV_KINDS[accts.find((a) => a.id === id)?.kind ?? "cto"]
+  const hist = ctx.history
+  const first = hist[0]?.value ?? 0
+  const perf = first > 0 ? (S.total / first - 1) * 100 : 0
+  const benchLast = hist.length ? hist[hist.length - 1].bench : null
+  const bench = benchLast != null ? benchLast - 100 : null
+  const actions = S.cls.find((c) => c.k === "actions")?.w ?? 0
+  const peaUsed = usedCeiling(accts, "pea")
+  const peapmeUsed = usedCeiling(accts, "peapme")
+  const alloc = allocationRows(S)
+  const allocMax = Math.max(1, ...alloc.map((r) => Math.max(r.cur, r.tgt)))
+  const advice = investAdvice(S, ctx)
+  const taxRows = investTaxRows(S, ctx, T.tmi, T.plafondPer)
+  const fees = feeRows(S, accts)
+  const zones = group(S.pos, "zone")
+  const envs = group(S.pos, (p) => kindOf(p.acct).label)
+  const flowsPerMonth = S.monthly
+  const income = ctx.members.reduce((s, x) => s + x.incomeMonthly, 0)
+  const profileLabel = PROFILES[profile].label
+  const t = S.target
 
-  if (!data) {
-    return (
-      <div className="page-placements">
-        <div className="page-header"><h1 className="page-title">Placements</h1></div>
-        <div className="empty"><i className="ti ti-loader" />Chargement…</div>
-      </div>
-    )
-  }
-
-  const { investments: invs, totals, allocation } = data
-  const gainPos = totals.totalGainCents >= 0
-
-  const donutSlices = allocation.map((a) => ({
-    label: KIND_LABELS[a.kind] ?? a.kind,
-    value: a.valueCents,
-    color: KIND_COLORS[a.kind] ?? "#888780",
-  }))
+  // graphe : valorisation vs indice (base 100 au premier mois)
+  const labels = hist.map((h) => { const [y, mo] = h.ym.split("-").map(Number); return new Date(y, mo - 1).toLocaleDateString("fr-FR", { month: "short" }) })
+  const vals = hist.map((h, i) => (i === hist.length - 1 ? S.total : h.value))
+  const port = vals.map((v) => (first ? (v / first) * 100 : 100))
+  const cs = typeof window !== "undefined" ? getComputedStyle(document.documentElement) : null
+  const grid = cs?.getPropertyValue("--chart-grid").trim() || "rgba(255,255,255,.05)"
+  const fg = cs?.getPropertyValue("--fg-secondary").trim() || "#999"
+  void themeTick
 
   return (
     <div className="page-placements">
-      <div className="page-header">
-        <h1 className="page-title">Placements</h1>
-        <button
-          className="btn btn-primary btn-sm"
-          onClick={() => setModal({ open: true, item: null })}
-        >
-          <i className="ti ti-plus" /> Ajouter
+      <PageHeader title="Placements" sub="Enveloppes, lignes, diversification et fiscalité" />
+
+      <div className="toolbar">
+        <div className="chips" style={{ margin: 0 }}>
+          {(Object.keys(PROFILES) as ProfileKey[]).map((k) => (
+            <button key={k} className={`chip ${k === profile ? "active" : ""}`} onClick={() => changeProfile(k)}>{PROFILES[k].label}</button>
+          ))}
+          <span className="budget-hint">Profil {profileLabel.toLowerCase()} — cible actions {t.actions} %</span>
+          <Link className="card-link" href="/parametres">Modifier</Link>
+        </div>
+        <div style={{ flex: 1 }} />
+        <button className="pill" onClick={() => setQuoteOpen(true)}>
+          <i className={`ti ti-${quotes.mode === "api" ? "cloud-data-connection" : quotes.mode === "manual" ? "pencil" : "flask"}`} /> {srcLabel(quotes.mode)}{quotes.ts ? ` · ${quotes.ts}` : ""}
         </button>
+        <button className="btn btn-ghost" onClick={() => setQuoteOpen(true)}><i className="ti ti-refresh" /> Cours</button>
       </div>
 
-      {/* KPI cards */}
-      <div className="metrics metrics-3">
-        <div className="metric">
-          <div className="metric-top">
-            <span className="metric-label">Valeur totale</span>
-            <div className="metric-ic metric-ic-info">
-              <i className="ti ti-chart-pie" />
-            </div>
-          </div>
-          <div className="metric-value num">{formatCents(totals.totalValueCents)}</div>
-          <div className="metric-sub neutral">
-            <i className="ti ti-info-circle" />
-            {invs.length} ligne{invs.length !== 1 ? "s" : ""}
-          </div>
-        </div>
-
-        <div className="metric">
-          <div className="metric-top">
-            <span className="metric-label">Plus-value totale</span>
-            <div className={`metric-ic ${gainPos ? "metric-ic-up" : "metric-ic-down"}`}>
-              <i className="ti ti-trending-up" />
-            </div>
-          </div>
-          <div className="metric-value num" style={{ color: gainPos ? "var(--primary)" : "var(--danger)" }}>
-            {gainPos ? "+" : ""}{formatCents(totals.totalGainCents)}
-          </div>
-          <div className={`metric-sub ${gainPos ? "up" : "down"}`}>
-            <i className={`ti ${gainPos ? "ti-arrow-up" : "ti-arrow-down"}`} />
-            Vs prix d&apos;achat
-          </div>
-        </div>
-
-        <div className="metric">
-          <div className="metric-top">
-            <span className="metric-label">Performance</span>
-            <div className={`metric-ic ${gainPos ? "metric-ic-up" : "metric-ic-down"}`}>
-              <i className="ti ti-percentage" />
-            </div>
-          </div>
-          <div className="metric-value num" style={{ color: gainPos ? "var(--primary)" : "var(--danger)" }}>
-            {fmtPct(totals.totalGainPct)}
-          </div>
-          <div className={`metric-sub ${gainPos ? "up" : "down"}`}>
-            <i className={`ti ${gainPos ? "ti-trending-up" : "ti-trending-down"}`} />
-            Rendement global
-          </div>
-        </div>
+      <div className="metrics">
+        <Kpi label="Valorisation" icon="ti-chart-area-line" color="#1D9E75" value={eur(S.total)}
+          sub={`${pcS(S.total ? (S.dayEur / S.total) * 100 : 0, 2)} aujourd'hui · ${eurS(S.dayEur)}`} tone={S.dayEur >= 0 ? "up" : "down"} />
+        <Kpi label="Plus-value latente" icon="ti-trending-up" color="#378ADD" value={eurS(S.pv)}
+          sub={`${pcS(S.paid ? (S.pv / S.paid) * 100 : 0)} sur ${eur(S.paid)} versés`} tone={S.pv >= 0 ? "up" : "down"} />
+        <Kpi label="Performance 6 mois" icon="ti-flag" color="#7C6BD6" value={hist.length > 1 ? pcS(perf) : "—"}
+          sub={bench != null ? `MSCI World (EUR) ${pcS(bench)} · écart ${pcS(perf - bench)}` : "Historique en cours de constitution"} tone={bench != null && perf < bench ? "down" : "up"} />
+        <Kpi label="Versements programmés" icon="ti-calendar-repeat" color="#EF9F27" value={eur(S.monthly)} sub={`+ ${eur(S.match)} d'abondement employeur`} />
+      </div>
+      <div className="metrics">
+        <Kpi label="TRI annualisé estimé" icon="ti-percentage" color="#1D9E75" value={pc(S.tri)} sub={`sur ${S.years.toFixed(1)} ans de détention moyenne`} tone={S.tri >= 0 ? "up" : "down"} />
+        <Kpi label="Frais moyens pondérés" icon="ti-receipt-tax" color="#D85A30" value={pc(S.ter, 2)} sub={`≈ ${eur(S.fees)} / an, gestion incluse`} tone={S.ter > 0.6 ? "down" : "up"} />
+        <Kpi label="Part actions" icon="ti-chart-candle" color="#378ADD" value={pc(actions)}
+          sub={`Cible ${profileLabel.toLowerCase()} ${t.actions} % · écart ${pcS(actions - t.actions, 0)}`} tone={Math.abs(actions - t.actions) < 5 ? "up" : "down"} />
+        <Kpi label="Plafond PEA restant" icon="ti-lock-open" color="#D4537E" value={eur(150000 - peaUsed)}
+          sub={`${eur(peaUsed)} versés sur 150 000 € · PEA-PME ${eur(225000 - peaUsed - peapmeUsed)}`} />
       </div>
 
-      {/* Donut + table */}
-      <div className="plac-layout">
-        {donutSlices.length > 0 && (
-          <div className="plac-donut">
-            <div className="section-title">Répartition</div>
-            <DonutChart slices={donutSlices} />
-            <div className="plac-legend">
-              {allocation.map((a) => (
-                <div key={a.kind} className="plac-legend-row">
-                  <span className="plac-legend-dot" style={{ background: KIND_COLORS[a.kind] ?? "#888780" }} />
-                  <span className="plac-legend-label">{KIND_LABELS[a.kind] ?? a.kind}</span>
-                  <span className="plac-legend-pct">{a.pct.toFixed(1)}%</span>
+      <div className="grid-7-5 mb-16">
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">Portefeuille vs indice de référence</span>
+            <span className="card-sub num">{hist.length > 1 ? `Base 100 il y a ${hist.length - 1} mois · ${eur(first)} → ${eur(S.total)}` : "—"}</span>
+          </div>
+          <div className="chart-box" style={{ height: 250 }} ref={chartWrap}>
+            {hist.length > 1 ? (
+              <Line
+                data={{
+                  labels,
+                  datasets: [
+                    { label: "Portefeuille", data: port, borderColor: "#1D9E75", borderWidth: 2, tension: 0.35, pointRadius: 0, pointHoverRadius: 5, fill: false },
+                    ...(hist.some((h) => h.bench != null)
+                      ? [{ label: "MSCI World (EUR)", data: hist.map((h) => h.bench), borderColor: "#888780", borderWidth: 1.5, borderDash: [5, 4], tension: 0.35, pointRadius: 0, pointHoverRadius: 5, fill: false }]
+                      : []),
+                  ],
+                }}
+                options={{
+                  responsive: true, maintainAspectRatio: false, animation: false,
+                  interaction: { intersect: false, mode: "index" },
+                  plugins: {
+                    legend: { display: true, position: "top", align: "end", labels: { color: fg, boxWidth: 9, boxHeight: 9, usePointStyle: true, pointStyle: "circle", padding: 14 } },
+                    tooltip: { callbacks: { label: (c) => `${c.dataset.label} : ${(c.parsed.y ?? 0).toFixed(1)} (base 100)` } },
+                  },
+                  scales: {
+                    x: { grid: { display: false }, ticks: { color: fg } },
+                    y: { grid: { color: grid }, border: { display: false }, ticks: { color: fg } },
+                  },
+                }}
+              />
+            ) : <div className="empty">L&apos;historique se construit mois après mois.</div>}
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header"><span className="card-title">Allocation vs cible</span></div>
+          <div>
+            {alloc.map((r) => {
+              const a = ASSETS[r.k]
+              const off = Math.abs(r.gap) >= 5
+              return (
+                <div className="alloc-row" key={r.k}>
+                  <span className="alloc-name"><span className="legend-dot" style={{ background: a.color }} />{a.label}</span>
+                  <div className="cat-track">
+                    <div className="cat-fill" style={{ width: `${(r.cur / allocMax) * 100}%`, background: a.color }} />
+                    <span className="cat-cap" style={{ left: `${(r.tgt / allocMax) * 100}%` }} title={`Cible ${r.tgt} %`} />
+                  </div>
+                  <span className="alloc-cur num">{pc(r.cur, 0)}</span>
+                  <span className="alloc-tgt num">/ {r.tgt} %</span>
+                  <span className={`alloc-gap num ${off ? "off" : ""}`}>{Math.abs(r.gap) < 0.5 ? "à la cible" : (r.gap > 0 ? "− " : "+ ") + eur(Math.abs(r.money))}</span>
                 </div>
-              ))}
-            </div>
+              )
+            })}
+            <div className="inv-note"><span className="cat-cap-demo" /> repère = allocation cible du profil {profileLabel.toLowerCase()} · dernière colonne = mouvement à faire pour revenir à la cible</div>
           </div>
-        )}
+        </div>
+      </div>
 
-        <div className="plac-table-wrap">
-          <div className="section-title">Portefeuille</div>
-          {invs.length === 0 ? (
-            <div className="empty"><i className="ti ti-seeding" />Aucun placement. Ajoutez-en un !</div>
-          ) : (
-            <table className="plac-table">
-              <thead>
-                <tr>
-                  <th className="plac-th">Actif</th>
-                  <th className="plac-th">Type</th>
-                  <th className="plac-th plac-th-num">Quantité</th>
-                  <th className="plac-th plac-th-num">Prix unitaire</th>
-                  <th className="plac-th plac-th-num">Valeur</th>
-                  <th className="plac-th plac-th-num">P&amp;L</th>
+      <div className="card mb-16">
+        <div className="card-header"><span className="card-title">Conseils &amp; rééquilibrage</span><span className="card-sub">Règles appliquées au profil sélectionné</span></div>
+        <div>
+          {advice.length === 0 && <div className="empty" style={{ padding: 20 }}>Ajoutez des lignes pour obtenir des conseils de diversification.</div>}
+          {advice.map((a, i) => <AdviceRow key={i} a={a} />)}
+        </div>
+        <Disclaimer />
+      </div>
+
+      <div className="card mb-16">
+        <div className="card-header">
+          <span className="card-title">Enveloppes</span>
+          <span className="card-sub">Fiscalité, plafonds et versements par contrat</span>
+          <span className="card-link" role="button" onClick={() => setEnvModal({ open: true, item: null })}>Ajouter une enveloppe</span>
+        </div>
+        <div className="inv-grid">
+          {accts.length === 0 && <div className="empty">Aucune enveloppe. Créez un PEA, une assurance vie… pour y ranger vos lignes.</div>}
+          {accts.map((a) => {
+            const k = INV_KINDS[a.kind]
+            const val = byAcct(S.pos, a.id)
+            const pv = S.pos.filter((p) => p.acct === a.id).reduce((s, p) => s + p.pv, 0)
+            const ceil = k.ceiling ? k.ceiling - (a.kind === "pea" ? peaUsed : peapmeUsed) : null
+            const age = ctx.year - a.since
+            return (
+              <div className="inv-card" key={a.id} style={{ cursor: "pointer" }} onClick={() => setEnvModal({ open: true, item: a })}>
+                <div className="inv-head">
+                  <span className="inv-badge" style={{ background: `${k.color}1f`, color: k.color }}><i className={`ti ${k.icon}`} /> {k.short}</span>
+                  <div className="inv-title"><div className="inv-name">{a.name}</div><div className="inv-bank">{a.bank} · ouvert en {a.since} ({age} ans)</div></div>
+                  <span className="inv-owners">{a.ownerIds.map((o) => <MiniAv key={o} m={ctx.members.find((x) => x.id === o)} size={26} />)}</span>
+                </div>
+                <div className="inv-nums">
+                  <div><div className="inv-lbl">Valorisation</div><div className="inv-val num private">{eur(val)}</div></div>
+                  <div><div className="inv-lbl">Versé</div><div className="inv-val num private">{eur(a.paid)}</div></div>
+                  <div><div className="inv-lbl">± value</div><div className={`inv-val num private ${pv >= 0 ? "pos" : "neg"}`}>{eurS(pv)} <span className="inv-sub num">{pcS(a.paid ? (pv / a.paid) * 100 : 0, 0)}</span></div></div>
+                  <div><div className="inv-lbl">Versement / mois</div><div className="inv-val num private">{a.monthly ? eur(a.monthly) : "—"}{a.match ? <> <span className="inv-sub">+{a.match} %</span></> : null}</div></div>
+                  <div><div className="inv-lbl">Frais de gestion</div><div className="inv-val num">{a.fees ? pc(a.fees, 2) : "aucun"}</div></div>
+                  <div><div className="inv-lbl">{ceil != null ? "Plafond restant" : "Poids"}</div><div className="inv-val num private">{ceil != null ? eur(ceil) : pc(S.total ? (val / S.total) * 100 : 0, 0)}</div></div>
+                </div>
+                <div className="inv-fisc">
+                  <i className="ti ti-scale" /> {k.fisc}
+                  {a.kind === "pea" && age >= 5 ? <> · <b className="pos">exonération d&apos;IR acquise</b></> : a.kind === "pea" ? ` · exonération dans ${5 - age} an${5 - age > 1 ? "s" : ""}` : null}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="card mb-16">
+        <div className="card-header">
+          <span className="card-title">Lignes du portefeuille</span>
+          <span className="card-link" role="button" onClick={() => setLineModal({ open: true, item: null })}>Ajouter une ligne</span>
+        </div>
+        <div className="table-wrap">
+          <table className="dtable">
+            <thead><tr><th>Ligne</th><th>Enveloppe</th><th>Classe</th><th>Zone</th><th className="r">Qté</th><th className="r">PRU</th><th className="r">Cours</th><th className="r">Jour</th><th className="r">Valeur</th><th className="r">Poids</th><th className="r">± value</th><th className="r">TER</th></tr></thead>
+            <tbody>
+              {S.pos.length === 0 && <tr><td colSpan={12}>Aucune ligne. Ajoutez votre première position.</td></tr>}
+              {S.pos.map((p) => {
+                const k = kindOf(p.acct), a = ASSETS[p.cls] ?? ASSETS.actions
+                const flat = p.cls === "euro" || p.cls === "monetaire"
+                const sym = p.cur === "USD" ? "$" : "€"
+                const src = ctx.holdings.find((h) => h.id === p.id) ?? null
+                return (
+                  <tr key={p.id} style={{ cursor: "pointer" }} onClick={() => setLineModal({ open: true, item: src })}>
+                    <td>{p.name}<span className="line-tk num">{p.tk}</span></td>
+                    <td><span className="inv-badge sm" style={{ background: `${k.color}1f`, color: k.color }}>{k.short}</span></td>
+                    <td><span className="legend-dot" style={{ background: a.color, display: "inline-block" }} /> {a.label}</td>
+                    <td>{p.zone}</td>
+                    <td className="r num">{flat ? "—" : p.qty.toLocaleString("fr-FR")}</td>
+                    <td className="r num private">{flat ? "—" : `${num2(p.pru)} ${sym}`}</td>
+                    <td className="r num private">{flat ? "—" : num2(p.price)}</td>
+                    <td className={`r num ${p.day >= 0 ? "pos" : "neg"}`}>{p.day ? pcS(p.day * 100, 2) : "—"}</td>
+                    <td className="r num private">{eur(p.value)}</td>
+                    <td className="r num">{pc(p.w, 1)}</td>
+                    <td className={`r num private ${p.pv >= 0 ? "pos" : "neg"}`}>{eurS(p.pv)}</td>
+                    <td className="r num">{p.ter ? pc(p.ter, 2) : "—"}</td>
+                  </tr>
+                )
+              })}
+              {S.pos.length > 0 && (
+                <tr className="tot">
+                  <td>{S.pos.length} lignes</td><td colSpan={7} />
+                  <td className="r num private">{eur(S.total)}</td><td className="r num">100 %</td>
+                  <td className={`r num private ${S.pv >= 0 ? "pos" : "neg"}`}>{eurS(S.pv)}</td>
+                  <td className="r num">{pc(S.ter, 2)}</td>
                 </tr>
-              </thead>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="grid-2 mb-16">
+        <div className="card"><div className="card-header"><span className="card-title">Zone géographique</span></div><Bars rows={zones} color={hash} /></div>
+        <div className="card"><div className="card-header"><span className="card-title">Secteurs</span></div><Bars rows={group(S.pos, "sector")} color={hash} /></div>
+      </div>
+      <div className="grid-2 mb-16">
+        <div className="card"><div className="card-header"><span className="card-title">Devises</span></div><Bars rows={group(S.pos, "cur")} color={(k) => (k === "EUR" ? "#1D9E75" : "#EF9F27")} /></div>
+        <div className="card"><div className="card-header"><span className="card-title">Capitalisation</span></div><Bars rows={group(S.pos, "cap")} color={hash} /></div>
+      </div>
+      <div className="grid-2 mb-16">
+        <div className="card"><div className="card-header"><span className="card-title">Poids des enveloppes</span></div>
+          <Bars rows={envs} color={(k) => Object.values(INV_KINDS).find((x) => x.label === k)?.color ?? "#888780"} /></div>
+        <div className="card">
+          <div className="card-header"><span className="card-title">Frais annuels par ligne</span></div>
+          <Bars rows={fees.rows} color={hash} />
+          <div className="inv-note">Total estimé {eur(S.fees)} par an ({pc(S.ter, 2)} de frais de supports + frais de gestion des enveloppes) — dont {eur(fees.top)} sur ces {fees.rows.length} lignes.</div>
+        </div>
+      </div>
+      <div className="grid-2">
+        <div className="card">
+          <div className="card-header"><span className="card-title">Simulation fiscale</span></div>
+          <div className="stat-list">{taxRows.map((r) => <StatRow key={r.label} label={r.label} value={r.value} hint={r.hint} />)}</div>
+        </div>
+        <div className="card">
+          <div className="card-header"><span className="card-title">Versements du foyer</span></div>
+          <div className="table-wrap">
+            <table className="dtable">
+              <thead><tr><th>Enveloppe</th><th className="r">Versement / mois</th><th className="r">Abondement</th><th className="r">Total</th></tr></thead>
               <tbody>
-                {invs.map((inv) => {
-                  const pos = inv.gainCents >= 0
+                {accts.filter((a) => a.monthly > 0).map((a) => {
+                  const mt = (a.monthly * a.match) / 100
                   return (
-                    <tr
-                      key={inv.id}
-                      className="plac-row"
-                      onClick={() => setModal({ open: true, item: inv })}
-                    >
-                      <td className="plac-td">
-                        <div className="plac-name">{inv.name}</div>
-                        {inv.ticker && <div className="plac-ticker">{inv.ticker}</div>}
-                      </td>
-                      <td className="plac-td">{KIND_LABELS[inv.kind] ?? inv.kind}</td>
-                      <td className="plac-td plac-td-num">{inv.quantity}</td>
-                      <td className="plac-td plac-td-num">{formatCents(inv.unitPriceCents)}</td>
-                      <td className="plac-td plac-td-num">{formatCents(inv.currentValueCents)}</td>
-                      <td className={`plac-td plac-td-num ${pos ? "pos" : "neg"}`}>
-                        <div>{pos ? "+" : ""}{formatCents(inv.gainCents)}</div>
-                        <div className="plac-pct">{fmtPct(inv.gainPct)}</div>
-                      </td>
+                    <tr key={a.id}>
+                      <td>{a.name}</td>
+                      <td className="r num private">{eur(a.monthly)}</td>
+                      <td className="r num private">{eur(mt)}</td>
+                      <td className="r num private">{eur(a.monthly + mt)}</td>
                     </tr>
                   )
                 })}
+                <tr className="tot">
+                  <td>Par mois</td>
+                  <td className="r num private">{eur(S.monthly)}</td>
+                  <td className="r num private">{eur(S.match)}</td>
+                  <td className="r num private">{eur(S.monthly + S.match)}</td>
+                </tr>
               </tbody>
             </table>
-          )}
+          </div>
+          <div className="inv-note">
+            Rythme actuel : {eur(flowsPerMonth)} par mois, soit {eur(flowsPerMonth * 12)} par an — {pc(income ? (flowsPerMonth / income) * 100 : 0, 0)} des revenus du foyer.
+          </div>
         </div>
       </div>
 
-      {modal.open && (
-        <InvestmentModal
-          investment={modal.item}
-          onClose={() => setModal({ open: false, item: null })}
-          onSaved={onSaved}
-          onDeleted={onDeleted}
-        />
-      )}
+      {quoteOpen && <QuoteModal ctx={ctx} state={quotes} onClose={() => setQuoteOpen(false)} onApply={applyQuotes} />}
+      {lineModal.open && <LineModal ctx={ctx} holding={lineModal.item} onClose={() => setLineModal({ open: false, item: null })} onDone={done} />}
+      {envModal.open && <EnvelopeModal ctx={ctx} account={envModal.item} onClose={() => setEnvModal({ open: false, item: null })} onDone={done} />}
     </div>
   )
 }

@@ -29,9 +29,10 @@ export async function POST(req: Request) {
     accountId?: string
     categoryId?: string
     active?: boolean
+    ownerIds?: string[]
   }
 
-  const { name, amountCents, frequency, kind, nextDate, accountId, categoryId, active } = body
+  const { name, amountCents, frequency, kind, nextDate, accountId, categoryId, active, ownerIds } = body
 
   if (
     !name ||
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
   if (!["monthly", "quarterly", "annual"].includes(frequency)) {
     return err("frequency must be monthly, quarterly, or annual")
   }
-  if (!["charge", "subscription", "saving"].includes(kind)) {
+  if (!["charge", "subscription", "insurance", "saving"].includes(kind)) {
     return err("kind must be charge, subscription, or saving")
   }
 
@@ -59,11 +60,12 @@ export async function POST(req: Request) {
         name,
         amountCents,
         frequency: frequency as "monthly" | "quarterly" | "annual",
-        kind: kind as "charge" | "subscription" | "saving",
+        kind: kind as "charge" | "subscription" | "insurance" | "saving",
         nextDate,
         accountId: accountId ?? null,
         categoryId: categoryId ?? null,
         active: active ?? true,
+        ownerIds: JSON.stringify(ownerIds ?? []),
         createdAt: new Date(),
       })
       .run()

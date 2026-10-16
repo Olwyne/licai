@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mentions légales — Lǐcái</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;450;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" rel="stylesheet" />
+<style>/* ── Lǐcái — pages publiques (auth & légal) ──────────────────── */
+:root{--bg:#0E0F11;--card:#16181B;--card-hover:#1C1F23;--surface:#16181B;--border:#26292E;--border-subtle:#20232700;
+--fg:#F2F3F5;--fg-secondary:#A9ADB4;--fg-muted:#767B83;--primary:#1D9E75;--primary-strong:#178A65;--danger:#D85A30;
+--radius-sm:10px;--radius-lg:16px;--shadow-pop:0 24px 60px rgba(0,0,0,.45)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:Geist,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5}
+.num{font-variant-numeric:tabular-nums}
+a{color:var(--primary);text-decoration:none}
+a:hover{color:var(--primary-strong);text-decoration:underline}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit}
+
+/* Layout auth */
+.auth{min-height:100vh;display:grid;grid-template-columns:1fr 1.05fr}
+.auth-aside{background:linear-gradient(180deg,#12211c 0%,#0E0F11 70%);border-right:1px solid var(--border);padding:48px 52px;display:flex;flex-direction:column}
+.auth-main{display:flex;align-items:center;justify-content:center;padding:48px 32px}
+.auth-card{width:100%;max-width:420px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:36px;height:36px;flex-shrink:0;display:grid;place-items:center;background:var(--primary);color:#fff;font-weight:700;font-size:17px;clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0% 50%)}
+.brand-name{font-size:19px;font-weight:600;letter-spacing:-.3px}
+.brand-sub{font-size:11.5px;color:var(--fg-muted);margin-top:2px}
+.aside-title{font-size:30px;font-weight:600;letter-spacing:-.8px;line-height:1.2;margin-top:auto;text-wrap:balance}
+.aside-text{font-size:14px;color:var(--fg-secondary);margin-top:14px;max-width:38ch;text-wrap:pretty}
+.aside-list{display:flex;flex-direction:column;gap:12px;margin-top:30px}
+.aside-item{display:flex;gap:11px;align-items:flex-start;font-size:13px;color:var(--fg-secondary)}
+.aside-item i{font-size:18px;color:var(--primary);margin-top:1px}
+.aside-foot{margin-top:auto;padding-top:32px;font-size:11.5px;color:var(--fg-muted)}
+
+h1.auth-h{font-size:23px;font-weight:600;letter-spacing:-.5px}
+.auth-p{font-size:13.5px;color:var(--fg-secondary);margin-top:7px}
+.field{display:flex;flex-direction:column;gap:7px;margin-top:16px}
+.field label{font-size:12.5px;color:var(--fg-secondary);font-weight:500}
+.field input,.field select{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 13px;font-size:13.5px;color:var(--fg)}
+.field input:focus,.field select:focus{outline:none;border-color:var(--primary)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hint{font-size:11.5px;color:var(--fg-muted);text-wrap:pretty}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:13.5px;font-weight:500;padding:12px 16px;border-radius:var(--radius-sm);transition:background .14s}
+.btn-primary{background:var(--primary);color:#fff;width:100%;margin-top:20px}
+.btn-primary:hover{background:var(--primary-strong)}
+.btn-ghost{background:var(--card);border:1px solid var(--border);color:var(--fg);width:100%;margin-top:10px}
+.btn-ghost:hover{background:var(--card-hover)}
+.btn i{font-size:17px}
+.row-between{display:flex;align-items:center;justify-content:space-between;margin-top:14px;font-size:12.5px}
+.check{display:flex;gap:9px;align-items:flex-start;margin-top:18px;font-size:12.5px;color:var(--fg-secondary);text-wrap:pretty}
+.check input{margin-top:2px;accent-color:var(--primary);width:15px;height:15px}
+.sep{display:flex;align-items:center;gap:12px;margin:22px 0;color:var(--fg-muted);font-size:11.5px}
+.sep::before,.sep::after{content:"";flex:1;height:1px;background:var(--border)}
+.alt{margin-top:22px;font-size:13px;color:var(--fg-secondary);text-align:center}
+.strength{display:flex;gap:5px;margin-top:8px}
+.strength span{height:3px;flex:1;border-radius:99px;background:var(--border)}
+.strength span.on{background:var(--primary)}
+.err{font-size:12px;color:var(--danger);margin-top:10px;display:none}
+.err.on{display:block}
+.disclaimer{display:flex;gap:9px;align-items:flex-start;margin-top:22px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--card-hover);font-size:12px;line-height:1.55;color:var(--fg-secondary);text-wrap:pretty}
+.disclaimer i{font-size:15px;color:#EF9F27;margin-top:1px;flex-shrink:0}
+.disclaimer b{color:var(--fg);font-weight:600}
+
+/* Pages légales */
+.legal{max-width:760px;margin:0 auto;padding:40px 32px 90px}
+.legal-top{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-bottom:26px;border-bottom:1px solid var(--border)}
+.legal h1{font-size:26px;font-weight:600;letter-spacing:-.6px;margin-top:34px}
+.legal .meta{font-size:12.5px;color:var(--fg-muted);margin-top:8px}
+.legal h2{font-size:15.5px;font-weight:600;margin-top:34px;letter-spacing:-.2px}
+.legal p{font-size:13.5px;color:var(--fg-secondary);margin-top:10px;text-wrap:pretty}
+.legal ul{margin-top:10px;padding-left:20px;display:flex;flex-direction:column;gap:7px}
+.legal li{font-size:13.5px;color:var(--fg-secondary);text-wrap:pretty}
+.legal .toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.legal .toc a{font-size:12px;color:var(--fg-secondary);border:1px solid var(--border);border-radius:99px;padding:6px 11px;background:var(--card)}
+.legal .toc a:hover{border-color:var(--primary);color:var(--primary);text-decoration:none}
+.legal-foot{margin-top:54px;padding-top:22px;border-top:1px solid var(--border);font-size:12px;color:var(--fg-muted);display:flex;gap:18px;flex-wrap:wrap}
+table.legal-t{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px}
+table.legal-t th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--fg-muted);padding:0 10px 8px;border-bottom:1px solid var(--border)}
+table.legal-t td{padding:10px;border-bottom:1px solid var(--border);color:var(--fg-secondary);vertical-align:top}
+@media (max-width:900px){.auth{grid-template-columns:1fr}.auth-aside{display:none}}
+</style>
+</head>
+<body>
+<div class="legal">
+  <div class="legal-top">
+    <a href="/login" class="brand" style="color:inherit;text-decoration:none;"><div class="brand-mark">L</div><div><div class="brand-name">Lǐcái</div><div class="brand-sub">Finances personnelles</div></div></a>
+    <a href="/dashboard"><i class="ti ti-arrow-left" style="vertical-align:-2px;"></i> Retour à l'application</a>
+  </div>
+  <h1>Mentions légales</h1>
+  <div class="meta">Dernière mise à jour : 1er juin 2026 · Version 1.2</div>
+  <div class="toc">
+    <a href="#editeur">Éditeur</a><a href="#statut">Statut réglementaire</a><a href="#nature">Nature du service</a>
+    <a href="#responsabilite">Responsabilité</a><a href="#donnees">Données personnelles</a><a href="#pi">Propriété intellectuelle</a><a href="#contact">Contact</a>
+  </div>
+
+  <h2 id="editeur">1. Éditeur du service</h2>
+  <p>Lǐcái est édité à titre de démonstration produit. Les informations d'identification de l'éditeur (dénomination sociale, forme juridique, capital, siège social, numéro RCS, numéro de TVA intracommunautaire, nom du directeur de la publication) doivent être complétées avant toute mise en ligne publique.</p>
+  <table class="legal-t"><thead><tr><th>Mention obligatoire</th><th>À compléter</th></tr></thead><tbody>
+    <tr><td>Dénomination et forme juridique</td><td>—</td></tr>
+    <tr><td>Siège social</td><td>—</td></tr>
+    <tr><td>RCS / SIREN</td><td>—</td></tr>
+    <tr><td>Directeur de la publication</td><td>—</td></tr>
+    <tr><td>Hébergeur (nom, adresse, téléphone)</td><td>—</td></tr>
+  </tbody></table>
+
+  <h2 id="statut">2. Statut réglementaire</h2>
+  <p>Lǐcái n'est ni un établissement de crédit, ni un établissement de paiement, ni un prestataire de services d'investissement, ni un conseiller en investissements financiers, ni un intermédiaire en opérations de banque, ni un professionnel du conseil fiscal ou juridique. Le service n'est enregistré à ce titre auprès d'aucune autorité de supervision et ne dispose d'aucun agrément de l'ACPR ni de l'AMF.</p>
+  <p>Aucune opération de paiement, aucun ordre de bourse et aucune souscription ne sont exécutés par Lǐcái. L'application se limite à la lecture, l'agrégation et la mise en forme d'informations saisies ou importées par l'utilisateur.</p>
+
+  <h2 id="nature">3. Nature du service : information, pas conseil</h2>
+  <p>Les tableaux de bord, analyses, scores, comparaisons, simulations fiscales, pistes d'optimisation et réponses de l'assistant sont fournis à titre <b>strictement informatif et pédagogique</b>. Ils ne constituent en aucun cas :</p>
+  <ul>
+    <li>un conseil en investissement ou une recommandation personnalisée d'acheter, de vendre ou de conserver un instrument financier ;</li>
+    <li>un conseil fiscal, juridique, comptable, patrimonial ou assurantiel ;</li>
+    <li>une sollicitation, une offre ou une incitation à souscrire un produit financier ou un crédit ;</li>
+    <li>une garantie de résultat, de rendement, d'exactitude fiscale ou d'éligibilité à un dispositif.</li>
+  </ul>
+  <p>Les simulations reposent sur des paramètres et barèmes susceptibles d'évoluer et sur les données que vous fournissez : elles ne remplacent ni un avis d'imposition, ni un relevé bancaire, ni l'analyse d'un professionnel habilité.</p>
+
+  <h2 id="responsabilite">4. Limitation de responsabilité</h2>
+  <p>Les performances passées ne préjugent pas des performances futures. Tout placement présente un risque de perte partielle ou totale du capital investi ; l'endettement expose au risque de défaut de paiement.</p>
+  <p>Vous demeurez seul décideur et seul responsable des opérations que vous réalisez. Dans les limites permises par la loi, l'éditeur ne saurait être tenu responsable des pertes financières, moins-values, pénalités, majorations, redressements fiscaux, occasions manquées ou dommages indirects résultant de l'usage du service, d'une donnée erronée ou incomplète, d'une interruption technique, ou d'une décision prise sur la base des informations affichées.</p>
+  <p>Avant toute décision significative — arbitrage, souscription, emprunt, déclaration fiscale, transmission — consultez un conseiller habilité et vérifiez les informations auprès de vos établissements et de l'administration.</p>
+
+  <h2 id="donnees">5. Données personnelles</h2>
+  <p>Les données financières que vous saisissez ou importez sont traitées pour la seule finalité de fournir le service. Dans cette démonstration, elles restent stockées localement dans votre navigateur et ne sont transmises à aucun tiers, à l'exception des appels que vous configurez explicitement (fournisseur de cours de bourse, fournisseur de taux de change, modèle d'IA connecté). Un instantané de vos données est alors envoyé au point d'accès que vous avez indiqué, sous votre responsabilité.</p>
+  <p>Conformément au RGPD, vous disposez de droits d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité. L'export CSV et l'effacement local sont disponibles dans les paramètres de l'application.</p>
+
+  <h2 id="pi">6. Propriété intellectuelle</h2>
+  <p>La structure, les textes, l'interface, les visuels et les composants logiciels de Lǐcái sont protégés. Toute reproduction ou réutilisation non autorisée est interdite. Les marques et noms d'établissements bancaires, de gestionnaires d'actifs et de produits cités le sont à titre d'identification : leurs titulaires respectifs en conservent tous les droits, et leur mention n'implique aucun partenariat.</p>
+
+  <h2 id="contact">7. Contact</h2>
+  <p>Pour toute question relative à ces mentions, à vos données ou à un signalement : adresse de contact à compléter avant mise en ligne.</p>
+  <div class="legal-foot">
+    <a href="/legal/mentions-legales.html">Mentions légales</a>
+    <a href="/legal/conditions.html">Conditions d'utilisation</a>
+    <a href="/login">Connexion</a>
+    <span>Lǐcái — démonstration produit, données fictives.</span>
+  </div>
+</div>
+</body>
+</html>

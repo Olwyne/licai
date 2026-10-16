@@ -11,6 +11,11 @@ const TYPE_LABELS: Record<string, string> = {
   other: "Autre",
 }
 
+function isChildOnlyAccount(account: EnrichedAccount, members: Member[]): boolean {
+  if (account.ownerIds.length === 0) return false
+  return account.ownerIds.every((id) => members.find((m) => m.id === id)?.isChild === true)
+}
+
 interface Props {
   members: Member[]
   banks: Bank[]
@@ -18,6 +23,8 @@ interface Props {
   ownerFilter: string
   onOwnerFilter: (f: string) => void
   onAddAccount: () => void
+  onEditAccount?: (account: EnrichedAccount) => void
+  childViewId?: string | null
 }
 
 export function AccountGroups({
@@ -27,19 +34,24 @@ export function AccountGroups({
   ownerFilter,
   onOwnerFilter,
   onAddAccount,
+  onEditAccount,
+  childViewId,
 }: Props) {
   const { private: isPrivate } = usePrivacy()
 
+  const visibleAccounts = childViewId
+    ? accounts.filter((a) => a.ownerIds.includes(childViewId))
+    : accounts
+
   const filtered =
     ownerFilter === "all"
-      ? accounts
+      ? visibleAccounts
       : ownerFilter === "shared"
-      ? accounts.filter((a) => a.ownerIds.length > 1)
-      : accounts.filter((a) => a.ownerIds.includes(ownerFilter))
+      ? visibleAccounts.filter((a) => a.ownerIds.length > 1)
+      : visibleAccounts.filter((a) => a.ownerIds.includes(ownerFilter))
 
   const bankMap = new Map(banks.map((b) => [b.id, b]))
 
-  // Group by bankId preserving insertion order
   const groupOrder: (string | null)[] = []
   const groupMap = new Map<string | null, EnrichedAccount[]>()
   for (const account of filtered) {
@@ -53,31 +65,33 @@ export function AccountGroups({
 
   return (
     <div>
-      <div className="accounts-toolbar">
-        <div className="owner-chips">
-          <Chip active={ownerFilter === "all"} onClick={() => onOwnerFilter("all")}>
-            Tout le foyer
-          </Chip>
-          {members.map((m) => (
-            <Chip
-              key={m.id}
-              active={ownerFilter === m.id}
-              onClick={() => onOwnerFilter(m.id)}
-            >
-              {m.short}
+      {!childViewId && (
+        <div className="accounts-toolbar">
+          <div className="owner-chips">
+            <Chip active={ownerFilter === "all"} onClick={() => onOwnerFilter("all")}>
+              Tout le foyer
             </Chip>
-          ))}
-          <Chip
-            active={ownerFilter === "shared"}
-            onClick={() => onOwnerFilter("shared")}
-          >
-            Comptes partagés
-          </Chip>
+            {members.map((m) => (
+              <Chip
+                key={m.id}
+                active={ownerFilter === m.id}
+                onClick={() => onOwnerFilter(m.id)}
+              >
+                {m.short}
+              </Chip>
+            ))}
+            <Chip
+              active={ownerFilter === "shared"}
+              onClick={() => onOwnerFilter("shared")}
+            >
+              Comptes partagés
+            </Chip>
+          </div>
+          <button className="btn btn-primary btn-sm" onClick={onAddAccount} type="button">
+            + Nouveau compte
+          </button>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={onAddAccount} type="button">
-          + Nouveau compte
-        </button>
-      </div>
+      )}
 
       {filtered.length === 0 && (
         <div className="empty-state">Aucun compte pour ce filtre</div>
@@ -111,8 +125,16 @@ export function AccountGroups({
               {bankAccounts.map((account) => {
                 const isShared = account.ownerIds.length > 1
                 const typeLabel = TYPE_LABELS[account.type] ?? account.type
+                const childOnly = isChildOnlyAccount(account, members)
                 return (
-                  <div key={account.id} className="acct-card">
+                  <div
+                    key={account.id}
+                    className={`acct-card${onEditAccount ? " acct-card--clickable" : ""}`}
+                    onClick={() => onEditAccount?.(account)}
+                    role={onEditAccount ? "button" : undefined}
+                    tabIndex={onEditAccount ? 0 : undefined}
+                    onKeyDown={(e) => e.key === "Enter" && onEditAccount?.(account)}
+                  >
                     <div className="acct-top">
                       <div>
                         <div className="acct-name">{account.name}</div>
@@ -159,9 +181,11 @@ export function AccountGroups({
                       <span className="acct-sync">
                         <i className="ti ti-refresh" /> Aucune opération importée
                       </span>
-                      <button className="acct-import" disabled type="button">
-                        ⬆ Importer
-                      </button>
+                      {!childOnly && (
+                        <button className="acct-import" disabled type="button">
+                          ⬆ Importer
+                        </button>
+                      )}
                     </div>
                   </div>
                 )

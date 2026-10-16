@@ -27,6 +27,15 @@ export async function PATCH(
       unitPriceCents?: number
       purchasePriceCents?: number
       note?: string
+      accountId?: string | null
+      assetClass?: string
+      zone?: string
+      sector?: string
+      currency?: string
+      cap?: string
+      terPct?: number
+      gainCents?: number | null
+      prevPriceCents?: number | null
     }
 
     const patch: Partial<typeof row> = {}
@@ -37,6 +46,15 @@ export async function PATCH(
     if (body.unitPriceCents !== undefined) patch.unitPriceCents = body.unitPriceCents
     if (body.purchasePriceCents !== undefined) patch.purchasePriceCents = body.purchasePriceCents
     if (body.note !== undefined) patch.note = body.note
+    if (body.accountId !== undefined) patch.accountId = body.accountId
+    if (body.assetClass !== undefined) patch.assetClass = body.assetClass
+    if (body.zone !== undefined) patch.zone = body.zone
+    if (body.sector !== undefined) patch.sector = body.sector
+    if (body.currency !== undefined) patch.currency = body.currency
+    if (body.cap !== undefined) patch.cap = body.cap
+    if (body.terPct !== undefined) patch.terPct = body.terPct
+    if (body.gainCents !== undefined) patch.gainCents = body.gainCents
+    if (body.prevPriceCents !== undefined) patch.prevPriceCents = body.prevPriceCents
 
     db.update(investments)
       .set(patch)

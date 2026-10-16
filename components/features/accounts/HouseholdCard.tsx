@@ -3,6 +3,7 @@ import { formatCents } from "@/lib/money"
 import { usePrivacy } from "@/contexts/PrivacyContext"
 import { Card } from "@/components/ui/Card"
 import type { EnrichedAccount, Member } from "./types"
+import type { Goal } from "@/db/schema"
 
 function initials(name: string): string {
   const words = name.trim().split(/\s+/)
@@ -13,12 +14,19 @@ function initials(name: string): string {
     .toUpperCase()
 }
 
+function calcAge(birthYear: number | null | undefined): number | null {
+  if (!birthYear) return null
+  return new Date().getFullYear() - birthYear
+}
+
 interface Props {
   householdName: string
   members: Member[]
   accounts: EnrichedAccount[]
   banksCount: number
   onAddMember: () => void
+  childGoals?: Record<string, Goal[]>
+  onChildView?: (memberId: string) => void
 }
 
 export function HouseholdCard({
@@ -27,6 +35,8 @@ export function HouseholdCard({
   accounts,
   banksCount,
   onAddMember,
+  childGoals = {},
+  onChildView,
 }: Props) {
   const { private: isPrivate } = usePrivacy()
 
@@ -35,7 +45,9 @@ export function HouseholdCard({
   const memberStats = members.map((m) => {
     const memberAccounts = accounts.filter((a) => a.ownerIds.includes(m.id))
     const memberBalance = memberAccounts.reduce((sum, a) => sum + a.balanceCents, 0)
-    return { ...m, accountCount: memberAccounts.length, balance: memberBalance }
+    const age = calcAge(m.birthYear)
+    const goals = childGoals[m.id] ?? []
+    return { ...m, accountCount: memberAccounts.length, balance: memberBalance, age, goals }
   })
 
   return (
@@ -59,7 +71,7 @@ export function HouseholdCard({
       </div>
       <div className="member-grid">
         {memberStats.map((m) => (
-          <div key={m.id} className="member-card">
+          <div key={m.id} className={`member-card${m.isChild ? " member-card--child" : ""}`}>
             <span
               className="mini-av"
               style={{
@@ -71,8 +83,44 @@ export function HouseholdCard({
               {initials(m.name)}
             </span>
             <div className="member-info">
-              <div className="member-name">{m.name}</div>
+              <div className="member-name">
+                {m.name}
+                {m.age !== null && <span className="member-age"> · {m.age} ans</span>}
+              </div>
               <div className="member-role">{m.role}</div>
+              {m.isChild && (
+                <span className="badge-enfant">Enfant (lecture)</span>
+              )}
+              {m.isChild && m.allowanceCents > 0 && (
+                <div className="allowance-line">
+                  <i className="ti ti-coins" /> Argent de poche : {formatCents(m.allowanceCents)}/mois
+                </div>
+              )}
+              {m.isChild && m.goals.length > 0 && (
+                <div className="goal-mini-list">
+                  {m.goals.slice(0, 2).map((g) => {
+                    const pct = Math.min(100, Math.round((g.currentCents / g.targetCents) * 100))
+                    return (
+                      <div key={g.id} className="goal-mini">
+                        <div className="goal-mini-header">
+                          <span>{g.emoji} {g.name}</span>
+                          <span className="goal-mini-pct">{pct}%</span>
+                        </div>
+                        <div className="goal-mini-track">
+                          <div
+                            className="goal-mini-fill"
+                            style={{ width: `${pct}%`, background: g.colorHex }}
+                          />
+                        </div>
+                        <div className="goal-mini-amounts">
+                          <span className={isPrivate ? "private" : ""}>{formatCents(g.currentCents)}</span>
+                          <span className="goal-mini-target">/ {formatCents(g.targetCents)}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
             <div className="member-nums">
               <div className={`member-sum${isPrivate ? " private" : ""}`}>
@@ -81,6 +129,16 @@ export function HouseholdCard({
               <div className="member-accs">
                 {m.accountCount} compte{m.accountCount > 1 ? "s" : ""}
               </div>
+              {m.isChild && onChildView && (
+                <button
+                  type="button"
+                  className="btn-child-view"
+                  onClick={() => onChildView(m.id)}
+                  title={`Voir le foyer comme ${m.short ?? m.name.split(" ")[0]}`}
+                >
+                  <i className="ti ti-eye" /> Vue {m.short ?? m.name.split(" ")[0]}
+                </button>
+              )}
             </div>
           </div>
         ))}

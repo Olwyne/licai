@@ -14,7 +14,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const householdId = await getHouseholdId()
   if (!householdId) return unauthorized()
-  const { name, short, role, colorHex, monthlyIncomeCents, birthYear, retireYear } = await req.json()
+  const { name, short, role, colorHex, monthlyIncomeCents, birthYear, retireYear, isChild, allowanceCents } = await req.json()
   if (!name || !short) return err("name and short are required")
   const id = randomUUID()
   db.insert(members).values({
@@ -27,6 +27,8 @@ export async function POST(req: Request) {
     monthlyIncomeCents: monthlyIncomeCents ?? 0,
     birthYear: birthYear ?? null,
     retireYear: retireYear ?? null,
+    isChild: isChild ?? false,
+    allowanceCents: allowanceCents ?? 0,
   }).run()
   revalidateTag("members", { expire: 0 })
   return ok(db.select().from(members).where(eq(members.id, id)).get(), 201)

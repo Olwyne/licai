@@ -103,3 +103,17 @@ export async function PUT(req: Request) {
       .all()
   )
 }
+
+// DELETE /api/budget?month=YYYY-MM&categoryId=… — retire une catégorie du budget du mois
+export async function DELETE(req: Request) {
+  const householdId = await getHouseholdId()
+  if (!householdId) return unauthorized()
+  const q = new URL(req.url).searchParams
+  const month = q.get("month"), categoryId = q.get("categoryId")
+  if (!month || !categoryId) return err("month and categoryId required")
+  db.delete(budgets)
+    .where(and(eq(budgets.householdId, householdId), eq(budgets.month, month), eq(budgets.categoryId, categoryId)))
+    .run()
+  revalidateTag("budget", { expire: 0 })
+  return ok({ deleted: true })
+}

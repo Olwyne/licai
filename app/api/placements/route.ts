@@ -76,6 +76,15 @@ export async function POST(req: Request) {
       unitPriceCents: number
       purchasePriceCents: number
       note?: string
+      accountId?: string | null
+      assetClass?: string
+      zone?: string
+      sector?: string
+      currency?: string
+      cap?: string
+      terPct?: number
+      gainCents?: number | null
+      prevPriceCents?: number | null
     }
 
     if (!body.name?.trim()) return err("Le nom est requis.", 400)
@@ -94,6 +103,15 @@ export async function POST(req: Request) {
       purchasePriceCents: body.purchasePriceCents,
       note: body.note ?? "",
       createdAt: now,
+      accountId: body.accountId ?? null,
+      assetClass: body.assetClass ?? "actions",
+      zone: body.zone ?? "Monde",
+      sector: body.sector ?? "Diversifié",
+      currency: body.currency ?? "EUR",
+      cap: body.cap ?? "—",
+      terPct: body.terPct ?? 0,
+      gainCents: body.gainCents ?? null,
+      prevPriceCents: body.prevPriceCents ?? null,
     }).run()
 
     const row = db.select().from(investments).where(and(eq(investments.id, id), eq(investments.householdId, householdId))).get()

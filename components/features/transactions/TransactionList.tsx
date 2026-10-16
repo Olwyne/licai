@@ -1,4 +1,5 @@
 "use client"
+import { useRef, useEffect } from "react"
 import { usePrivacy } from "@/contexts/PrivacyContext"
 import { formatCents, maskAmount } from "@/lib/money"
 import type { Transaction, Account, Category } from "@/db/schema"
@@ -10,18 +11,19 @@ interface Props {
   selected: Set<string>
   onToggleSelect: (id: string) => void
   onEdit: (tx: Transaction) => void
+  allPageSelected?: boolean
+  somePageSelected?: boolean
+  onSelectAll?: () => void
 }
 
-function monthLabel(month: string): string {
-  const d = new Date(month + "-02") // day 2 avoids UTC offset issues
-  const raw = d.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })
+function dayLabel(date: string): string {
+  const d = new Date(date + "T12:00:00")
+  const today = new Date().toISOString().slice(0, 10)
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+  if (date === today) return "Aujourd'hui"
+  if (date === yesterday) return "Hier"
+  const raw = d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })
   return raw.charAt(0).toUpperCase() + raw.slice(1)
-}
-
-function shortDate(date: string): string {
-  // date is YYYY-MM-DD → DD/MM
-  const parts = date.split("-")
-  return `${parts[2]}/${parts[1]}`
 }
 
 export function TransactionList({
@@ -31,14 +33,23 @@ export function TransactionList({
   selected,
   onToggleSelect,
   onEdit,
+  allPageSelected = false,
+  somePageSelected = false,
+  onSelectAll,
 }: Props) {
   const { private: isPrivate } = usePrivacy()
+  const selectAllRef = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = somePageSelected && !allPageSelected
+    }
+  }, [somePageSelected, allPageSelected])
 
   const accountMap = new Map(accounts.map((a) => [a.id, a]))
   const categoryMap = new Map(categories.map((c) => [c.id, c]))
 
-  // Group by month (YYYY-MM), sorted descending
-  const months = [...new Set(transactions.map((tx) => tx.date.slice(0, 7)))].sort().reverse()
+  // Group by day (YYYY-MM-DD), sorted descending
+  const months = [...new Set(transactions.map((tx) => tx.date))].sort().reverse()
 
   if (transactions.length === 0) {
     return (
@@ -50,11 +61,26 @@ export function TransactionList({
 
   return (
     <div className="tx-list">
-      {months.map((month) => {
-        const txs = transactions.filter((tx) => tx.date.startsWith(month))
+      {onSelectAll && (
+        <div className="tx-select-all-row">
+          <input
+            ref={selectAllRef}
+            type="checkbox"
+            className="tx-check"
+            checked={allPageSelected}
+            onChange={onSelectAll}
+            title="Tout sélectionner"
+          />
+          <span style={{ fontSize: 12.5, color: "var(--fg-muted)", userSelect: "none", cursor: "pointer" }} onClick={onSelectAll}>
+            {allPageSelected ? "Tout désélectionner" : "Tout sélectionner"}
+          </span>
+        </div>
+      )}
+      {months.map((day) => {
+        const txs = transactions.filter((tx) => tx.date === day)
         return (
-          <div key={month} className="tx-month-group">
-            <div className="tx-month-head">{monthLabel(month)}</div>
+          <div key={day} className="tx-month-group">
+            <div className="tx-month-head">{dayLabel(day)}</div>
             {txs.map((tx) => {
               const cat = tx.categoryId ? categoryMap.get(tx.categoryId) : undefined
               const acc = tx.accountId ? accountMap.get(tx.accountId) : undefined
@@ -72,14 +98,12 @@ export function TransactionList({
                     onClick={(e) => e.stopPropagation()}
                     onChange={() => onToggleSelect(tx.id)}
                   />
-                  {cat ? (
-                    <span
-                      className="tx-icon"
-                      style={{
-                        background: `${cat.colorHex}22`,
-                        color: cat.colorHex,
-                      }}
-                    >
+                  {tx.kind === "transfer" ? (
+                    <span className="tx-icon tx-icon-transfer">
+                      <i className="ti ti-arrows-exchange" />
+                    </span>
+                  ) : cat ? (
+                    <span className="tx-icon" style={{ background: `${cat.colorHex}22`, color: cat.colorHex }}>
                       <i className={`ti ${cat.icon}`} />
                     </span>
                   ) : (
@@ -90,15 +114,14 @@ export function TransactionList({
                   <div className="tx-info">
                     <div className="tx-name">{tx.name}</div>
                     <div className="tx-meta">
-                      {shortDate(tx.date)}
-                      {acc ? ` · ${acc.name}` : ""}
+                      {tx.kind === "transfer"
+                        ? `${acc ? acc.name : "—"} → ${tx.toAccountId ? (accountMap.get(tx.toAccountId)?.name ?? "—") : "—"}`
+                        : acc ? acc.name : ""}
                       {cat ? ` · ${cat.label}` : ""}
                     </div>
                   </div>
-                  <span
-                    className={`tx-amt${tx.amountCents >= 0 ? " pos" : " neg"}${isPrivate ? " private" : ""}`}
-                  >
-                    {isPrivate ? maskAmount("") : formatCents(tx.amountCents)}
+                  <span className={`tx-amt${tx.kind === "transfer" ? " transfer" : tx.amountCents >= 0 ? " pos" : " neg"}${isPrivate ? " private" : ""}`}>
+                    {isPrivate ? maskAmount("") : (tx.kind === "transfer" ? `⇄ ${formatCents(tx.amountCents)}` : formatCents(tx.amountCents))}
                   </span>
                 </div>
               )

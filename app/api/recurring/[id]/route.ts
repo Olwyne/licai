@@ -23,11 +23,12 @@ export async function PATCH(
     name?: string
     amountCents?: number
     frequency?: "monthly" | "quarterly" | "annual"
-    kind?: "charge" | "subscription" | "saving"
+    kind?: "charge" | "subscription" | "insurance" | "saving"
     nextDate?: string
     accountId?: string | null
     categoryId?: string | null
     active?: boolean
+    ownerIds?: string[]
   }
 
   const allowed: Partial<typeof row> = {}
@@ -38,6 +39,7 @@ export async function PATCH(
   if (body.nextDate !== undefined) allowed.nextDate = body.nextDate
   if (body.accountId !== undefined) allowed.accountId = body.accountId
   if (body.categoryId !== undefined) allowed.categoryId = body.categoryId
+  if (body.ownerIds !== undefined) allowed.ownerIds = JSON.stringify(body.ownerIds)
   if (body.active !== undefined) allowed.active = body.active
 
   db.update(recurring).set(allowed).where(eq(recurring.id, id)).run()

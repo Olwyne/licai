@@ -18,6 +18,7 @@ export async function POST(req: Request) {
 
   const body = await req.json()
   const { accountId, rows } = body
+  const ownerIds: string[] = Array.isArray(body.ownerIds) ? body.ownerIds.filter((x: unknown) => typeof x === "string") : []
 
   if (!accountId || !Array.isArray(rows)) {
     return err("accountId and rows are required")
@@ -44,7 +45,8 @@ export async function POST(req: Request) {
         amountCents: row.amountCents,
         date: row.date,
         note: row.note ?? "",
-        isCommon: true,
+        isCommon: ownerIds.length !== 1,
+        memberId: ownerIds.length === 1 ? ownerIds[0] : null,
         importedAt: now,
         createdAt: now,
       })

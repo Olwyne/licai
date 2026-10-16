@@ -9,7 +9,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!householdId) return unauthorized()
   const { id } = await params
   const body = await req.json()
-  const allowed = ["name", "type", "balanceCents", "currency", "bankId", "ownerIds", "colorHex", "iban"]
+  const allowed = ["name", "type", "balanceCents", "currency", "bankId", "ownerIds", "colorHex", "iban", "last4", "purpose"]
   const updates: Record<string, unknown> = {}
   for (const k of allowed) {
     if (k in body) updates[k] = k === "ownerIds" ? JSON.stringify(body[k]) : body[k]

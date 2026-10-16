@@ -1,9 +1,9 @@
 "use client"
 import React, { useCallback, useRef, useState } from "react"
-import { Button } from "@/components/ui/Button"
+import { MiniAv } from "@/components/features/finance/ui"
 import { formatCents } from "@/lib/money"
 import { mapColumns } from "@/lib/finance/csv"
-import type { Account, Bank, Category, Transaction } from "@/db/schema"
+import type { Account, Bank, Category, Member, Transaction } from "@/db/schema"
 import type { ParsedRow } from "@/lib/finance/csv"
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
   banks: Bank[]
   categories: Category[]
   txList: Transaction[]
+  members: Member[]
   onImported: (txs: Transaction[]) => void
   onClose: () => void
 }
@@ -87,6 +88,7 @@ export function CsvImportWizard({
   banks,
   categories,
   txList,
+  members,
   onImported,
   onClose,
 }: Props) {
@@ -99,6 +101,10 @@ export function CsvImportWizard({
   const [bankId, setBankId] = useState(banks[0]?.id ?? "")
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "")
   const [isDragOver, setIsDragOver] = useState(false)
+  const [owners, setOwners] = useState<string[]>([])
+  const [presets, setPresets] = useState<CsvPreset[]>(() => (typeof window === "undefined" ? [] : loadPresets()))
+  const [presetSel, setPresetSel] = useState("")
+  const [presetMsg, setPresetMsg] = useState<{ text: string; ok: boolean } | null>(null)
 
   // Step 2
   const [separator, setSeparator] = useState(";")
@@ -270,7 +276,18 @@ export function CsvImportWizard({
       creditCol,
     }
     savePreset(p)
+    setPresets(loadPresets())
+    setPresetSel(n)
+    setPresetMsg({ text: `Format « ${n} » enregistré.`, ok: true })
     setPresetName("")
+  }
+
+  function deletePreset() {
+    if (!presetSel) return
+    try { localStorage.setItem("licai-csv-presets", JSON.stringify(loadPresets().filter((x) => x.name !== presetSel))) } catch { /* indisponible */ }
+    setPresets(loadPresets())
+    setPresetMsg({ text: `Format « ${presetSel} » oublié.`, ok: false })
+    setPresetSel("")
   }
 
   function goToStep3() {
@@ -312,7 +329,7 @@ export function CsvImportWizard({
       const res = await fetch("/api/transactions/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accountId, rows }),
+        body: JSON.stringify({ accountId, rows, ownerIds: owners }),
       })
 
       if (!res.ok) {
@@ -349,294 +366,182 @@ export function CsvImportWizard({
     ? accounts.filter((a) => a.bankId === bankId)
     : accounts
 
+  const acct = accounts.find((a) => a.id === accountId)
+  const bank = banks.find((b) => b.id === acct?.bankId)
+  const dups = previewRows.filter((r) => r.isDup).length
+  const ownerNames = members.filter((m) => owners.includes(m.id)).map((m) => m.short || m.name)
+  const toMini = (m: Member) => ({ id: m.id, name: m.name, short: m.short, role: m.role, color: m.colorHex, incomeMonthly: 0, birthYear: null, isChild: false })
+  const nextLabel = step === 3 ? (importing ? "Import…" : `Importer ${checkedCount} opération${checkedCount > 1 ? "s" : ""}`) : "Continuer"
+  const nextDisabled = step === 1 ? !rawCsv || !accountId : step === 3 ? importing || checkedCount === 0 : false
+  const fmtDate = (d: string) => d.split("-").reverse().join("/")
+
   return (
-    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="modal import-modal">
-        <div className="modal-header">
-          <h2>Importer un fichier CSV</h2>
-          <button className="modal-close" type="button" onClick={onClose}>✕</button>
+    <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="modal modal-lg">
+        <div className="modal-head">
+          <h3>Importer un relevé CSV</h3>
+          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
         </div>
 
-        {/* Step indicator */}
-        <div className="import-steps">
-          {([1, 2, 3] as const).map((s, idx) => (
-            <React.Fragment key={s}>
-              {idx > 0 && <div className="step-sep" />}
-              <div
-                className={`step${step === s ? " active" : step > s ? " done" : ""}`}
-              >
-                <span className="step-num">{step > s ? "✓" : s}</span>
-                {s === 1 ? "Fichier" : s === 2 ? "Colonnes" : "Aperçu"}
-              </div>
-            </React.Fragment>
+        <div className="steps">
+          {([[1, "Fichier & compte"], [2, "Colonnes"], [3, "Vérification"]] as const).map(([n, label]) => (
+            <div key={n} className={`step${step === n ? " active" : step > n ? " done" : ""}`}>
+              <span className="step-n">{step > n ? "✓" : n}</span> {label}
+            </div>
           ))}
         </div>
 
-        {/* ── Step 1 ── */}
-        <div className={`import-step${step === 1 ? " active" : ""}`}>
-          <div
-            className={`dropzone${isDragOver ? " over" : ""}${fileName ? " filled" : ""}`}
-            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
-            onDragLeave={() => setIsDragOver(false)}
-            onDrop={handleFileDrop}
-            onClick={() => fileRef.current?.click()}
-          >
-            {fileName
-              ? `✓ ${fileName}`
-              : "Glissez un fichier CSV ici ou cliquez pour choisir"}
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".csv,.txt"
-              style={{ display: "none" }}
-              onChange={handleFileInput}
-            />
-          </div>
-
-          <div className="wizard-toolbar">
-            <div className="filter-group">
-              <label>Banque</label>
-              <select value={bankId} onChange={(e) => setBankId(e.target.value)}>
-                <option value="">Toutes</option>
-                {banks.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="filter-group">
-              <label>Compte *</label>
-              <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-                <option value="">— Sélectionner —</option>
-                {filteredAccounts.map((a) => (
-                  <option key={a.id} value={a.id}>{a.name}</option>
-                ))}
-              </select>
-            </div>
-            <button
-              type="button"
-              className="wizard-sample-btn"
-              onClick={loadSample}
+        <div className="modal-body">
+          {/* Étape 1 */}
+          <div className={`import-step${step === 1 ? " active" : ""}`}>
+            <label
+              className={`dropzone${isDragOver ? " over" : ""}${fileName ? " filled" : ""}`}
+              onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={handleFileDrop}
             >
-              Charger un exemple
-            </button>
-          </div>
-
-          <div className="modal-footer">
-            <Button variant="ghost" type="button" onClick={onClose}>Annuler</Button>
-            <Button
-              variant="primary"
-              type="button"
-              onClick={goToStep2}
-              disabled={!rawCsv}
-            >
-              Continuer
-            </Button>
-          </div>
-        </div>
-
-        {/* ── Step 2 ── */}
-        <div className={`import-step${step === 2 ? " active" : ""}`}>
-          {presetHint && (
-            <div className="preset-hint on">
-              <span>Format reconnu : <strong>{presetHint.name}</strong></span>
-              <button
-                type="button"
-                className="amode-btn active"
-                onClick={() => applyPreset(presetHint)}
-              >
-                Appliquer
-              </button>
+              <input ref={fileRef} type="file" accept=".csv,.txt,text/csv" hidden onChange={handleFileInput} />
+              <i className="ti ti-upload dz-ic" />
+              <div className="dz-title">Dépose ton fichier CSV ici</div>
+              <div className="dz-sub">ou clique pour parcourir · CSV exporté depuis ta banque</div>
+              <div className="dz-file">{fileName ? `✓ ${fileName}` : ""}</div>
+            </label>
+            <button type="button" className="link-btn" onClick={loadSample}><i className="ti ti-flask" /> Utiliser un relevé d&apos;exemple</button>
+            <div className="field-row" style={{ marginTop: 18 }}>
+              <div className="field"><label>Banque</label>
+                <select value={bankId} onChange={(e) => setBankId(e.target.value)}>
+                  <option value="">Toutes</option>
+                  {banks.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select></div>
+              <div className="field"><label>Compte de destination</label>
+                <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                  <option value="">— Sélectionner —</option>
+                  {filteredAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select></div>
             </div>
-          )}
-
-          <div className="wizard-col-form">
-            <div className="map-row">
-              <label>Séparateur</label>
-              <select value={separator} onChange={(e) => setSeparator(e.target.value)}>
-                <option value=";">; (point-virgule)</option>
-                <option value=",">, (virgule)</option>
-                <option value={"\t"}>⇥ (tabulation)</option>
-              </select>
-            </div>
-            <div className="map-row">
-              <label>Format date</label>
-              <select value={dateFormat} onChange={(e) => setDateFormat(e.target.value)}>
-                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-              </select>
-            </div>
-            <div className="map-row">
-              <label>Décimal</label>
-              <select value={decimal} onChange={(e) => setDecimal(e.target.value)}>
-                <option value=",">, (virgule)</option>
-                <option value=".">. (point)</option>
-              </select>
-            </div>
-            <div className="map-row">
-              <label>Mode montant</label>
-              <div className="amode-btns">
-                <button
-                  type="button"
-                  className={`amode-btn${amountMode === "single" ? " active" : ""}`}
-                  onClick={() => setAmountMode("single")}
-                >
-                  Montant unique
-                </button>
-                <button
-                  type="button"
-                  className={`amode-btn${amountMode === "split" ? " active" : ""}`}
-                  onClick={() => setAmountMode("split")}
-                >
-                  Débit / Crédit
-                </button>
+            {presetHint && <div className="preset-hint on"><i className="ti ti-bookmark" /> <span>Format reconnu : <strong>{presetHint.name}</strong></span></div>}
+            <div className="field">
+              <label>Attribuer les opérations à</label>
+              <div className="owner-picker">
+                {members.filter((m) => !m.isChild).map((m) => (
+                  <button key={m.id} type="button" className={`owner-opt${owners.includes(m.id) ? " on" : ""}`}
+                    onClick={() => setOwners((o) => (o.includes(m.id) ? o.filter((x) => x !== m.id) : [...o, m.id]))}>
+                    <MiniAv m={toMini(m)} size={24} /> {m.short || m.name}
+                  </button>
+                ))}
               </div>
+              <div className="field-hint">Plusieurs personnes = dépense partagée du foyer.</div>
             </div>
-            <div className="map-row">
-              <label>Colonne date</label>
-              <select value={dateCol} onChange={(e) => setDateCol(e.target.value)}>
-                {headers.map((h) => <option key={h} value={h}>{h}</option>)}
-              </select>
-            </div>
-            <div className="map-row">
-              <label>Colonne libellé</label>
-              <select value={labelCol} onChange={(e) => setLabelCol(e.target.value)}>
-                {headers.map((h) => <option key={h} value={h}>{h}</option>)}
-              </select>
-            </div>
-            {amountMode === "single" ? (
-              <div className="map-row">
-                <label>Colonne montant</label>
-                <select value={amountCol} onChange={(e) => setAmountCol(e.target.value)}>
-                  <option value="">—</option>
-                  {headers.map((h) => <option key={h} value={h}>{h}</option>)}
+          </div>
+
+          {/* Étape 2 */}
+          <div className={`import-step${step === 2 ? " active" : ""}`}>
+            <div className="preset-bar">
+              <i className="ti ti-bookmark" />
+              <div className="select" style={{ minWidth: 190 }}>
+                <select value={presetSel} onChange={(e) => setPresetSel(e.target.value)}>
+                  <option value="">{presets.length ? "Formats enregistrés…" : "Aucun format enregistré"}</option>
+                  {presets.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
                 </select>
               </div>
+              <button type="button" className="btn btn-ghost" disabled={!presetSel} onClick={() => { const p = presets.find((x) => x.name === presetSel); if (p) { applyPreset(p); setPresetMsg({ text: `Format « ${p.name} » appliqué.`, ok: true }) } }}><i className="ti ti-wand" /> Appliquer</button>
+              <button type="button" className="btn btn-ghost" title="Oublier ce format" disabled={!presetSel} onClick={deletePreset}><i className="ti ti-trash" /></button>
+              <div style={{ flex: 1 }} />
+              <input className="preset-input" type="text" placeholder="Nom du format" value={presetName} onChange={(e) => setPresetName(e.target.value)} />
+              <button type="button" className="btn btn-primary" onClick={handleSavePreset}><i className="ti ti-device-floppy" /> Enregistrer</button>
+            </div>
+            {presetMsg && <div className={`preset-msg${presetMsg.ok ? " ok" : ""}`}>{presetMsg.text}</div>}
+            <div className="field-row">
+              <div className="field"><label>Séparateur</label>
+                <select value={separator} onChange={(e) => setSeparator(e.target.value)}>
+                  <option value=";">Point-virgule ;</option><option value=",">Virgule ,</option><option value={"\t"}>Tabulation</option>
+                </select></div>
+              <div className="field"><label>Format de date</label>
+                <select value={dateFormat} onChange={(e) => setDateFormat(e.target.value)}>
+                  <option value="DD/MM/YYYY">JJ/MM/AAAA</option><option value="YYYY-MM-DD">AAAA-MM-JJ</option><option value="MM/DD/YYYY">MM/JJ/AAAA</option>
+                </select></div>
+            </div>
+            <div className="field-row">
+              <div className="field"><label>Colonne date</label>
+                <select value={dateCol} onChange={(e) => setDateCol(e.target.value)}>{headers.map((h) => <option key={h} value={h}>{h}</option>)}</select></div>
+              <div className="field"><label>Colonne libellé</label>
+                <select value={labelCol} onChange={(e) => setLabelCol(e.target.value)}>{headers.map((h) => <option key={h} value={h}>{h}</option>)}</select></div>
+            </div>
+            <div className="field">
+              <label>Montants</label>
+              <div className="type-toggle">
+                <button type="button" className={`type-opt${amountMode === "single" ? " active" : ""}`} onClick={() => setAmountMode("single")}>Une colonne montant</button>
+                <button type="button" className={`type-opt${amountMode === "split" ? " active" : ""}`} onClick={() => setAmountMode("split")}>Débit / Crédit séparés</button>
+              </div>
+            </div>
+            {amountMode === "single" ? (
+              <div className="field-row">
+                <div className="field"><label>Colonne montant</label>
+                  <select value={amountCol} onChange={(e) => setAmountCol(e.target.value)}><option value="">—</option>{headers.map((h) => <option key={h} value={h}>{h}</option>)}</select></div>
+                <div className="field"><label>Décimale</label>
+                  <select value={decimal} onChange={(e) => setDecimal(e.target.value)}><option value=",">Virgule (1 234,56)</option><option value=".">Point (1,234.56)</option></select></div>
+              </div>
             ) : (
-              <>
-                <div className="map-row">
-                  <label>Colonne débit</label>
-                  <select value={debitCol} onChange={(e) => setDebitCol(e.target.value)}>
-                    <option value="">—</option>
-                    {headers.map((h) => <option key={h} value={h}>{h}</option>)}
-                  </select>
+              <div className="field-row">
+                <div className="field"><label>Colonne débit</label>
+                  <select value={debitCol} onChange={(e) => setDebitCol(e.target.value)}><option value="">—</option>{headers.map((h) => <option key={h} value={h}>{h}</option>)}</select></div>
+                <div className="field"><label>Colonne crédit</label>
+                  <select value={creditCol} onChange={(e) => setCreditCol(e.target.value)}><option value="">—</option>{headers.map((h) => <option key={h} value={h}>{h}</option>)}</select></div>
+              </div>
+            )}
+            {previewLines.length > 0 && (
+              <div className="raw-preview">
+                <div className="rp-title">Aperçu des {previewLines.length} premières lignes</div>
+                <div className="wizard-preview-scroll">
+                  <table className="rp-table">
+                    <thead><tr>{headers.map((h) => <th key={h}>{h}</th>)}</tr></thead>
+                    <tbody>{previewLines.map((row, ri) => <tr key={ri}>{row.map((cell, ci) => <td key={ci}>{cell}</td>)}</tr>)}</tbody>
+                  </table>
                 </div>
-                <div className="map-row">
-                  <label>Colonne crédit</label>
-                  <select value={creditCol} onChange={(e) => setCreditCol(e.target.value)}>
-                    <option value="">—</option>
-                    {headers.map((h) => <option key={h} value={h}>{h}</option>)}
-                  </select>
-                </div>
-              </>
+              </div>
             )}
           </div>
 
-          {/* Preview table */}
-          {previewLines.length > 0 && (
-            <div className="wizard-preview-scroll">
-              <table className="rp-table">
-                <thead>
-                  <tr>{headers.map((h) => <th key={h}>{h}</th>)}</tr>
-                </thead>
-                <tbody>
-                  {previewLines.map((row, ri) => (
-                    <tr key={ri}>
-                      {row.map((cell, ci) => <td key={ci}>{cell}</td>)}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* Étape 3 */}
+          <div className={`import-step${step === 3 ? " active" : ""}`}>
+            <div className="import-summary">
+              <div className="isum">
+                <div><div className="isum-lbl">Fichier</div><div className="isum-val">{fileName || "—"}</div></div>
+                <div><div className="isum-lbl">Compte</div><div className="isum-val">{bank ? `${bank.name} · ` : ""}{acct?.name ?? "—"}</div></div>
+                <div><div className="isum-lbl">Attribué à</div><div className="isum-val">{ownerNames.length ? ownerNames.join(", ") : "—"}</div></div>
+                <div><div className="isum-lbl">Solde net</div><div className={`isum-val num ${netCents >= 0 ? "pos" : "neg"}`}>{netCents >= 0 ? "+" : "−"}{formatCents(Math.abs(netCents))}</div></div>
+              </div>
+              {dups > 0 && <div className="warn"><i className="ti ti-alert-triangle" /> {dups} ligne{dups > 1 ? "s" : ""} ignorée{dups > 1 ? "s" : ""} — doublon probable avec l&apos;historique.</div>}
             </div>
-          )}
-
-          {/* Save preset */}
-          <div className="wizard-preset-row">
-            <input
-              type="text"
-              placeholder="Nom du format…"
-              value={presetName}
-              onChange={(e) => setPresetName(e.target.value)}
-              className="wizard-preset-input"
-            />
-            <button type="button" className="amode-btn" onClick={handleSavePreset}>
-              Enregistrer ce format
-            </button>
-          </div>
-
-          <div className="modal-footer">
-            <Button variant="ghost" type="button" onClick={() => setStep(1)}>Précédent</Button>
-            <Button variant="primary" type="button" onClick={goToStep3}>
-              Continuer
-            </Button>
+            <div className="preview-list">
+              {previewRows.map((row, i) => {
+                const cat = categories.find((c) => c.id === row.categoryId)
+                return (
+                  <label key={i} className={`pv-row${row.isDup ? " dup" : ""}`}>
+                    <input type="checkbox" checked={row.checked} onChange={() => toggleRow(i)} />
+                    <span className="tx-icon" style={{ width: 32, height: 32, background: `${cat?.colorHex ?? "#888780"}22`, color: cat?.colorHex ?? "#888780" }}><i className={`ti ${cat?.icon ?? "ti-tag"}`} /></span>
+                    <span className="pv-info"><span className="pv-name">{row.name}</span>{row.isDup && <span className="pv-raw">Doublon détecté</span>}</span>
+                    <select className="pv-cat" value={row.categoryId} onChange={(e) => setRowCat(i, e.target.value)}>
+                      <option value="">Catégorie…</option>
+                      {categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+                    </select>
+                    <span className="pv-date">{fmtDate(row.date)}</span>
+                    <span className={`pv-amt num ${row.amountCents >= 0 ? "pos" : "neg"}`}>{row.amountCents >= 0 ? "+" : "−"}{formatCents(Math.abs(row.amountCents))}</span>
+                  </label>
+                )
+              })}
+            </div>
+            {importError && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {importError}</div>}
           </div>
         </div>
 
-        {/* ── Step 3 ── */}
-        <div className={`import-step${step === 3 ? " active" : ""}`}>
-          {/* Summary */}
-          <div className="isum">
-            <div>
-              <div className="isum-lbl">Opérations</div>
-              <div className="isum-val">{checkedCount}</div>
-            </div>
-            <div>
-              <div className="isum-lbl">Solde net</div>
-              <div className="isum-val">{formatCents(netCents)}</div>
-            </div>
-            <div>
-              <div className="isum-lbl">Doublons</div>
-              <div className="isum-val">{previewRows.filter((r) => r.isDup).length}</div>
-            </div>
-          </div>
-
-          {/* Preview rows */}
-          <div className="wizard-pv-list">
-            {previewRows.map((row, i) => (
-              <div key={i} className={`pv-row${row.isDup ? " dup" : ""}`}>
-                <input
-                  type="checkbox"
-                  checked={row.checked}
-                  onChange={() => toggleRow(i)}
-                />
-                <div className="pv-info">
-                  <div className="pv-name">{row.name}</div>
-                  {row.isDup && (
-                    <div className="pv-dup-label">Doublon détecté</div>
-                  )}
-                </div>
-                <span className="pv-date">{row.date}</span>
-                <span className={`pv-amt${row.amountCents >= 0 ? " pos" : " neg"}`}>
-                  {formatCents(row.amountCents)}
-                </span>
-                <div className="pv-cat">
-                  <select
-                    value={row.categoryId}
-                    onChange={(e) => setRowCat(i, e.target.value)}
-                  >
-                    <option value="">Catégorie…</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>{c.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {importError && <div className="wizard-error">{importError}</div>}
-
-          <div className="modal-footer">
-            <Button variant="ghost" type="button" onClick={() => setStep(2)}>Précédent</Button>
-            <Button
-              variant="primary"
-              type="button"
-              onClick={() => void handleImport()}
-              disabled={importing || checkedCount === 0}
-            >
-              {importing ? "Import…" : `Importer ${checkedCount} opération(s)`}
-            </Button>
-          </div>
+        <div className="modal-foot">
+          <button type="button" className="btn btn-ghost" style={{ visibility: step === 1 ? "hidden" : "visible" }} onClick={() => setStep(step === 3 ? 2 : 1)}>Retour</button>
+          <div style={{ flex: 1 }} />
+          <button type="button" className="btn btn-ghost" onClick={onClose}>Annuler</button>
+          <button type="button" className="btn btn-primary" disabled={nextDisabled} onClick={() => (step === 1 ? goToStep2() : step === 2 ? goToStep3() : void handleImport())}>
+            {nextLabel} {step < 3 && <i className="ti ti-arrow-right" />}
+          </button>
         </div>
       </div>
     </div>
