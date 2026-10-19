@@ -2068,3 +2068,28 @@ html[data-anon="on"] :is(.tx-name, .tx-meta, .pat-name, .pat-address, .inv-name,
   .type-toggle .type-opt { flex: 1 1 auto; min-width: 0; }
 }
 @media (max-width: 900px) { .page-placements { padding: 0; } }
+
+/* ── Finitions mobile & écarts de design ─────────────────────────────────────── */
+/* Champs de la capacité d'emprunt / trajectoire : même habillage que les champs de formulaire */
+.fi-field input, .fi-field select {
+  background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 9px 12px; font-size: 14px; font-weight: 500; color: var(--fg); outline: none; transition: border-color .15s;
+}
+.fi-field .field-amount input { font-size: 14px; font-weight: 500; padding-right: 38px; }
+.fi-field .field-amount .cur { font-size: 13px; }
+.fi-field input:focus, .fi-field select:focus { border-color: var(--primary); }
+
+@media (max-width: 560px) {
+  .metric { padding: 14px; }
+  .metric-top { margin-bottom: 8px; }
+  .metric-label { font-size: 12px; }
+  .metric-value { font-size: 20px; letter-spacing: -0.4px; overflow-wrap: normal; white-space: nowrap; }
+  .metric-sub { white-space: normal; font-size: 11.5px; }
+  .metrics { margin-bottom: 14px; }
+  .card { padding-left: 14px; padding-right: 14px; }
+  .page-comptes { gap: 16px; }
+  .member-card { flex-wrap: wrap; }
+  .member-nums { margin-left: 0; text-align: left; width: 100%; }
+  .fi-grid, .fi-grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chat-fab { bottom: 16px; right: 16px; width: 46px; height: 46px; font-size: 20px; }
+}
