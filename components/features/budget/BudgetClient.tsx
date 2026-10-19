@@ -4,6 +4,7 @@ import { usePeriod } from "@/contexts/PeriodContext"
 import { useEffect, useState } from "react"
 import { BudgetCard } from "./BudgetCard"
 import { CategoryModal } from "./CategoryModal"
+import { SuggestBudgetsModal } from "./SuggestBudgetsModal"
 import { formatCents } from "@/lib/money"
 import { usePrivacy } from "@/contexts/PrivacyContext"
 import type { Category } from "@/db/schema"
@@ -22,6 +23,7 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
   const [currentMonth, setCurrentMonth] = useState(month)
   const [editTarget, setEditTarget] = useState<EnrichedBudget | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [showSuggest, setShowSuggest] = useState(false)
   const [catList, setCatList] = useState<Category[]>(categories)
   const { private: priv } = usePrivacy()
 
@@ -69,6 +71,9 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <PeriodPill />
+          <button className="btn btn-ghost btn-sm" type="button" onClick={() => setShowSuggest(true)}>
+            <i aria-hidden="true" className="ti ti-wand" /> Suggérer des plafonds
+          </button>
           <button className="btn btn-primary btn-sm" type="button" onClick={() => setShowAdd(true)}>
             <i aria-hidden="true" className="ti ti-plus" /> Ajouter une catégorie
           </button>
@@ -130,6 +135,7 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
           onRemoved={(id) => { setBudgetList((prev) => prev.filter((b) => b.id !== id)); setEditTarget(null); setShowAdd(false) }}
         />
       )}
+      {showSuggest && <SuggestBudgetsModal month={currentMonth} onClose={() => setShowSuggest(false)} onApplied={() => { setShowSuggest(false); void switchMonth(currentMonth) }} />}
     </div>
   )
 }

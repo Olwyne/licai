@@ -6,6 +6,7 @@ import { buildFinanceContext } from "@/lib/server/finance-context"
 import { buildPrevisions } from "@/lib/server/previsions"
 import { computeTax, situationFor, taxInputs } from "@/lib/finance/tax"
 import { frequencyToMonthlyCents } from "@/lib/finance/recurring"
+import { detectAnomalies } from "@/lib/finance/anomalies"
 import { buildCalendar, deriveAlerts, type CalMonth, type DerivedAlert, type AlertInputs } from "@/lib/finance/alerts-engine"
 
 export type AlertStatus = "open" | "done" | "snooze"
@@ -13,7 +14,7 @@ export interface AlertItem extends DerivedAlert { status: AlertStatus; source: "
 export interface AlertsPageData { items: AlertItem[]; calendar: CalMonth[]; today: string; tmi: number; perRoom: number }
 
 const TONE: Record<string, DerivedAlert["tone"]> = { danger: "high", warning: "mid", success: "good", info: "info" }
-const KIND_HREF: Record<string, string> = { budget: "/budget", echeance: "/recurrent", optim: "/impots" }
+const KIND_HREF: Record<string, string> = { budget: "/budget", echeance: "/recurrent", optim: "/impots", anomalie: "/transactions" }
 
 export function buildAlertsData(householdId: string): AlertsPageData {
   const today = new Date().toISOString().slice(0, 10)
@@ -58,7 +59,18 @@ export function buildAlertsData(householdId: string): AlertsPageData {
   } catch { /* prévisions indisponibles */ }
 
   const inputs: AlertInputs = { today, ctx, tax, budgetsOver, recurring: rec, goals: goalsIn, forecast }
-  const derived = deriveAlerts(inputs)
+  // anomalies : dépenses des 12 derniers mois (hors virements internes)
+  const since12 = new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1).toISOString().slice(0, 10)
+  const txYear = db.select().from(transactions).where(and(eq(transactions.householdId, householdId), gte(transactions.date, since12))).all()
+    .filter((t) => t.kind === "expense" && t.amountCents < 0)
+    .map((t) => ({ id: t.id, name: t.name, amount: Math.abs(t.amountCents) / 100, date: t.date, categoryId: t.categoryId }))
+  const anomalies = detectAnomalies({
+    today, txs: txYear,
+    recurring: rec.map((r) => ({ id: r.id, name: r.name, amount: r.amount, frequency: r.frequency, kind: r.kind, active: r.active })),
+    categories: new Map([...cats].map(([id, c]) => [id, { label: c.label, icon: c.icon }])),
+  })
+  const scheduled = deriveAlerts(inputs)
+  const derived = [...scheduled, ...anomalies]
   const states = new Map(db.select().from(alertStates).where(eq(alertStates.householdId, householdId)).all().map((s) => [s.alertId, s.status as AlertStatus]))
 
   const items: AlertItem[] = derived.map((a) => ({ ...a, status: states.get(a.id) ?? "open", source: "derived" }))
@@ -70,5 +82,5 @@ export function buildAlertsData(householdId: string): AlertsPageData {
   const rank = { high: 0, mid: 1, good: 2, info: 3 }
   items.sort((a, b) => rank[a.tone] - rank[b.tone] || (a.due ?? "9999").localeCompare(b.due ?? "9999"))
 
-  return { items, calendar: buildCalendar(inputs, derived), today, tmi: tax.tmi, perRoom: Math.max(0, tax.plafondPer - tax.perVerse) }
+  return { items, calendar: buildCalendar(inputs, scheduled), today, tmi: tax.tmi, perRoom: Math.max(0, tax.plafondPer - tax.perVerse) }
 }

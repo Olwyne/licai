@@ -1,4 +1,5 @@
 "use client"
+import { CategorizeModal } from "./CategorizeModal"
 import { PeriodPill } from "@/components/layout/PeriodPill"
 import { usePeriod } from "@/contexts/PeriodContext"
 import { useState, useMemo, useEffect } from "react"
@@ -85,6 +86,7 @@ export function TransactionsClient({
   const PAGE_SIZE = 50
 
   const [txList, setTxList] = useState<Transaction[]>(initialTransactions)
+  const [showCategorize, setShowCategorize] = useState(false)
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [showAddModal, setShowAddModal] = useState(false)
@@ -196,6 +198,14 @@ export function TransactionsClient({
         </div>
       </div>
 
+      {txList.some((t) => t.kind === "expense" && !t.categoryId) && (
+        <div className="disclaimer sm" style={{ alignItems: "center", marginBottom: 12 }} data-testid="uncategorized-banner">
+          <i aria-hidden="true" className="ti ti-sparkles" />
+          <span style={{ flex: 1 }}><b>{txList.filter((t) => t.kind === "expense" && !t.categoryId).length} transaction(s) sans catégorie.</b> Laissez l&apos;app les classer d&apos;après votre historique (et l&apos;IA si une clé est configurée).</span>
+          <button className="btn btn-primary btn-sm" type="button" onClick={() => setShowCategorize(true)}>Catégoriser</button>
+        </div>
+      )}
+
       <FilterPanel
         filters={filters}
         accounts={accounts}
@@ -240,6 +250,18 @@ export function TransactionsClient({
       />
 
 
+
+      {showCategorize && (
+        <CategorizeModal
+          categories={categories}
+          onClose={() => setShowCategorize(false)}
+          onApplied={(assignments) => {
+            const byId = new Map(assignments.map((a) => [a.id, a.categoryId]))
+            setTxList((prev) => prev.map((t) => (byId.has(t.id) && !t.categoryId ? { ...t, categoryId: byId.get(t.id)! } : t)))
+            setShowCategorize(false)
+          }}
+        />
+      )}
 
       {(showAddModal || editingTx !== null) && (
         <TransactionModal
