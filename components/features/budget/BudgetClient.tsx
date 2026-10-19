@@ -1,7 +1,7 @@
 "use client"
 import { PeriodPill } from "@/components/layout/PeriodPill"
 import { usePeriod } from "@/contexts/PeriodContext"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { BudgetCard } from "./BudgetCard"
 import { CategoryModal } from "./CategoryModal"
 import { SuggestBudgetsModal } from "./SuggestBudgetsModal"
@@ -19,8 +19,12 @@ interface Props {
 
 
 export function BudgetClient({ month, budgets: initial, categories }: Props) {
-  const [budgetList, setBudgetList] = useState<EnrichedBudget[]>(initial)
-  const [currentMonth, setCurrentMonth] = useState(month)
+  // budgets du mois affiché : ceux fournis par le serveur, puis ceux rechargés quand la période change
+  const [loaded, setLoaded] = useState<{ month: string; list: EnrichedBudget[] }>({ month, list: initial })
+  const budgetList = loaded.list
+  const currentMonth = loaded.month
+  const setBudgetList = (u: EnrichedBudget[] | ((prev: EnrichedBudget[]) => EnrichedBudget[])) =>
+    setLoaded((l) => ({ ...l, list: typeof u === "function" ? u(l.list) : u }))
   const [editTarget, setEditTarget] = useState<EnrichedBudget | null>(null)
   const [showAdd, setShowAdd] = useState(false)
   const [showSuggest, setShowSuggest] = useState(false)
@@ -33,19 +37,26 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
 
   const { month: pMonth } = usePeriod()
 
-  async function switchMonth(m: string) {
-    setCurrentMonth(m)
+  const fetchBudgets = useCallback(async (m: string): Promise<EnrichedBudget[] | null> => {
     const res = await fetch(`/api/budget?month=${m}`)
     const json = await res.json()
-    if (json.data) {
-      const enriched = (json.data as EnrichedBudget[]).map((b) => ({
-        ...b,
-        spentCents: b.spentCents ?? 0,
-        category: b.category ?? catList.find((c) => c.id === b.categoryId) ?? null,
-      }))
-      setBudgetList(enriched)
-    }
-  }
+    if (!json.data) return null
+    return (json.data as EnrichedBudget[]).map((b) => ({
+      ...b,
+      spentCents: b.spentCents ?? 0,
+      category: b.category ?? catList.find((c) => c.id === b.categoryId) ?? null,
+    }))
+  }, [catList])
+
+  const reload = () => { void fetchBudgets(currentMonth).then((list) => { if (list) setLoaded({ month: currentMonth, list }) }) }
+
+  // la période choisie (pastille partagée) change : on charge les budgets de ce mois
+  useEffect(() => {
+    if (pMonth === currentMonth) return
+    let live = true
+    void fetchBudgets(pMonth).then((list) => { if (live && list) setLoaded({ month: pMonth, list }) })
+    return () => { live = false }
+  }, [pMonth, currentMonth, fetchBudgets])
 
   function handleUpdated(updated: EnrichedBudget) {
     setBudgetList((prev) =>
@@ -59,8 +70,6 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
     setBudgetList((prev) => [...prev, budget])
     setShowAdd(false)
   }
-
-  useEffect(() => { if (pMonth !== currentMonth) void switchMonth(pMonth) }, [pMonth]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="page-budget">
@@ -135,7 +144,7 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
           onRemoved={(id) => { setBudgetList((prev) => prev.filter((b) => b.id !== id)); setEditTarget(null); setShowAdd(false) }}
         />
       )}
-      {showSuggest && <SuggestBudgetsModal month={currentMonth} onClose={() => setShowSuggest(false)} onApplied={() => { setShowSuggest(false); void switchMonth(currentMonth) }} />}
+      {showSuggest && <SuggestBudgetsModal month={currentMonth} onClose={() => setShowSuggest(false)} onApplied={() => { setShowSuggest(false); reload() }} />}
     </div>
   )
 }

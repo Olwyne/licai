@@ -1,6 +1,8 @@
 "use client"
-import { useState, useEffect, useCallback } from "react"
+import { useState } from "react"
 import { formatCents } from "@/lib/money"
+import { useFetch } from "@/lib/use-fetch"
+import { useLocalStorage } from "@/lib/use-local-storage"
 import type { Loan } from "@/db/schema"
 import { LoanModal } from "./LoanModal"
 import { useFinanceContext } from "@/components/features/finance/useFinanceContext"
@@ -57,22 +59,17 @@ const CAP_KEY = "licai-capacity"
 
 function CapaciteEmprunt() {
   const { ctx } = useFinanceContext()
-  const [c, setC] = useState<CapacityInputs>(DEFAULT_CAPACITY)
-  const [raw, setRaw] = useState({ rate: "3,4", years: "20", apport: "30000" })
-
-  useEffect(() => {
-    try {
-      const v = JSON.parse(localStorage.getItem(CAP_KEY) ?? "null") as CapacityInputs | null
-      if (v && v.rate > 0) { setC(v); setRaw({ rate: String(v.rate).replace(".", ","), years: String(v.years), apport: String(Math.round(v.apport)) }) }
-    } catch { /* valeurs par défaut */ }
-  }, [])
+  const [stored, setC] = useLocalStorage<CapacityInputs>(CAP_KEY, DEFAULT_CAPACITY)
+  const c = stored.rate > 0 ? stored : DEFAULT_CAPACITY
+  // texte des champs : valeur enregistrée tant que l'utilisateur n'a rien tapé, puis son brouillon
+  const [draft, setRaw] = useState<{ rate: string; years: string; apport: string } | null>(null)
+  const raw = draft ?? { rate: String(c.rate).replace(".", ","), years: String(c.years), apport: String(Math.round(c.apport)) }
 
   function commit(next: typeof raw) {
     setRaw(next)
     const n = (x: string) => parseFloat(x.replace(/\s/g, "").replace(",", ".")) || 0
     const v = { rate: n(next.rate) || DEFAULT_CAPACITY.rate, years: Math.min(25, Math.max(5, Math.round(n(next.years)) || DEFAULT_CAPACITY.years)), apport: n(next.apport) }
     setC(v)
-    try { localStorage.setItem(CAP_KEY, JSON.stringify(v)) } catch { /* stockage indisponible */ }
   }
 
   if (!ctx) return <div className="card"><div className="empty"><i aria-hidden="true" className="ti ti-loader" />Chargement…</div></div>
@@ -174,24 +171,10 @@ function formatEndDate(dateStr: string): string {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export function CreditsClient() {
-  const [data, setData]     = useState<CreditsData | null>(null)
-  const [loadErr, setLoadErr] = useState("")
+  const { data, error: loadErr, reload: load } = useFetch<CreditsData>("/api/credits", "Impossible de charger les crédits.")
   const [kindFilter, setKindFilter] = useState<KindFilter>("tous")
   const [amort, setAmort] = useState<Loan | null>(null)
   const [modal, setModal]   = useState<{ open: boolean; loan: EnrichedLoan | null }>({ open: false, loan: null })
-
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch("/api/credits")
-      if (!res.ok) { setLoadErr("Impossible de charger les crédits."); return }
-      const json = (await res.json()) as { data: CreditsData }
-      setData(json.data)
-    } catch {
-      setLoadErr("Erreur réseau.")
-    }
-  }, [])
-
-  useEffect(() => { void load() }, [load])
 
   function onSaved() { setModal({ open: false, loan: null }); void load() }
 

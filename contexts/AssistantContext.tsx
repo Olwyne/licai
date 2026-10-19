@@ -1,5 +1,7 @@
 "use client"
-import { createContext, useCallback, useContext, useEffect, useState } from "react"
+import { createContext, useCallback, useContext, useMemo, useState } from "react"
+import { useFetch } from "@/lib/use-fetch"
+import { useLocalStorage } from "@/lib/use-local-storage"
 
 export interface ChatProvider { mode: "builtin" | "custom"; endpoint: string; key: string; model: string }
 
@@ -57,44 +59,33 @@ export const AssistantContext = createContext<AssistantCtx>({
 
 export function AssistantProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
-  const [builtinReady, setBuiltinReady] = useState(false)
-  const [ready, setReady] = useState(false)
-  const [keySource, setKeySource] = useState<"account" | "server" | "none">("none")
-  const [keyHint, setKeyHint] = useState("")
-  const [keyUnreadable, setKeyUnreadable] = useState(false)
-  const [aiProvider, setAiProvider] = useState<"anthropic" | "openai" | "gemini">("anthropic")
-  const [providerLabel, setProviderLabel] = useState("Claude (Anthropic)")
-  const [chosenModel, setChosenModel] = useState("")
-  const [model, setModel] = useState("")
-  const [provider, setProviderState] = useState<ChatProvider>(DEFAULT_PROVIDER)
+  const status = useFetch<StatusData>("/api/assistant/status")
+  const [resolvedModel, setResolvedModel] = useState("")
+  const [stored, setStored] = useLocalStorage<Partial<ChatProvider>>(PROV_KEY, {})
+  const provider = useMemo<ChatProvider>(() => ({ ...DEFAULT_PROVIDER, ...stored }), [stored])
 
-  const refresh = useCallback(async () => {
-    try {
-      const r = await fetch("/api/assistant/status")
-      const j = (r.ok ? await r.json() : null) as { data?: StatusData } | null
-      setBuiltinReady(Boolean(j?.data?.builtin)); setKeySource(j?.data?.source ?? "none"); setKeyHint(j?.data?.hint ?? ""); setKeyUnreadable(Boolean(j?.data?.unreadable))
-      setAiProvider(j?.data?.provider ?? "anthropic"); setProviderLabel(j?.data?.providerLabel ?? "Claude (Anthropic)"); setChosenModel(j?.data?.chosenModel ?? ""); setModel(j?.data?.model ?? "")
-    } catch { /* statut indisponible : assistant masqué */ }
-    setReady(true)
-  }, [])
+  const d = status.data
+  const ready = status.data !== null || status.error !== ""
+  const builtinReady = Boolean(d?.builtin)
+  const keySource = d?.source ?? "none"
+  const keyHint = d?.hint ?? ""
+  const keyUnreadable = Boolean(d?.unreadable)
+  const aiProvider = d?.provider ?? "anthropic"
+  const providerLabel = d?.providerLabel ?? "Claude (Anthropic)"
+  const chosenModel = d?.chosenModel ?? ""
+  const model = resolvedModel || (d?.model ?? "")
+
+  const refresh = useCallback(async () => { status.reload() }, [status.reload]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadModel = useCallback(async () => {
     try {
       const r = await fetch("/api/assistant/status?model=1")
       const j = (r.ok ? await r.json() : null) as { data?: StatusData } | null
-      if (j?.data?.model) setModel(j.data.model)
+      if (j?.data?.model) setResolvedModel(j.data.model)
     } catch { /* modèle non résolu : l'étiquette reste générique */ }
   }, [])
 
-  useEffect(() => {
-    try { const v = localStorage.getItem(PROV_KEY); if (v) setProviderState({ ...DEFAULT_PROVIDER, ...(JSON.parse(v) as Partial<ChatProvider>) }) } catch { /* stockage indisponible */ }
-    void refresh()
-  }, [refresh])
-
-  const setProvider = useCallback((p: ChatProvider) => {
-    setProviderState(p)
-    try { localStorage.setItem(PROV_KEY, JSON.stringify(p)) } catch { /* stockage indisponible */ }
-  }, [])
+  const setProvider = useCallback((p: ChatProvider) => setStored(p), [setStored])
 
   const external = provider.mode === "custom" && Boolean(provider.endpoint && provider.key)
   const available = external || (provider.mode === "builtin" && builtinReady)

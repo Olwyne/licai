@@ -1,5 +1,6 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useFetch } from "@/lib/use-fetch"
+import { useState } from "react"
 import type { Goal, Transaction } from "@/db/schema"
 import { grow } from "@/lib/finance/amort"
 import { eur } from "@/lib/finance/format"
@@ -49,20 +50,12 @@ export function GoalModal({ goal, accounts, members, onClose, onSaved, onDeleted
   const [risk, setRisk] = useState(goal?.risk ?? "equilibre")
   const [owners, setOwners] = useState<string[]>(parseIds(goal?.ownerIds))
   const [pockets, setPockets] = useState<Record<string, number>>(Object.fromEntries((goal?.pockets ?? []).map((p) => [p.accountId, p.pct])))
-  const [txs, setTxs] = useState<Transaction[]>([])
+  const { data: txsData, reload: loadTx } = useFetch<Transaction[]>(goal ? "/api/transactions" : null)
+  const txs = txsData ?? []
   const [linkId, setLinkId] = useState("")
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState("")
-
-  const loadTx = async () => {
-    if (!goal) return
-    try {
-      const res = await fetch("/api/transactions")
-      if (res.ok) setTxs(((await res.json()) as { data: Transaction[] }).data)
-    } catch { /* liste facultative */ }
-  }
-  useEffect(() => { void loadTx() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const picked = Object.keys(pockets)
   const pocketsValue = picked.reduce((s, id) => s + ((accounts.find((a) => a.id === id)?.balanceCents ?? 0) / 100) * ((pockets[id] ?? 100) / 100), 0)

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { useLocalStorage } from "@/lib/use-local-storage"
 import { useAssistant } from "@/contexts/AssistantContext"
 import { ConnModal } from "./ConnModal"
 
@@ -15,8 +16,6 @@ const SUGGESTIONS = [
   "Résume ma situation financière",
 ]
 
-const read = <T,>(key: string, def: T): T => { try { const v = localStorage.getItem(key); return v ? (JSON.parse(v) as T) : def } catch { return def } }
-const write = (key: string, v: unknown) => { try { localStorage.setItem(key, JSON.stringify(v)) } catch { /* stockage indisponible */ } }
 
 const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;")
 /** Mini rendu Markdown (gras, italique, code, listes) — le texte est échappé avant. */
@@ -29,18 +28,19 @@ function md(t: string): string {
 
 export function AssistantChat() {
   const { open, openAssistant, closeAssistant, available, ready, provider, setProvider, providerLabel: aiLabel, model, loadModel } = useAssistant()
-  const [history, setHistory] = useState<ChatMessage[]>([])
+  const [stored, setStored] = useLocalStorage<ChatMessage[]>(HIST_KEY, [])
+  const [live, setHistory] = useState<ChatMessage[] | null>(null) // réponse en cours de réception (non enregistrée)
+  const history = live ?? stored
   const [connOpen, setConnOpen] = useState(false)
   const [input, setInput] = useState("")
   const [busy, setBusy] = useState(false)
   const logRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  useEffect(() => { setHistory(read<ChatMessage[]>(HIST_KEY, [])) }, [])
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight }, [history, busy, open])
   useEffect(() => { if (open) { setTimeout(() => inputRef.current?.focus(), 120); void loadModel() } }, [open, loadModel])
 
-  const commit = (h: ChatMessage[]) => { setHistory(h); write(HIST_KEY, h.slice(-40)) }
+  const commit = (h: ChatMessage[]) => { setHistory(null); setStored(h.slice(-40)) }
 
   async function askBuiltin(msgs: ChatMessage[], onChunk: (t: string) => void) {
     const res = await fetch("/api/assistant", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: msgs }) })

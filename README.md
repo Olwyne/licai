@@ -24,6 +24,10 @@ make prod-up             # docker compose -f docker-compose.prod.yaml up -d --bu
 - Pensez à copier le dossier de sauvegardes **hors de la machine** (le volume `licai_data` contient la base et ses sauvegardes).
 - L'application écoute sur `127.0.0.1:3000` : placez-la derrière un reverse proxy HTTPS.
 
+## Application installable (PWA)
+
+Le service worker (`public/sw.js`, écrit à la main) met en cache uniquement les fichiers statiques et une page hors ligne (`/offline.html`). Les pages et les réponses de l'API ne sont **jamais** stockées par le navigateur : aucune donnée financière sur l'appareil. Il n'est enregistré qu'en production.
+
 ## Qualité
 
 ```bash

@@ -12,7 +12,7 @@ import {
 import { computeTax, situationFor, taxInputs } from "@/lib/finance/tax"
 import { eur, eurS, num2, pc, pcS } from "@/lib/finance/format"
 import {
-  loadProfile, loadQuotes, overrides, quoteTickers, refreshAuto, refreshLive, saveProfile, saveQuotes, srcLabel, type QuoteMode, type QuoteState,
+  overrides, quoteTickers, refreshAuto, refreshLive, saveProfile, saveQuotes, srcLabel, useQuoteState, useStoredProfile, type QuoteMode, type QuoteState,
 } from "@/components/features/finance/quotes"
 import { useThemeTick } from "@/components/features/finance/useThemeTick"
 import { useFinanceContext } from "@/components/features/finance/useFinanceContext"
@@ -360,8 +360,8 @@ function EnvelopeModal({ ctx, account, onClose, onDone }: {
 
 export function PlacementsClient() {
   const { ctx, error, reload } = useFinanceContext()
-  const [profile, setProfile] = useState<ProfileKey>("equilibre")
-  const [quotes, setQuotes] = useState<QuoteState | null>(null)
+  const profile = useStoredProfile()
+  const quotes = useQuoteState()
   const [quoteOpen, setQuoteOpen] = useState(false)
   const [flowModal, setFlowModal] = useState(false)
   const [lineModal, setLineModal] = useState<{ open: boolean; item: CtxHolding | null }>({ open: false, item: null })
@@ -369,28 +369,26 @@ export function PlacementsClient() {
   const themeTick = useThemeTick()
   const chartWrap = useRef<HTMLDivElement>(null)
 
-  useEffect(() => { setProfile(loadProfile()); setQuotes(loadQuotes()) }, [])
-
   // Mode « Crypto en direct » : cours du jour récupérés une fois au chargement des lignes.
   const autoDone = useRef(false)
   useEffect(() => {
     if (autoDone.current || !ctx || !quotes || quotes.mode !== "auto") return
     autoDone.current = true
-    void refreshAuto(quotes, ctx.holdings).then((next) => { setQuotes(next); saveQuotes(next) })
+    void refreshAuto(quotes, ctx.holdings).then((next) => saveQuotes(next))
   }, [ctx, quotes])
 
-  const changeProfile = (p: ProfileKey) => { setProfile(p); saveProfile(p) }
-  const applyQuotes = (q: QuoteState) => { setQuotes(q); saveQuotes(q); setQuoteOpen(false) }
+  const changeProfile = (p: ProfileKey) => saveProfile(p)
+  const applyQuotes = (q: QuoteState) => { saveQuotes(q); setQuoteOpen(false) }
   const done = useCallback(() => { setLineModal({ open: false, item: null }); setEnvModal({ open: false, item: null }); void reload() }, [reload])
 
   const m = useMemo(() => {
-    if (!ctx || !quotes) return null
+    if (!ctx) return null
     const S: PortfolioState = computePortfolio(ctx, profile, overrides(quotes))
     const T = computeTax(taxInputs(ctx), situationFor(ctx))
     return { S, T }
   }, [ctx, profile, quotes])
 
-  if (!ctx || !quotes || !m) return <LoadingOrError title="Placements" sub="Enveloppes, lignes, diversification et fiscalité" error={error} />
+  if (!ctx || !m) return <LoadingOrError title="Placements" sub="Enveloppes, lignes, diversification et fiscalité" error={error} />
 
   const { S, T } = m
   const accts = ctx.invAccounts

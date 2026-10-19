@@ -1,13 +1,13 @@
 "use client"
 import { CURRENCIES, FIAT_CODES, getBaseCurrency } from "@/lib/finance/fx"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo, useSyncExternalStore } from "react"
 import { useSession } from "next-auth/react"
 import { signOut } from "next-auth/react"
 import { usePrivacy } from "@/contexts/PrivacyContext"
 import { useTheme } from "@/contexts/ThemeContext"
 import Link from "next/link"
 import { PROFILES, type ProfileKey } from "@/lib/finance/invest"
-import { loadProfile, saveProfile } from "@/components/features/finance/quotes"
+import { PREFS_EVENT, saveProfile, subscribePrefs, useStoredProfile } from "@/components/features/finance/quotes"
 import { useAssistant } from "@/contexts/AssistantContext"
 import { ConnModal } from "@/components/features/assistant/ConnModal"
 
@@ -26,14 +26,6 @@ interface Prefs {
 const PREF_KEY = "licai-prefs"
 const ASSET_LABEL: Record<string, string> = { actions: "actions", obligations: "obligations", euro: "fonds euro", immobilier: "immobilier", monetaire: "monétaire", crypto: "crypto" }
 
-function loadPrefs(): Prefs {
-  try {
-    const raw = localStorage.getItem(PREF_KEY)
-    if (raw) return { ...defaultPrefs(), ...JSON.parse(raw) as Partial<Prefs> }
-  } catch {}
-  return defaultPrefs()
-}
-
 function defaultPrefs(): Prefs {
   return {
     displayName: "",
@@ -49,7 +41,15 @@ function defaultPrefs(): Prefs {
 }
 
 function savePrefs(prefs: Prefs) {
-  try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)) } catch {}
+  try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)) } catch { /* stockage indisponible */ }
+  try { window.dispatchEvent(new Event(PREFS_EVENT)) } catch { /* hors navigateur */ }
+}
+
+const DEFAULT_PREFS_RAW = ""
+const readPrefsRaw = (): string => { try { return localStorage.getItem(PREF_KEY) ?? "" } catch { return "" } }
+const parsePrefs = (raw: string): Prefs => {
+  try { if (raw) return { ...defaultPrefs(), ...(JSON.parse(raw) as Partial<Prefs>) } } catch { /* valeurs par défaut */ }
+  return defaultPrefs()
 }
 
 // ─── Modal: Edit profile ───────────────────────────────────────────────────────
@@ -383,7 +383,11 @@ function AiKeyCard({ onAdvanced }: { onAdvanced: () => void }) {
   const saved = keySource === "account"
   const hint = AI_PROVIDERS.find((p) => p.id === prov)?.hint ?? ""
 
-  useEffect(() => { setProv(aiProvider); setModel(chosenModel) }, [aiProvider, chosenModel])
+  // le fournisseur/modèle enregistrés changent (rechargement du statut) : le formulaire repart de ces valeurs
+  const [synced, setSynced] = useState({ aiProvider, chosenModel })
+  if (synced.aiProvider !== aiProvider || synced.chosenModel !== chosenModel) {
+    setSynced({ aiProvider, chosenModel }); setProv(aiProvider); setModel(chosenModel)
+  }
   // modèles accessibles avec la clé enregistrée + modèle recommandé automatiquement
   useEffect(() => {
     if (!available) return
@@ -477,15 +481,12 @@ export function ParametresClient() {
   const assistant = useAssistant()
   const [connOpen, setConnOpen] = useState(false)
 
-  const [prefs, setPrefs] = useState<Prefs>(defaultPrefs)
-  const [profile, setProfile] = useState<ProfileKey>("equilibre")
+  // préférences du navigateur : valeurs par défaut au rendu serveur, puis valeurs enregistrées (sans setState dans un effet)
+  const prefsRaw = useSyncExternalStore(subscribePrefs, readPrefsRaw, () => DEFAULT_PREFS_RAW)
+  const prefs = useMemo(() => parsePrefs(prefsRaw), [prefsRaw])
+  const profile = useStoredProfile()
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
-
-  useEffect(() => {
-    setPrefs(loadPrefs())
-    setProfile(loadProfile())
-  }, [])
 
   async function changeCurrency(cur: string) {
     if (cur === getBaseCurrency()) return
@@ -495,12 +496,8 @@ export function ParametresClient() {
   }
 
   const updatePref = useCallback(<K extends keyof Prefs>(key: K, value: Prefs[K]) => {
-    setPrefs(prev => {
-      const next = { ...prev, [key]: value }
-      savePrefs(next)
-      if (key === "anon") document.documentElement.dataset.anon = value ? "on" : "off"
-      return next
-    })
+    savePrefs({ ...parsePrefs(readPrefsRaw()), [key]: value })
+    if (key === "anon") document.documentElement.dataset.anon = value ? "on" : "off"
   }, [])
 
   const email = session?.user?.email ?? ""
@@ -560,7 +557,7 @@ export function ParametresClient() {
             <label>Profil d&apos;investisseur</label>
             <div className="chips" style={{ margin: 0 }}>
               {(Object.keys(PROFILES) as ProfileKey[]).map((k) => (
-                <button key={k} type="button" className={`chip${profile === k ? " active" : ""}`} onClick={() => { setProfile(k); saveProfile(k) }}>{PROFILES[k].label}</button>
+                <button key={k} type="button" className={`chip${profile === k ? " active" : ""}`} onClick={() => saveProfile(k)}>{PROFILES[k].label}</button>
               ))}
             </div>
             <div className="field-hint">

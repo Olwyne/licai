@@ -1,5 +1,6 @@
 "use client"
 import { useCallback, useEffect, useState } from "react"
+import { useLocalStorage } from "@/lib/use-local-storage"
 import { eur } from "@/lib/finance/format"
 import { initials } from "@/lib/finance/format"
 import { PageHeader, LoadingOrError } from "@/components/features/finance/ui"
@@ -25,25 +26,17 @@ function Av({ m, size = 26 }: { m: M; size?: number }) {
 export function PartageClient() {
   const [data, setData] = useState<Data | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [mode, setMode] = useState<Mode>("prorata")
-  const [custom, setCustom] = useState<Record<string, number>>({})
-  const [done, setDone] = useState<string[]>([])
   const month = new Date().toISOString().slice(0, 7)
+  const [split, setSplit] = useLocalStorage<{ mode?: Mode; custom?: Record<string, number> }>(LS, {})
+  const mode: Mode = split.mode ?? "prorata"
+  const custom = split.custom ?? {}
+  const [done, setDone] = useLocalStorage<string[]>(`licai-transfers-${month}`, [])
 
   const load = useCallback(() => {
     fetch("/api/partage").then((r) => r.json()).then((j) => (j.data ? setData(j.data as Data) : setError(j.error ?? "Erreur inconnue")))
       .catch(() => setError("Impossible de charger les données"))
   }, [])
   useEffect(() => { load() }, [load])
-  useEffect(() => {
-    try {
-      const s = JSON.parse(localStorage.getItem(LS) ?? "{}") as { mode?: Mode; custom?: Record<string, number> }
-      if (s.mode) setMode(s.mode)
-      if (s.custom) setCustom(s.custom)
-      setDone(JSON.parse(localStorage.getItem(`licai-transfers-${month}`) ?? "[]") as string[])
-    } catch { /* stockage indisponible */ }
-  }, [month])
-  const persist = (m: Mode, c: Record<string, number>) => { try { localStorage.setItem(LS, JSON.stringify({ mode: m, custom: c })) } catch { /* ignoré */ } }
 
   if (!data) return <LoadingOrError title="Répartition du foyer" sub="Revenus, clé de partage et virements à faire" error={error ?? ""} />
 
@@ -91,9 +84,8 @@ export function PartageClient() {
   function toggleDone(id: string) {
     const next = done.includes(id) ? done.filter((x) => x !== id) : [...done, id]
     setDone(next)
-    try { localStorage.setItem(`licai-transfers-${month}`, JSON.stringify(next)) } catch { /* ignoré */ }
   }
-  const setModeP = (m: Mode) => { setMode(m); persist(m, custom) }
+  const setModeP = (m: Mode) => setSplit({ mode: m, custom })
 
   return (
     <div>
@@ -148,7 +140,7 @@ export function PartageClient() {
                 {mode === "custom" ? (
                   <>
                     <input className="share-input" type="text" inputMode="numeric" defaultValue={custom[m.id] || 0}
-                      onBlur={(e) => { const c = { ...custom, [m.id]: num(e.target.value) }; setCustom(c); persist(mode, c) }} />
+                      onBlur={(e) => setSplit({ mode, custom: { ...custom, [m.id]: num(e.target.value) } })} />
                     <span className="share-pct">%</span>
                   </>
                 ) : (

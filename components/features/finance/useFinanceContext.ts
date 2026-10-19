@@ -1,23 +1,9 @@
 "use client"
-import { useCallback, useEffect, useState } from "react"
+import { useFetch } from "@/lib/use-fetch"
 import type { FinanceContext } from "@/lib/finance/types"
 
+/** Contexte financier du foyer (comptes, crédits, biens, placements…) chargé depuis l'API. */
 export function useFinanceContext() {
-  const [ctx, setCtx] = useState<FinanceContext | null>(null)
-  const [error, setError] = useState("")
-
-  const reload = useCallback(async () => {
-    try {
-      const res = await fetch("/api/finance/context")
-      if (!res.ok) { setError("Impossible de charger les données."); return }
-      const json = (await res.json()) as { data: FinanceContext }
-      setCtx(json.data)
-      setError("")
-    } catch {
-      setError("Erreur réseau.")
-    }
-  }, [])
-
-  useEffect(() => { void reload() }, [reload])
-  return { ctx, error, reload }
+  const { data, error, reload } = useFetch<FinanceContext>("/api/finance/context")
+  return { ctx: data, error, reload }
 }

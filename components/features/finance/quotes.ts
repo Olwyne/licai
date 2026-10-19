@@ -1,4 +1,5 @@
 "use client"
+import { useMemo, useSyncExternalStore } from "react"
 import type { CtxHolding } from "@/lib/finance/types"
 import type { ProfileKey, QuoteOverrides } from "@/lib/finance/invest"
 
@@ -19,7 +20,18 @@ const K = { mode: "licai-quote-mode", manual: "licai-quote-manual", api: "licai-
 const read = <T,>(key: string, def: T): T => {
   try { const v = localStorage.getItem(key); return v ? (JSON.parse(v) as T) : def } catch { return def }
 }
-const write = (key: string, v: unknown) => { try { localStorage.setItem(key, JSON.stringify(v)) } catch { /* stockage indisponible */ } }
+export const PREFS_EVENT = "licai-prefs-changed"
+const write = (key: string, v: unknown) => {
+  try { localStorage.setItem(key, JSON.stringify(v)) } catch { /* stockage indisponible */ }
+  try { window.dispatchEvent(new Event(PREFS_EVENT)) } catch { /* hors navigateur */ }
+}
+
+// Préférences stockées dans le navigateur, lues via useSyncExternalStore : valeur par défaut au rendu serveur et à l'hydratation,
+// puis valeur enregistrée, sans setState dans un effet.
+export const subscribePrefs = (cb: () => void) => {
+  window.addEventListener("storage", cb); window.addEventListener(PREFS_EVENT, cb)
+  return () => { window.removeEventListener("storage", cb); window.removeEventListener(PREFS_EVENT, cb) }
+}
 
 export function loadQuotes(): QuoteState {
   const mode = read<QuoteMode>(K.mode, "demo")
@@ -85,3 +97,22 @@ export function loadProfile(): ProfileKey {
   return p === "prudent" || p === "dynamique" ? p : "equilibre"
 }
 export const saveProfile = (p: ProfileKey) => write(K.profile, p)
+
+const DEFAULT_QUOTES_RAW = JSON.stringify({ mode: "demo", manual: {}, api: { endpoint: "", key: "" }, live: null, ts: "", status: "" })
+
+/** État des cours enregistré dans le navigateur (se met à jour quand il est modifié, y compris depuis un autre onglet). */
+export function useQuoteState(): QuoteState {
+  const raw = useSyncExternalStore(subscribePrefs, () => JSON.stringify(loadQuotes()), () => DEFAULT_QUOTES_RAW)
+  return useMemo(() => JSON.parse(raw) as QuoteState, [raw])
+}
+
+/** Cours à appliquer aux positions (selon la source choisie). */
+export function useQuoteOverrides(): QuoteOverrides {
+  const q = useQuoteState()
+  return useMemo(() => overrides(q), [q])
+}
+
+/** Profil d'investisseur choisi (« équilibré » par défaut). */
+export function useStoredProfile(): ProfileKey {
+  return useSyncExternalStore(subscribePrefs, loadProfile, () => "equilibre" as ProfileKey)
+}

@@ -1,20 +1,19 @@
 "use client"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 import Link from "next/link"
-import { computePortfolio, type ProfileKey } from "@/lib/finance/invest"
+import { computePortfolio } from "@/lib/finance/invest"
 import { computeTax, situationFor, taxInputs } from "@/lib/finance/tax"
 import { householdNet, perPerson } from "@/lib/finance/succession"
 import { immoSplit, rentRows } from "@/lib/finance/patrimoine"
 import { eur, eurS, pc } from "@/lib/finance/format"
-import { loadProfile, loadQuotes, overrides } from "@/components/features/finance/quotes"
+import { useQuoteOverrides, useStoredProfile } from "@/components/features/finance/quotes"
 import { useFinanceContext } from "@/components/features/finance/useFinanceContext"
 import { MiniAv } from "@/components/features/finance/ui"
 
 export function PatrimoineInsights({ reloadKey }: { reloadKey: number }) {
   const { ctx, reload } = useFinanceContext()
-  const [profile, setProfile] = useState<ProfileKey>("equilibre")
-  const [quotes, setQuotes] = useState(() => ({}) as ReturnType<typeof overrides>)
-  useEffect(() => { setProfile(loadProfile()); setQuotes(overrides(loadQuotes())) }, [])
+  const profile = useStoredProfile()
+  const quotes = useQuoteOverrides()
   useEffect(() => { if (reloadKey > 0) void reload() }, [reloadKey, reload])
 
   const m = useMemo(() => {

@@ -9,8 +9,6 @@ export default defineConfig([
     rules: {
       // Paramètres préfixés « _ » = volontairement inutilisés (signatures de callbacks).
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" }],
-      // Lecture de localStorage / du thème après hydratation : motif voulu (évite un décalage serveur/client).
-      "react-hooks/set-state-in-effect": "warn",
     },
   },
   globalIgnores([".next/**", "node_modules/**", "coverage/**", "test-results/**", "playwright-report/**", "next-env.d.ts", "public/**"]),

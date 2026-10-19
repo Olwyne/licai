@@ -5,8 +5,7 @@ import { fxRate } from "@/lib/finance/fx"
 import { computeTax, situationFor, taxInputs } from "@/lib/finance/tax"
 import { householdNet, ifi, psLines, pvRows, succession, successionAdvice } from "@/lib/finance/succession"
 import { eur, eurS, pc, pcS } from "@/lib/finance/format"
-import { loadProfile, loadQuotes, overrides } from "@/components/features/finance/quotes"
-import type { ProfileKey } from "@/lib/finance/invest"
+import { useQuoteOverrides, useStoredProfile } from "@/components/features/finance/quotes"
 import { useFinanceContext } from "@/components/features/finance/useFinanceContext"
 import { AdviceRow, FrenchTaxNotice, Kpi, LoadingOrError, MiniAv, PageHeader, StatRow } from "@/components/features/finance/ui"
 
@@ -16,11 +15,10 @@ const DISCLAIMER =
 export function PrevoyanceAnalysis({ reloadKey }: { reloadKey: number }) {
   const { ctx, error, reload } = useFinanceContext()
   const [who, setWho] = useState<string>("")
-  const [profile, setProfile] = useState<ProfileKey>("equilibre")
-  const [quotes, setQuotes] = useState(() => ({}) as ReturnType<typeof overrides>)
+  const profile = useStoredProfile()
+  const quotes = useQuoteOverrides()
 
   useEffect(() => { void reload() }, [reloadKey, reload])
-  useEffect(() => { setProfile(loadProfile()); setQuotes(overrides(loadQuotes())) }, [])
 
   const data = useMemo(() => {
     if (!ctx) return null

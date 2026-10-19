@@ -1,14 +1,13 @@
 "use client"
 import { getBaseCurrency } from "@/lib/finance/fx"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { computePortfolio } from "@/lib/finance/invest"
 import {
   BRACKETS, DEFAULT_SITUATION, P, computeTax, situationFor, taxAdvice, taxContextNumbers, taxInputs, taxScenarios,
 } from "@/lib/finance/tax"
 import type { TaxSituation } from "@/lib/finance/types"
 import { eur, eurS, pc } from "@/lib/finance/format"
-import { loadProfile, loadQuotes, overrides } from "@/components/features/finance/quotes"
-import type { ProfileKey } from "@/lib/finance/invest"
+import { useQuoteOverrides, useStoredProfile } from "@/components/features/finance/quotes"
 import { useFinanceContext } from "@/components/features/finance/useFinanceContext"
 import { AdviceRow, FrenchTaxNotice, Disclaimer, Kpi, LoadingOrError, PageHeader, StatRow } from "@/components/features/finance/ui"
 
@@ -130,10 +129,8 @@ function SituationModal({ situation, onClose, onSave }: {
 export function ImpotsClient() {
   const { ctx, error, reload } = useFinanceContext()
   const [open, setOpen] = useState(false)
-  const [profile, setProfile] = useState<ProfileKey>("equilibre")
-  const [quotes, setQuotes] = useState(() => ({}) as ReturnType<typeof overrides>)
-
-  useEffect(() => { setProfile(loadProfile()); setQuotes(overrides(loadQuotes())) }, [])
+  const profile = useStoredProfile()
+  const quotes = useQuoteOverrides()
 
   const m = useMemo(() => {
     if (!ctx) return null

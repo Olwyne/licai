@@ -1,8 +1,9 @@
 "use client"
+import { useSearchParams } from "next/navigation"
 import { CategorizeModal } from "./CategorizeModal"
 import { PeriodPill } from "@/components/layout/PeriodPill"
 import { usePeriod } from "@/contexts/PeriodContext"
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/Button"
 import { usePrivacy } from "@/contexts/PrivacyContext"
 import { formatCents, maskAmount } from "@/lib/money"
@@ -90,10 +91,13 @@ export function TransactionsClient({
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [showAddModal, setShowAddModal] = useState(false)
-  const [showImportModal, setShowImportModal] = useState(false)
-  useEffect(() => { if (new URLSearchParams(window.location.search).get("import") === "1") setShowImportModal(true) }, [])
+  // ?import=1 (lien « Importer » des comptes) ouvre directement l'assistant d'import
+  const [showImportModal, setShowImportModal] = useState(useSearchParams().get("import") === "1")
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
-  const [page, setPage] = useState(0)
+  // page courante : revient à 0 dès que les filtres changent (état dérivé, sans effet)
+  const [pageState, setPageState] = useState({ filters, page: 0 })
+  const page = pageState.filters === filters ? pageState.page : 0
+  const setPage = (p: number | ((prev: number) => number)) => setPageState({ filters, page: typeof p === "function" ? p(page) : p })
 
   const { month: pMonth, touched: pTouched } = usePeriod()
   const filteredTx = useMemo(() => applyFilters(txList, filters, pTouched ? pMonth : null), [txList, filters, pTouched, pMonth])
@@ -103,9 +107,6 @@ export function TransactionsClient({
     () => filteredTx.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE),
     [filteredTx, safePage, PAGE_SIZE]
   )
-
-  // Reset to page 0 on filter change
-  useEffect(() => { setPage(0) }, [filters])
 
   const expenseCents = useMemo(
     () => filteredTx.filter((t) => t.kind === "expense").reduce((s, t) => s + t.amountCents, 0),
