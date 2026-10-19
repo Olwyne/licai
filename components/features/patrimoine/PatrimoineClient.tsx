@@ -562,7 +562,7 @@ function PropertyModal({ property, members, loans, onClose, onSaved, onDeleted }
                 {taxeHistory.length === 0 && (
                   <div className="field-hint">Aucune taxe enregistrée.</div>
                 )}
-                {[...taxeHistory].sort((a, b) => b.year - a.year).map((entry, i) => {
+                {[...taxeHistory].sort((a, b) => b.year - a.year).map((entry) => {
                   const realIdx = taxeHistory.findIndex(e => e.year === entry.year)
                   return (
                     <div key={entry.year} className="taxe-row">

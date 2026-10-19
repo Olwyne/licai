@@ -20,7 +20,6 @@ interface Props {
 export function BudgetClient({ month, budgets: initial, categories }: Props) {
   const [budgetList, setBudgetList] = useState<EnrichedBudget[]>(initial)
   const [currentMonth, setCurrentMonth] = useState(month)
-  const [loading, setLoading] = useState(false)
   const [editTarget, setEditTarget] = useState<EnrichedBudget | null>(null)
   const [showAdd, setShowAdd] = useState(false)
   const [catList, setCatList] = useState<Category[]>(categories)
@@ -30,12 +29,10 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
   const totalSpent = budgetList.reduce((s, b) => s + b.spentCents, 0)
   const overallPct = totalLimit > 0 ? Math.round((totalSpent / totalLimit) * 100) : 0
 
-  const { month: pMonth, setMonth: setPMonth } = usePeriod()
-  useEffect(() => { if (pMonth !== currentMonth) void switchMonth(pMonth) }, [pMonth]) // eslint-disable-line react-hooks/exhaustive-deps
+  const { month: pMonth } = usePeriod()
 
   async function switchMonth(m: string) {
     setCurrentMonth(m)
-    setLoading(true)
     const res = await fetch(`/api/budget?month=${m}`)
     const json = await res.json()
     if (json.data) {
@@ -46,7 +43,6 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
       }))
       setBudgetList(enriched)
     }
-    setLoading(false)
   }
 
   function handleUpdated(updated: EnrichedBudget) {
@@ -61,6 +57,8 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
     setBudgetList((prev) => [...prev, budget])
     setShowAdd(false)
   }
+
+  useEffect(() => { if (pMonth !== currentMonth) void switchMonth(pMonth) }, [pMonth]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="page-budget">
@@ -128,7 +126,7 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
           categories={catList}
           budget={editTarget}
           onClose={() => { setEditTarget(null); setShowAdd(false) }}
-          onSaved={(cat, b) => { editTarget ? handleUpdated(b) : handleAdded(cat, b); setCatList((prev) => prev.map((c) => (c.id === cat.id ? cat : c))); setEditTarget(null); setShowAdd(false) }}
+          onSaved={(cat, b) => { if (editTarget) handleUpdated(b); else handleAdded(cat, b); setCatList((prev) => prev.map((c) => (c.id === cat.id ? cat : c))); setEditTarget(null); setShowAdd(false) }}
           onRemoved={(id) => { setBudgetList((prev) => prev.filter((b) => b.id !== id)); setEditTarget(null); setShowAdd(false) }}
         />
       )}

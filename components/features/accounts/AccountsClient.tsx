@@ -162,7 +162,7 @@ export function AccountsClient({ household, members, banks, accounts, childGoals
         {/* Child spending report — only shown to parents */}
         {!childViewId && childMembers.length > 0 && (
           <ChildSpendingReport
-            children={childMembers}
+            kids={childMembers}
             spending={childSpending}
           />
         )}

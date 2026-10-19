@@ -1,7 +1,8 @@
 "use client"
 import { useState } from "react"
 
-export interface ChatProvider { mode: "builtin" | "custom"; endpoint: string; key: string; model: string }
+import type { ChatProvider } from "@/contexts/AssistantContext"
+export type { ChatProvider }
 
 export function ConnModal({ provider, onClose, onSave }: { provider: ChatProvider; onClose: () => void; onSave: (p: ChatProvider) => void }) {
   const [p, setP] = useState<ChatProvider>(provider)
@@ -16,7 +17,7 @@ export function ConnModal({ provider, onClose, onSave }: { provider: ChatProvide
           <div className="field">
             <label>Fournisseur</label>
             <select value={p.mode} onChange={(e) => setP({ ...p, mode: e.target.value as ChatProvider["mode"] })}>
-              <option value="builtin">Modèle intégré à l&apos;application</option>
+              <option value="builtin">Clé API du serveur (ANTHROPIC_API_KEY)</option>
               <option value="custom">Point d&apos;accès externe (votre backend)</option>
             </select>
             <div className="field-hint">

@@ -2,12 +2,11 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useAssistant } from "@/contexts/AssistantContext"
-import { ConnModal, type ChatProvider } from "./ConnModal"
+import { ConnModal } from "./ConnModal"
 
 type ChatMessage = { role: "user" | "assistant"; content: string }
 
 const HIST_KEY = "licai-chat"
-const PROV_KEY = "licai-chat-provider"
 const SUGGESTIONS = [
   "Comment réduire mes impôts cette année ?",
   "Mon portefeuille est-il bien diversifié ?",
@@ -15,7 +14,6 @@ const SUGGESTIONS = [
   "Quelles dépenses réduire en priorité ?",
   "Résume ma situation financière",
 ]
-const DEFAULT_PROVIDER: ChatProvider = { mode: "builtin", endpoint: "", key: "", model: "" }
 
 const read = <T,>(key: string, def: T): T => { try { const v = localStorage.getItem(key); return v ? (JSON.parse(v) as T) : def } catch { return def } }
 const write = (key: string, v: unknown) => { try { localStorage.setItem(key, JSON.stringify(v)) } catch { /* stockage indisponible */ } }
@@ -30,24 +28,23 @@ function md(t: string): string {
 }
 
 export function AssistantChat() {
-  const { open, openAssistant, closeAssistant } = useAssistant()
+  const { open, openAssistant, closeAssistant, available, ready, provider, setProvider, providerLabel: aiLabel, model, loadModel } = useAssistant()
   const [history, setHistory] = useState<ChatMessage[]>([])
-  const [provider, setProvider] = useState<ChatProvider>(DEFAULT_PROVIDER)
   const [connOpen, setConnOpen] = useState(false)
   const [input, setInput] = useState("")
   const [busy, setBusy] = useState(false)
   const logRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  useEffect(() => { setHistory(read<ChatMessage[]>(HIST_KEY, [])); setProvider({ ...DEFAULT_PROVIDER, ...read(PROV_KEY, {}) }) }, [])
+  useEffect(() => { setHistory(read<ChatMessage[]>(HIST_KEY, [])) }, [])
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight }, [history, busy, open])
-  useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 120) }, [open])
+  useEffect(() => { if (open) { setTimeout(() => inputRef.current?.focus(), 120); void loadModel() } }, [open, loadModel])
 
   const commit = (h: ChatMessage[]) => { setHistory(h); write(HIST_KEY, h.slice(-40)) }
 
   async function askBuiltin(msgs: ChatMessage[], onChunk: (t: string) => void) {
     const res = await fetch("/api/assistant", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: msgs }) })
-    if (!res.ok || !res.body) throw new Error(res.status === 500 ? "modèle intégré indisponible (clé API manquante ?)" : `HTTP ${res.status}`)
+    if (!res.ok || !res.body) { const body = (await res.json().catch(() => null)) as { error?: string } | null; throw new Error(body?.error ?? (res.status === 503 ? "aucune clé API configurée" : `HTTP ${res.status}`)) }
     const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ""
     for (;;) {
       const { done, value } = await reader.read()
@@ -96,7 +93,10 @@ export function AssistantChat() {
     }
   }
 
-  const providerLabel = provider.mode === "custom" ? (provider.endpoint ? "Fournisseur externe" : "Fournisseur non configuré") : "Modèle intégré"
+  const providerLabel = provider.mode === "custom" ? (provider.endpoint ? "Fournisseur externe" : "Fournisseur non configuré") : `${aiLabel.split(" ")[0]}${model ? ` · ${model}` : ""}`
+
+  // Sans clé API (serveur ou fournisseur externe), l'assistant n'existe pas dans l'interface.
+  if (!ready || !available) return null
 
   return (
     <>
@@ -139,7 +139,7 @@ export function AssistantChat() {
           <button className="btn btn-primary" onClick={() => void send(input)} disabled={busy || !input.trim()} aria-label="Envoyer"><i aria-hidden="true" className="ti ti-send" /></button>
         </div>
       </aside>
-      {connOpen && <ConnModal provider={provider} onClose={() => setConnOpen(false)} onSave={(p) => { setProvider(p); write(PROV_KEY, p); setConnOpen(false) }} />}
+      {connOpen && <ConnModal provider={provider} onClose={() => setConnOpen(false)} onSave={(p) => { setProvider(p); setConnOpen(false) }} />}
     </>
   )
 }

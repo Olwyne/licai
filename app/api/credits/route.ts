@@ -26,7 +26,6 @@ export async function GET() {
       .all()
 
     const enriched: EnrichedLoan[] = rows.map((loan) => {
-      const r = loan.ratePercent / 100 / 12
       let echeancesRestantes = 0
       if (loan.endDate) {
         const end = new Date(loan.endDate)

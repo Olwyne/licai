@@ -25,11 +25,6 @@ function fmtDelta(cents: number): string {
   return `${sign} ${fmt(Math.abs(cents))}`
 }
 
-function monthLabel(dateStr: string): string {
-  const [y, m] = dateStr.split("-").map(Number)
-  return new Date(y, m - 1).toLocaleDateString("fr-FR", { month: "short", year: "numeric" })
-}
-
 function computeIFMonths(
   capitalCents: number,
   monthlyCents: number,
@@ -570,7 +565,7 @@ export function TrajectoireClient() {
               </div>
               {data.dettesCents > 0 && (
                 <div style={{ fontSize: 11, color: "var(--fg-muted)" }}>
-                  Taux d'endettement patrimonial{" "}
+                  Taux d&apos;endettement patrimonial{" "}
                   {Math.round(data.dettesCents / (data.liquiditesCents + data.placementsCents + data.immobilierCents) * 100 * 10) / 10} %
                 </div>
               )}
@@ -583,7 +578,7 @@ export function TrajectoireClient() {
       {!loading && data && sim && (
         <div className="card">
           <div className="card-header">
-            <div className="card-title">Simulateur d'indépendance financière</div>
+            <div className="card-title">Simulateur d&apos;indépendance financière</div>
             <div className="card-sub">Règle des {withdrawalRate} % · rendement réel {sim.realReturn} %</div>
           </div>
 
@@ -704,7 +699,7 @@ export function TrajectoireClient() {
             <div className="card-title">Objectifs fléchés</div>
             <div className="card-sub">
               {fmt(data.totalMonthlyGoalEffortCents)} / mois fléchés ·{" "}
-              {fmt(data.epargneMenusuelleCents)} d'épargne dégagée
+              {fmt(data.epargneMenusuelleCents)} d&apos;épargne dégagée
             </div>
             <Link className="card-link" href="/objectifs">Gérer</Link>
           </div>
@@ -717,7 +712,7 @@ export function TrajectoireClient() {
         <div className="card">
           <div className="card-header">
             <div className="card-title">Projection du patrimoine</div>
-            <div className="card-sub">À effort d'épargne constant</div>
+            <div className="card-sub">À effort d&apos;épargne constant</div>
           </div>
           <div className="table-scroll">
             <table className="traj-table">
@@ -756,7 +751,7 @@ export function TrajectoireClient() {
             </table>
           </div>
           <p style={{ fontSize: 11.5, color: "var(--fg-muted)", marginTop: 12 }}>
-            Hypothèses : {(R_FINANCIER * 100).toFixed(1)} % de rendement financier, +{(R_IMMO * 100).toFixed(1)} %/an sur l'immobilier, amortissement linéaire des crédits, épargne constante de {fmt(data.epargneMenusuelleCents)}/mois.
+            Hypothèses : {(R_FINANCIER * 100).toFixed(1)} % de rendement financier, +{(R_IMMO * 100).toFixed(1)} %/an sur l&apos;immobilier, amortissement linéaire des crédits, épargne constante de {fmt(data.epargneMenusuelleCents)}/mois.
           </p>
         </div>
       )}

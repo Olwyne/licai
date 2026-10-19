@@ -6,7 +6,6 @@ import { useSession } from "next-auth/react"
 import { usePrivacy } from "@/contexts/PrivacyContext"
 import { useTheme } from "@/contexts/ThemeContext"
 import { useSearch } from "@/contexts/SearchContext"
-import { useAssistant } from "@/contexts/AssistantContext"
 import { useNav } from "@/contexts/NavContext"
 
 const NAV = [
@@ -37,7 +36,6 @@ export function Sidebar() {
   const { private: priv, toggle: togglePrivacy } = usePrivacy()
   const { theme, toggle: toggleTheme } = useTheme()
   const { openSearch } = useSearch()
-  const { openAssistant } = useAssistant()
   const { open, close } = useNav()
   const [alertCount, setAlertCount] = useState(0)
   useEffect(() => {
@@ -76,10 +74,6 @@ export function Sidebar() {
       <div className="nav-spacer" />
 
       <div className="sidebar-tools">
-        <button className="sidebar-tool accent" onClick={openAssistant}>
-          <i aria-hidden="true" className="ti ti-sparkles" />
-          <span>Assistant IA</span>
-        </button>
         <button className="sidebar-tool" onClick={openSearch}>
           <i aria-hidden="true" className="ti ti-search" />
           <span>Rechercher</span>

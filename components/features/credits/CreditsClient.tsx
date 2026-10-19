@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useCallback } from "react"
-import { formatCents, parseCents } from "@/lib/money"
+import { formatCents } from "@/lib/money"
 import type { Loan } from "@/db/schema"
 import { LoanModal } from "./LoanModal"
 import { useFinanceContext } from "@/components/features/finance/useFinanceContext"

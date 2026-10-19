@@ -2,7 +2,6 @@ import { db } from "@/lib/db"
 import { baseBalanceCents, householdFx } from "@/lib/server/fx-convert"
 import { recurring, transactions, accounts, budgets, categories } from "@/db/schema"
 import { eq, and, gte } from "drizzle-orm"
-import { frequencyToMonthlyCents } from "@/lib/finance/recurring"
 
 export type RecurringEvent = {
   name: string
@@ -45,8 +44,6 @@ export type PrevisionData = {
   }
   budgetVsReel: BudgetVsReel[]
 }
-
-const FREQ = { monthly: 1, quarterly: 3, annual: 12 } as const
 
 function monthApplies(item: { frequency: string; nextDate: string }, year: number, monthIdx: number): boolean {
   const nextD = new Date(item.nextDate)
@@ -160,9 +157,6 @@ export function buildPrevisions(householdId: string, horizon: number): Prevision
   const catSpend = new Map<string, number[]>()
   for (const t of pastTx) {
     if (t.amountCents < 0 && t.categoryId) {
-      const monthKey = t.date.slice(0, 7)
-      const key = `${t.categoryId}:${monthKey}`
-      // group by (cat, month)
       if (!catSpend.has(t.categoryId)) catSpend.set(t.categoryId, [])
       catSpend.get(t.categoryId)!.push(Math.abs(t.amountCents))
     }

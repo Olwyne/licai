@@ -8,6 +8,8 @@ import { useTheme } from "@/contexts/ThemeContext"
 import Link from "next/link"
 import { PROFILES, type ProfileKey } from "@/lib/finance/invest"
 import { loadProfile, saveProfile } from "@/components/features/finance/quotes"
+import { useAssistant } from "@/contexts/AssistantContext"
+import { ConnModal } from "@/components/features/assistant/ConnModal"
 
 interface Prefs {
   displayName: string
@@ -223,10 +225,10 @@ function DataCard({ anon, onAnon, onPassword }: { anon: boolean; onAnon: () => v
     <div className="card">
       <div className="card-header"><div className="card-title">Données &amp; compte</div></div>
       <div className="set-list">
-        {action("ti-file-spreadsheet", "Exporter les transactions", "CSV compatible Excel et Google Sheets", () => { window.location.href = "/api/export/transactions" })}
-        {action("ti-chart-candle", "Exporter le portefeuille", "Lignes, prix de revient et plus-values latentes", () => { window.location.href = "/api/export/portfolio" })}
+        {action("ti-file-spreadsheet", "Exporter les transactions", "CSV compatible Excel et Google Sheets", () => { window.open("/api/export/transactions", "_self") })}
+        {action("ti-chart-candle", "Exporter le portefeuille", "Lignes, prix de revient et plus-values latentes", () => { window.open("/api/export/portfolio", "_self") })}
         {action("ti-file-text", "Rapport patrimonial", "Synthèse imprimable ou PDF", () => { window.open("/rapport", "_blank") })}
-        {action("ti-database-export", "Sauvegarde complète", "Fichier JSON de toutes les données du foyer", () => { window.location.href = "/api/export" })}
+        {action("ti-database-export", "Sauvegarde complète", "Fichier JSON de toutes les données du foyer", () => { window.open("/api/export", "_self") })}
         <label className="set-action" style={{ cursor: "pointer" }}>
           <i aria-hidden="true" className="ti ti-database-import" />
           <div className="flex-1"><div className="set-name">Importer une sauvegarde</div><div className="set-desc">{importing ? "Lecture…" : "Fichier JSON exporté depuis Lǐcái"}</div></div>
@@ -363,10 +365,116 @@ function ResetDataButton() {
 }
 
 // ─── Main client component ─────────────────────────────────────────────────────
+const AI_PROVIDERS = [
+  { id: "anthropic", label: "Claude (Anthropic)", hint: "sk-ant-…" },
+  { id: "openai", label: "ChatGPT (OpenAI)", hint: "sk-…" },
+  { id: "gemini", label: "Gemini (Google)", hint: "AIza…" },
+] as const
+
+function AiKeyCard({ onAdvanced }: { onAdvanced: () => void }) {
+  const { available, keySource, keyHint, aiProvider, chosenModel, provider, refresh } = useAssistant()
+  const [prov, setProv] = useState<string>(aiProvider)
+  const [model, setModel] = useState(chosenModel)
+  const [models, setModels] = useState<{ recommended: string; list: string[] }>({ recommended: "", list: [] })
+  const [value, setValue] = useState("")
+  const [shown, setShown] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState("")
+  const saved = keySource === "account"
+  const hint = AI_PROVIDERS.find((p) => p.id === prov)?.hint ?? ""
+
+  useEffect(() => { setProv(aiProvider); setModel(chosenModel) }, [aiProvider, chosenModel])
+  // modèles accessibles avec la clé enregistrée + modèle recommandé automatiquement
+  useEffect(() => {
+    if (!available) return
+    let live = true
+    fetch("/api/assistant/models").then((r) => (r.ok ? r.json() : null)).then((j: { data?: { recommended: string; models: string[] } } | null) => {
+      if (live && j?.data) setModels({ recommended: j.data.recommended, list: j.data.models })
+    }).catch(() => {})
+    return () => { live = false }
+  }, [available, aiProvider, keySource])
+
+  async function toggleShow() {
+    // clé enregistrée mais pas saisie ici : on la relit côté serveur pour l'afficher
+    if (!shown && !value && saved) {
+      const r = await fetch("/api/assistant/key")
+      if (r.ok) setValue(((await r.json()) as { data: { key: string } }).data.key)
+    }
+    setShown((v) => !v)
+  }
+
+  async function save(body: { key?: string }, done: string) {
+    setBusy(true); setMsg("")
+    const r = await fetch("/api/assistant/key", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider: prov, model, ...body }) })
+    const j = (await r.json().catch(() => null)) as { data?: { warning?: string }; error?: string } | null
+    setBusy(false)
+    if (!r.ok) { setMsg(j?.error ?? "Erreur d'enregistrement."); return }
+    setValue(""); setShown(false)
+    setMsg(`${done}${j?.data?.warning ? ` ${j.data.warning}` : ""}`)
+    await refresh()
+  }
+
+  return (
+    <div className="card">
+      <div className="card-header"><div className="card-title">Assistant financier IA</div></div>
+      <div className="field-row">
+        <div className="field">
+          <label htmlFor="ai-provider">Fournisseur</label>
+          <select id="ai-provider" value={prov} onChange={(e) => { setProv(e.target.value); setModel(""); setMsg("") }}>
+            {AI_PROVIDERS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="ai-model">Modèle</label>
+          <select id="ai-model" value={model} onChange={(e) => setModel(e.target.value)}>
+            <option value="">{models.recommended && prov === aiProvider ? `Automatique — ${models.recommended}` : "Automatique (le plus pertinent)"}</option>
+            {prov === aiProvider && models.list.map((m) => <option key={m} value={m}>{m}</option>)}
+            {model && !models.list.includes(model) && <option value={model}>{model}</option>}
+          </select>
+        </div>
+      </div>
+      <div className="field">
+        <label htmlFor="ai-key">Clé API</label>
+        <div className="field-amount">
+          <input
+            id="ai-key" type={shown ? "text" : "password"} autoComplete="off" spellCheck={false}
+            value={value} onChange={(e) => { setValue(e.target.value); setMsg("") }}
+            placeholder={saved ? `Clé enregistrée ${keyHint}` : hint}
+            style={{ fontSize: 14, fontWeight: 500, paddingRight: 44 }}
+          />
+          <button type="button" className="icon-btn" onClick={() => void toggleShow()} aria-pressed={shown}
+            aria-label={shown ? "Masquer la clé" : "Afficher la clé"} title={shown ? "Masquer la clé" : "Afficher la clé"}
+            style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", width: 30, height: 30 }}>
+            <i aria-hidden="true" className={`ti ${shown ? "ti-eye-off" : "ti-eye"}`} />
+          </button>
+        </div>
+        <div className="field-hint">
+          {available
+            ? keySource === "account" ? `Assistant activé avec la clé de votre compte (${keyHint}).` : keySource === "server" ? "Assistant activé avec la clé du serveur (variable d'environnement)." : "Assistant activé via un fournisseur externe."
+            : "Sans clé API, l'assistant est désactivé : la bulle de conseil n'apparaît pas."}
+          {" "}La clé est vérifiée auprès du fournisseur, chiffrée sur le serveur et n&apos;est renvoyée au navigateur que si vous cliquez sur l&apos;œil. En mode « Automatique », l&apos;app choisit le modèle le plus pertinent parmi ceux de votre compte.
+        </div>
+      </div>
+      {msg && <div className="field-hint" role="status">{msg}</div>}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+        <button className="btn btn-primary btn-sm" type="button" disabled={busy || (!value.trim() && !(saved && (prov !== aiProvider || model !== chosenModel)))}
+          onClick={() => void save(value.trim() ? { key: value.trim() } : {}, value.trim() ? "Clé enregistrée." : "Préférences enregistrées.")}>
+          <i aria-hidden="true" className="ti ti-check" /> {value.trim() ? "Enregistrer la clé" : "Enregistrer"}
+        </button>
+        {saved && <button className="btn btn-ghost btn-sm" type="button" disabled={busy} onClick={() => void save({ key: "" }, "Clé supprimée.")}><i aria-hidden="true" className="ti ti-trash" /> Supprimer la clé</button>}
+        <button className="btn btn-ghost btn-sm" type="button" onClick={onAdvanced}>{provider.mode === "custom" ? "Point d'accès externe : modifier" : "Utiliser un point d'accès externe"}</button>
+      </div>
+      <div className="field-hint" style={{ marginTop: 8 }}>La bulle en bas à droite conseille à partir de l&apos;ensemble des données de l&apos;application (comptes, transactions, budgets, crédits, immobilier, placements, impôts). Rien n&apos;est envoyé avant votre premier message.</div>
+    </div>
+  )
+}
+
 export function ParametresClient() {
   const { data: session } = useSession()
   const { private: priv, toggle: togglePrivacy } = usePrivacy()
   const { theme, toggle: toggleTheme } = useTheme()
+  const assistant = useAssistant()
+  const [connOpen, setConnOpen] = useState(false)
 
   const [prefs, setPrefs] = useState<Prefs>(defaultPrefs)
   const [profile, setProfile] = useState<ProfileKey>("equilibre")
@@ -508,6 +616,8 @@ export function ParametresClient() {
           </div>
         </div>
 
+        <AiKeyCard onAdvanced={() => setConnOpen(true)} />
+
         {/* ── Card 3: Notifications ───────────────────────────────────── */}
         <div className="card">
           <div className="card-header">
@@ -559,6 +669,7 @@ export function ParametresClient() {
         {/* ── Card 4: Données & compte ───────────────────────────────── */}
         <DataCard anon={prefs.anon} onAnon={() => updatePref("anon", !prefs.anon)} onPassword={() => setShowPasswordModal(true)} />
       </div>
+      {connOpen && <ConnModal provider={assistant.provider} onClose={() => setConnOpen(false)} onSave={(p) => { assistant.setProvider(p); setConnOpen(false) }} />}
 
       {showProfileModal && (
         <ProfileModal

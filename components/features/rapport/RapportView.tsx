@@ -76,7 +76,7 @@ interface Props {
   householdId: string
 }
 
-export function RapportView({ month, householdId: _householdId }: Props) {
+export function RapportView({ month }: Props) {
   const router = useRouter()
   const [data, setData] = useState<RapportData | null>(null)
   const [loading, setLoading] = useState(true)

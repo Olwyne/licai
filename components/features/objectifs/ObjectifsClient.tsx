@@ -29,8 +29,6 @@ const FILTERS: { value: FilterMode; label: string }[] = [
   { value: "atteints", label: "Atteints" },
 ]
 
-const PRESET_COLORS = ["#1D9E75", "#378ADD", "#7C6BD6", "#D4537E", "#EF9F27", "#D85A30"]
-
 // ─── AddFundsModal ────────────────────────────────────────────────────────────
 
 interface AddFundsModalProps {
@@ -131,6 +129,7 @@ function GoalCard({ goal, onEdit, onAddFunds }: GoalCardProps) {
   // Probabilité heuristique: high if pct >= expected pct at this point in time
   let probabilite: number | null = null
   if (goal.deadline && days !== null && days > 0) {
+    // eslint-disable-next-line react-hooks/purity -- affichage dépendant de la date du jour
     const totalDays = (new Date(goal.deadline).getTime() - (Date.now() - days * 86400000)) / 86400000
     const expectedPct = totalDays > 0 ? Math.round(((totalDays - days) / totalDays) * 100) : 0
     const lead = pct - expectedPct

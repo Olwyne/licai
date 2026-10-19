@@ -216,7 +216,7 @@ export function PrevoyanceClient() {
 
   useEffect(() => { void load() }, [load])
 
-  function onSaved(_c: ContractRow) {
+  function onSaved() {
     setModal({ open: false, item: null })
     void load()
     setReloadKey((k) => k + 1)
