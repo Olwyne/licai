@@ -104,6 +104,12 @@ export default async function ComptesPage() {
     }
   }
 
+  // Nombre d'opérations par compte (pied de carte)
+  const txCounts: Record<string, number> = {}
+  for (const t of db.select({ a: transactions.accountId }).from(transactions).where(eq(transactions.householdId, hid)).all()) {
+    if (t.a) txCounts[t.a] = (txCounts[t.a] ?? 0) + 1
+  }
+
   const portfolio = computePortfolio(fctx, "equilibre")
   const fx = {
     rates: fctx.fx, source: fctx.fxSource, ts: fctx.fxTs,
@@ -120,6 +126,7 @@ export default async function ComptesPage() {
       accounts={enrichedAccounts}
       childGoals={childGoals}
       childSpending={childSpending}
+      txCounts={txCounts}
       fx={fx}
     />
   )

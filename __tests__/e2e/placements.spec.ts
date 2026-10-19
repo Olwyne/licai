@@ -26,7 +26,7 @@ test.describe("Placements", () => {
 
   test("add a line → appears in the table, then delete it", async ({ page }) => {
     await page.goto("/placements")
-    await page.getByText("Ajouter une ligne", { exact: true }).click()
+    await page.getByText("Ajouter une ligne", { exact: true }).first().click()
     const modal = page.locator(".modal")
     await expect(modal).toBeVisible()
     await modal.locator(".field", { hasText: "Nom du support" }).locator("input").fill("Ligne E2E")

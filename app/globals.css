@@ -861,26 +861,9 @@ h1.auth-h { font-size: 23px; font-weight: 600; letter-spacing: -.5px; }
 .devise-note { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg-muted); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 
 /* Household card */
-.hh-head { display: flex; align-items: center; gap: 16px; padding: 20px; border-bottom: 1px solid var(--border); }
-.hh-mark { width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--primary)1f; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 22px; }
-.hh-name { font-size: 16px; font-weight: 600; }
-.hh-sub { font-size: 12px; color: var(--fg-secondary); margin-top: 2px; }
-.hh-total { margin-left: auto; text-align: right; }
-.hh-total-lbl { font-size: 11px; color: var(--fg-secondary); text-transform: uppercase; letter-spacing: .04em; }
-.hh-total-val { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.member-grid { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px 20px; }
-.member-card { display: flex; align-items: center; gap: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 14px; cursor: default; min-width: 200px; }
-.member-card.add { background: transparent; border-style: dashed; color: var(--fg-secondary); cursor: pointer; font-size: 13px; gap: 6px; }
-.member-card.add:hover { border-color: var(--primary); color: var(--primary); }
 .member-info { flex: 1; }
-.member-name { font-size: 14px; font-weight: 500; }
-.member-role { font-size: 12px; color: var(--fg-secondary); }
-.member-nums { text-align: right; }
-.member-sum { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.member-accs { font-size: 11px; color: var(--fg-secondary); }
 
-.mini-av { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; font-size: 11px; font-weight: 700; border: 1.5px solid; flex-shrink: 0; }
 .member-age { font-size: 11px; color: var(--fg-secondary); font-weight: 400; }
 .badge-enfant { display: inline-block; padding: 1px 7px; border-radius: 20px; font-size: 10.5px; font-weight: 600; background: #EF9F2722; color: #C07D10; border: 1px solid #EF9F2744; margin-top: 3px; }
 .allowance-line { font-size: 11px; color: var(--fg-secondary); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
@@ -938,26 +921,10 @@ h1.auth-h { font-size: 23px; font-weight: 600; letter-spacing: -.5px; }
 .owner-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* Bank groups */
-.bank-group { margin-bottom: 24px; }
-.bank-head { display: flex; align-items: center; gap: 10px; padding: 8px 0; margin-bottom: 10px; border-bottom: 1px solid var(--border); }
-.bank-logo { width: 30px; height: 30px; border-radius: var(--radius-sm); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
-.bank-name { font-size: 14px; font-weight: 600; flex: 1; }
-.bank-count { font-size: 12px; color: var(--fg-secondary); }
-.bank-sum { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; margin-left: auto; }
 
-.acct-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-.acct-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .acct-card--clickable { cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+.acct-card { display: flex; flex-direction: column; }
 .acct-card--clickable:hover { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
-.acct-top { display: flex; justify-content: space-between; align-items: flex-start; }
-.acct-name { font-size: 14px; font-weight: 600; }
-.acct-meta { font-size: 12px; color: var(--fg-secondary); margin-top: 2px; }
-.acct-shared { color: var(--info); }
-.acct-owners { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
-.acct-balance { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.acct-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
-.acct-sync { font-size: 12px; color: var(--fg-secondary); display: flex; align-items: center; gap: 4px; }
-.acct-import { background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 10px; font-size: 12px; cursor: pointer; color: var(--fg-secondary); display: flex; align-items: center; gap: 4px; }
 .acct-import:hover { border-color: var(--primary); color: var(--primary); }
 .acct-import:disabled { opacity: 0.4; cursor: default; }
 
@@ -1645,7 +1612,9 @@ h1.auth-h { font-size: 23px; font-weight: 600; letter-spacing: -.5px; }
 .cred-cout-empty { padding: 16px; font-size: 13px; color: var(--fg-muted); text-align: center; }
 
 /* Loan list */
-.cred-list { display: flex; flex-direction: column; gap: 12px; }
+.cred-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; }
+.cred-list > .empty { grid-column: 1 / -1; }
+@media (max-width: 420px) { .cred-list { grid-template-columns: minmax(0, 1fr); } }
 .cred-card { background: var(--card-bg, var(--bg-card, var(--bg))); border: 1px solid var(--border); border-radius: 12px; padding: 16px; cursor: pointer; transition: border-color .15s; }
 .cred-card:hover { border-color: var(--primary); }
 .cred-card-header { margin-bottom: 14px; }
@@ -2078,3 +2047,7 @@ html[data-anon="on"] :is(.tx-name, .tx-meta, .pat-name, .pat-address, .inv-name,
   .fi-grid, .fi-grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .chat-fab { bottom: 16px; right: 16px; width: 46px; height: 46px; font-size: 20px; }
 }
+
+.member-info { flex: 1; min-width: 0; }
+.acct-foot .acct-import[disabled] { opacity: .45; cursor: default; }
+.acct-foot .acct-import[disabled]:hover { text-decoration: none; }

@@ -72,76 +72,8 @@ export function RecurringList({
     return r.kind === filter
   })
 
-  const activeItems = items.filter((r) => r.active)
-
-  const chargesMonthly = activeItems
-    .filter((r) => r.kind !== "saving")
-    .reduce((s, r) => s + frequencyToMonthlyCents(r.amountCents, r.frequency), 0)
-
-  const subscriptionsMonthly = activeItems
-    .filter((r) => r.kind === "subscription")
-    .reduce((s, r) => s + frequencyToMonthlyCents(r.amountCents, r.frequency), 0)
-
-  const savingMonthly = activeItems
-    .filter((r) => r.kind === "saving")
-    .reduce((s, r) => s + frequencyToMonthlyCents(r.amountCents, r.frequency), 0)
-
   return (
     <div>
-      <div className="metrics">
-        <div className="metric">
-          <div className="metric-top">
-            <span className="metric-label">Charges fixes / mois</span>
-            <span className="metric-ic" style={{ background: "#D85A3020" }}>
-              <i className="ti ti-calendar-repeat" style={{ color: "#D85A30" }} />
-            </span>
-          </div>
-          <div className={`metric-value ${priv ? "private" : ""}`}>
-            {formatCents(chargesMonthly)}
-          </div>
-          <div className="metric-sub">hors épargne</div>
-        </div>
-
-        <div className="metric">
-          <div className="metric-top">
-            <span className="metric-label">Avec les crédits</span>
-            <span className="metric-ic" style={{ background: "#6366F120" }}>
-              <i className="ti ti-credit-card" style={{ color: "#6366F1" }} />
-            </span>
-          </div>
-          <div className={`metric-value ${priv ? "private" : ""}`}>
-            {formatCents(chargesMonthly)}
-          </div>
-          <div className="metric-sub">+0 € de crédits</div>
-        </div>
-
-        <div className="metric">
-          <div className="metric-top">
-            <span className="metric-label">Abonnements</span>
-            <span className="metric-ic" style={{ background: "#EF9F2720" }}>
-              <i className="ti ti-device-tv" style={{ color: "#EF9F27" }} />
-            </span>
-          </div>
-          <div className={`metric-value ${priv ? "private" : ""}`}>
-            {formatCents(subscriptionsMonthly)}
-          </div>
-          <div className="metric-sub">/ mois</div>
-        </div>
-
-        <div className="metric">
-          <div className="metric-top">
-            <span className="metric-label">Épargne automatique</span>
-            <span className="metric-ic" style={{ background: "#1D9E7520" }}>
-              <i className="ti ti-pig-money" style={{ color: "#1D9E75" }} />
-            </span>
-          </div>
-          <div className={`metric-value ${priv ? "private" : ""}`}>
-            {formatCents(savingMonthly)}
-          </div>
-          <div className="metric-sub">/ mois</div>
-        </div>
-      </div>
-
       <div className="rec-chips-row">
         {FILTERS.map((f) => (
           <Chip key={f.value} active={filter === f.value} onClick={() => onFilterChange(f.value)}>

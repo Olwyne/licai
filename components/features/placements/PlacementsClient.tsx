@@ -426,7 +426,9 @@ export function PlacementsClient() {
 
   return (
     <div className="page-placements">
-      <PageHeader title="Placements" sub="Enveloppes, lignes, diversification et fiscalité" />
+      <PageHeader title="Placements" sub="Enveloppes, lignes, diversification et fiscalité">
+        <button className="btn btn-primary" onClick={() => setLineModal({ open: true, item: null })}><i className="ti ti-plus" /> Ajouter une ligne</button>
+      </PageHeader>
 
       <div className="toolbar">
         <div className="chips" style={{ margin: 0 }}>
