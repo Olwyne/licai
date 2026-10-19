@@ -1,3 +1,4 @@
+import { householdFx } from "@/lib/server/fx-convert"
 import { db } from "@/lib/db"
 import { accounts } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
@@ -15,6 +16,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (k in body) updates[k] = k === "ownerIds" ? JSON.stringify(body[k]) : body[k]
   }
   if (Object.keys(updates).length === 0) return err("Nothing to update")
+  // changement de devise : le taux à l'ouverture repart du taux courant
+  if (typeof updates.currency === "string") {
+    const cur = db.select().from(accounts).where(and(eq(accounts.id, id), eq(accounts.householdId, householdId))).get()
+    if (cur && cur.currency !== updates.currency) {
+      const hf = householdFx(householdId)
+      updates.openedRate = updates.currency === hf.base ? null : hf.fx[updates.currency] ?? null
+    }
+  }
   try {
     db.update(accounts).set(updates).where(and(eq(accounts.id, id), eq(accounts.householdId, householdId))).run()
   } catch {

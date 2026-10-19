@@ -13,6 +13,8 @@ export const households = sqliteTable("households", {
   aiKeyEnc: text("ai_key_enc").notNull().default(""), // clé API IA du foyer (chiffrée, cf. lib/server/secret.ts)
   aiProvider: text("ai_provider").notNull().default("anthropic"), // anthropic | openai | gemini
   aiModel: text("ai_model").notNull().default(""), // vide = choix automatique du modèle le plus pertinent
+  fxAuto: integer("fx_auto", { mode: "boolean" }).notNull().default(false), // mise à jour automatique des taux et cryptos
+  fxUpdatedAt: text("fx_updated_at").notNull().default(""), // ISO, dernière mise à jour des taux
 })
 
 export const users = sqliteTable("users", {
@@ -71,6 +73,14 @@ export const accounts = sqliteTable("accounts", {
   ownerIds: text("owner_ids").notNull().default("[]"), // JSON array
   last4: text("last4").notNull().default(""),
   purpose: text("purpose").notNull().default(""),
+  openedRate: real("opened_rate"), // taux de change (vers la devise de référence) à l'ouverture du compte étranger, pour l'écart de change
+})
+
+export const fxHistory = sqliteTable("fx_history", {
+  householdId: text("household_id").notNull().references(() => households.id),
+  date: text("date").notNull(), // YYYY-MM-DD
+  base: text("base").notNull(), // devise de référence au moment du relevé
+  rates: text("rates").notNull(), // JSON { USD: 0.88, … } : 1 unité = X base
 })
 
 export const categories = sqliteTable("categories", {

@@ -112,7 +112,7 @@ export default async function ComptesPage() {
 
   const portfolio = computePortfolio(fctx, "equilibre")
   const fx = {
-    rates: fctx.fx, source: fctx.fxSource, ts: fctx.fxTs,
+    rates: fctx.fx, source: fctx.fxSource, ts: fctx.fxTs, auto: Boolean(household?.fxAuto),
     positions: portfolio.pos.map((p) => ({ value: p.value, qty: p.qty, price: p.price, cur: p.cur })),
   }
 

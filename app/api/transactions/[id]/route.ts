@@ -21,12 +21,12 @@ export async function PATCH(
     if (k in body) updates[k] = body[k]
   }
 
-  if ("amountCents" in updates || "accountId" in updates) {
+  if ("amountCents" in updates || "accountId" in updates || "date" in updates) {
     const cur = db.select().from(transactions).where(and(eq(transactions.id, id), eq(transactions.householdId, householdId))).get()
     if (!cur) return err("Not found", 404)
     // le client envoie le montant dans la devise du compte ; l'absence de montant conserve le montant d'origine
     const native = typeof body.amountCents === "number" ? body.amountCents : (cur.originalCents ?? cur.amountCents)
-    Object.assign(updates, toBaseAmount(householdId, (updates.accountId as string | null | undefined) ?? cur.accountId, native))
+    Object.assign(updates, toBaseAmount(householdId, (updates.accountId as string | null | undefined) ?? cur.accountId, native, (updates.date as string | undefined) ?? cur.date))
   }
 
   if (Object.keys(updates).length === 0) {

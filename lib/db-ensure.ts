@@ -16,6 +16,9 @@ const COLUMNS: ColumnStep[] = [
   { table: "properties", column: "taxe_fonciere_history", ddl: "TEXT NOT NULL DEFAULT '[]'" },
   { table: "properties", column: "residence_type", ddl: "TEXT NOT NULL DEFAULT 'principale'" },
   { table: "properties", column: "rent_monthly_cents", ddl: "INTEGER NOT NULL DEFAULT 0" },
+  { table: "households", column: "fx_auto", ddl: "INTEGER NOT NULL DEFAULT 0" },
+  { table: "households", column: "fx_updated_at", ddl: "TEXT NOT NULL DEFAULT ''" },
+  { table: "accounts", column: "opened_rate", ddl: "REAL" },
   { table: "households", column: "ai_key_enc", ddl: "TEXT NOT NULL DEFAULT ''" },
   { table: "households", column: "ai_provider", ddl: "TEXT NOT NULL DEFAULT 'anthropic'" },
   { table: "households", column: "ai_model", ddl: "TEXT NOT NULL DEFAULT ''" },
@@ -48,6 +51,13 @@ const COLUMNS: ColumnStep[] = [
 ]
 
 const TABLES = [
+  `CREATE TABLE IF NOT EXISTS fx_history (
+    household_id TEXT NOT NULL REFERENCES households(id),
+    date TEXT NOT NULL,
+    base TEXT NOT NULL,
+    rates TEXT NOT NULL,
+    PRIMARY KEY (household_id, date)
+  )`,
   `CREATE TABLE IF NOT EXISTS investment_accounts (
     id TEXT PRIMARY KEY NOT NULL,
     household_id TEXT NOT NULL REFERENCES households(id),

@@ -10,8 +10,8 @@ const readApi = (): { endpoint: string; key: string } => {
   return { endpoint: "", key: "" }
 }
 
-export function FxModal({ rates, source, ts, onClose, onSaved }: {
-  rates: FxTable; source: FxSource; ts: string; onClose: () => void; onSaved: () => void
+export function FxModal({ rates, source, ts, auto: autoInit, onClose, onSaved }: {
+  rates: FxTable; source: FxSource; ts: string; auto: boolean; onClose: () => void; onSaved: () => void
 }) {
   const base = getBaseCurrency()
   const demoFx = rebase(DEFAULT_FX, base)
@@ -22,6 +22,7 @@ export function FxModal({ rates, source, ts, onClose, onSaved }: {
   const [stamp, setStamp] = useState(ts || FX_DEMO_TS)
   const [status, setStatus] = useState("")
   const [busy, setBusy] = useState(false)
+  const [auto, setAuto] = useState(autoInit)
 
   const persistApi = () => { try { localStorage.setItem(API_KEY, JSON.stringify(api)) } catch { /* indisponible */ } }
 
@@ -67,7 +68,7 @@ export function FxModal({ rates, source, ts, onClose, onSaved }: {
     }
     if (src === "demo") { rows = { ...demoFx }; ts2 = FX_DEMO_TS }
     persistApi()
-    const res = await fetch("/api/fx", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rates: rows, source: src, ts: ts2 }) })
+    const res = await fetch("/api/fx", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rates: rows, source: src, ts: ts2, auto }) })
     setBusy(false)
     if (!res.ok) { setStatus("Erreur lors de l'enregistrement."); return }
     onSaved()
@@ -99,6 +100,13 @@ export function FxModal({ rates, source, ts, onClose, onSaved }: {
               <div className="field"><label>Clé d&apos;API</label><input type="text" placeholder="Bearer token" value={api.key} onChange={(e) => setApi({ ...api, key: e.target.value })} /></div>
             </div>
           )}
+          <label className="set-row" style={{ cursor: "pointer", marginBottom: 8 }}>
+            <div className="flex-1">
+              <div className="set-name">Mise à jour automatique</div>
+              <div className="set-desc">Taux de change et cryptos rafraîchis toutes les 6 h (devises : BCE · crypto : CoinGecko). Chaque relevé alimente l&apos;historique des taux.</div>
+            </div>
+            <input type="checkbox" role="switch" aria-label="Mise à jour automatique des taux" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
+          </label>
           <div className="q-status">{status ? <><i aria-hidden="true" className="ti ti-info-circle" /> {status}</> : <><i aria-hidden="true" className="ti ti-clock" /> Dernière mise à jour : {stamp}</>}</div>
           <div className="q-list">
             {Object.entries(CURRENCIES).map(([k, c]) => (

@@ -43,7 +43,7 @@ export async function POST(req: Request) {
         accountId,
         categoryId: row.categoryId ?? null,
         name: row.name,
-        ...toBaseAmount(householdId, accountId, row.amountCents),
+        ...toBaseAmount(householdId, accountId, row.amountCents, row.date),
         date: row.date,
         note: row.note ?? "",
         isCommon: ownerIds.length !== 1,

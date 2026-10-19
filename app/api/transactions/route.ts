@@ -60,7 +60,7 @@ export async function POST(req: Request) {
         accountId: accountId ?? null,
         categoryId: resolvedKind === "transfer" ? null : (categoryId ?? null),
         name,
-        ...toBaseAmount(householdId, accountId, amountCents),
+        ...toBaseAmount(householdId, accountId, amountCents, date),
         date,
         note: note ?? "",
         isCommon: isCommon ?? true,

@@ -12,6 +12,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext"
 import { AssistantProvider } from "@/contexts/AssistantContext"
 import { CmdPaletteWrapper } from "@/components/features/search/CmdPaletteWrapper"
 import { AnonSync } from "@/components/features/parametres/AnonSync"
+import { FxAutoRefresh } from "@/components/layout/FxAutoRefresh"
 import { AssistantChat } from "@/components/features/assistant/AssistantChat"
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -33,6 +34,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </main>
             </div>
             <AssistantChat />
+            <FxAutoRefresh />
             <AnonSync />
           </CmdPaletteWrapper>
         </AssistantProvider>
