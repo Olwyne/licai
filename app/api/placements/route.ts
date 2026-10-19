@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import { investments } from "@/db/schema"
 import { eq, and, desc } from "drizzle-orm"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
+import { householdFx } from "@/lib/server/fx-convert"
 import { randomUUID } from "crypto"
 import type { Investment } from "@/db/schema"
 
@@ -107,7 +108,7 @@ export async function POST(req: Request) {
       assetClass: body.assetClass ?? "actions",
       zone: body.zone ?? "Monde",
       sector: body.sector ?? "Diversifié",
-      currency: body.currency ?? "EUR",
+      currency: body.currency ?? householdFx(householdId).base,
       cap: body.cap ?? "—",
       terPct: body.terPct ?? 0,
       gainCents: body.gainCents ?? null,

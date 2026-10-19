@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { accounts, members, banks } from "@/db/schema"
 import { eq } from "drizzle-orm"
+import { CURRENCIES } from "@/lib/finance/fx"
 import { baseBalanceCents, householdFx } from "@/lib/server/fx-convert"
 import { getHouseholdId, ok, unauthorized, err } from "@/lib/api"
 import { randomUUID } from "crypto"
@@ -29,6 +30,8 @@ export async function POST(req: Request) {
   if (!householdId) return unauthorized()
   const { name, type, bankId, balanceCents, currency, iban, colorHex, ownerIds, last4, purpose } = await req.json()
   if (!name || !type) return err("name and type are required")
+  // Devise par défaut = devise de référence du foyer (modifiable par compte).
+  const accountCurrency = typeof currency === "string" && currency in CURRENCIES ? currency : householdFx(householdId).base
   const id = randomUUID()
   db.insert(accounts).values({
     id,
@@ -37,7 +40,7 @@ export async function POST(req: Request) {
     name,
     type,
     balanceCents: balanceCents ?? 0,
-    currency: currency ?? "EUR",
+    currency: accountCurrency,
     iban: iban ?? null,
     colorHex: colorHex ?? null,
     ownerIds: JSON.stringify(ownerIds ?? []),

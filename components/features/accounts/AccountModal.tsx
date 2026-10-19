@@ -214,8 +214,9 @@ export function AccountModal({ members, banks, account, onClose, onSaved, onDele
               <div className="field">
                 <label htmlFor="acct-cur">Devise du compte</label>
                 <select id="acct-cur" value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                  {Object.entries(CURRENCIES).map(([k, c]) => <option key={k} value={k}>{k} — {c.name} ({c.sym})</option>)}
+                  {Object.entries(CURRENCIES).map(([k, c]) => <option key={k} value={k}>{k} — {c.name} ({c.sym}){k === getBaseCurrency() ? " · devise du foyer" : ""}</option>)}
                 </select>
+                <div className="field-hint">Par défaut : devise de référence du foyer (Paramètres). Modifiable pour ce compte.</div>
               </div>
             </div>
             <div className="field">

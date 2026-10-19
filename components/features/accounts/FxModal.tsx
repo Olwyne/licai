@@ -27,9 +27,18 @@ export function FxModal({ rates, source, ts, onClose, onSaved }: {
 
   async function refresh() {
     persistApi()
-    if (!api.endpoint) { setStatus("Aucun fournisseur de taux configuré"); return }
     setStatus("Requête en cours…")
     try {
+      if (!api.endpoint) {
+        // Sans fournisseur personnalisé : taux du jour via le serveur (devises : BCE · crypto : CoinGecko).
+        const res = await fetch("/api/market/fx")
+        if (!res.ok) throw new Error("HTTP " + res.status)
+        const { data } = (await res.json()) as { data: { rates: FxTable; failed: string[]; ts: string } }
+        setTable(data.rates); setInputs(Object.fromEntries(Object.entries(data.rates).map(([k, v]) => [k, String(v)])))
+        setSrc("api"); setStamp(data.ts)
+        setStatus(data.failed.length ? `Taux reçus (indisponibles : ${data.failed.join(", ")} — valeurs précédentes conservées)` : "Taux du jour reçus (devises et crypto)")
+        return
+      }
       const list = Object.keys(CURRENCIES).filter((c) => c !== base)
       const url = api.endpoint + (api.endpoint.includes("?") ? "&" : "?") + "base=" + base + "&symbols=" + list.join(",")
       const res = await fetch(url, api.key ? { headers: { Authorization: "Bearer " + api.key } } : undefined)
@@ -80,7 +89,8 @@ export function FxModal({ rates, source, ts, onClose, onSaved }: {
               ))}
             </div>
             <div className="field-hint">
-              En mode fournisseur : <code>GET {"{endpoint}"}?base={base}&amp;symbols=USD,CHF</code> renvoyant <code>{`{ "rates": { "USD": 1.134 } }`}</code>. L&apos;app inverse le taux pour obtenir la contre-valeur dans la devise de référence.
+              Sans endpoint, « Rafraîchir » récupère automatiquement les taux du jour (devises : BCE · crypto : CoinGecko).<br />
+              Avec un fournisseur personnalisé : <code>GET {"{endpoint}"}?base={base}&amp;symbols=USD,CHF</code> renvoyant <code>{`{ "rates": { "USD": 1.134 } }`}</code>. L&apos;app inverse le taux pour obtenir la contre-valeur dans la devise de référence.
             </div>
           </div>
           {src === "api" && (
