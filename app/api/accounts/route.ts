@@ -31,7 +31,8 @@ export async function POST(req: Request) {
   const { name, type, bankId, balanceCents, currency, iban, colorHex, ownerIds, last4, purpose } = await req.json()
   if (!name || !type) return err("name and type are required")
   // Devise par défaut = devise de référence du foyer (modifiable par compte).
-  const accountCurrency = typeof currency === "string" && currency in CURRENCIES ? currency : householdFx(householdId).base
+  const hf = householdFx(householdId)
+  const accountCurrency = typeof currency === "string" && currency in CURRENCIES ? currency : hf.base
   const id = randomUUID()
   db.insert(accounts).values({
     id,
@@ -41,6 +42,8 @@ export async function POST(req: Request) {
     type,
     balanceCents: balanceCents ?? 0,
     currency: accountCurrency,
+    // taux à l'ouverture : sert à mesurer l'écart de change d'un compte en devise étrangère
+    openedRate: accountCurrency === hf.base ? null : hf.fx[accountCurrency] ?? null,
     iban: iban ?? null,
     colorHex: colorHex ?? null,
     ownerIds: JSON.stringify(ownerIds ?? []),

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { CURRENCIES, currencySym, exposure, fmtCurrency, fxRate, getBaseCurrency, baseSym, type FxSource, type FxTable } from "@/lib/finance/fx"
 import { eur, pc } from "@/lib/finance/format"
 import { FxModal, FX_DEMO_TS } from "./FxModal"
+import { fxGain } from "@/lib/finance/fx-history"
 import { HouseholdCard } from "./HouseholdCard"
 import { AccountGroups } from "./AccountGroups"
 import { MemberModal } from "./MemberModal"
@@ -25,7 +26,7 @@ interface Props {
   childGoals?: Record<string, Goal[]>
   childSpending?: Record<string, ChildSpending>
   txCounts?: Record<string, number>
-  fx: { rates: FxTable; source: FxSource; ts: string; positions: { value: number; qty: number; price: number; cur: string }[] }
+  fx: { rates: FxTable; source: FxSource; ts: string; auto?: boolean; positions: { value: number; qty: number; price: number; cur: string }[] }
 }
 
 export function AccountsClient({ household, members, banks, accounts, childGoals = {}, childSpending = {}, txCounts = {}, fx }: Props) {
@@ -78,6 +79,9 @@ export function AccountsClient({ household, members, banks, accounts, childGoals
   )
   const foreign = expo.rows.filter((r) => r.cur !== base)
   const foreignEur = foreign.reduce((s, r) => s + r.eur, 0)
+  // écart de change latent des comptes en devise : solde natif × (taux actuel − taux à l'ouverture), en devise de référence
+  const gains = accountList.flatMap((a) => (a.currency && a.currency !== base ? [fxGain(a.balanceCents, fxRate(a.currency, fx.rates), a.openedRate)] : [])).filter((g): g is NonNullable<typeof g> => g !== null)
+  const fxGainTotal = gains.reduce((sum, g) => sum + g.cents / 100, 0)
   const fxSourceLabel = fx.source === "api" ? "Fournisseur externe" : fx.source === "manual" ? "Taux manuels" : "Taux de référence"
 
   const childViewMember = childViewId ? memberList.find((m) => m.id === childViewId) : null
@@ -137,6 +141,9 @@ export function AccountsClient({ household, members, banks, accounts, childGoals
               <div><div className="inv-lbl">Comptes + placements</div><div className="fx-val num private">{eur(expo.total)}</div><div className="metric-sub neutral">comptes {eur(expo.cash)} + placements {eur(expo.total - expo.cash)}</div></div>
               <div><div className="inv-lbl">Exposition hors {base}</div><div className="fx-val num private">{eur(foreignEur)}</div>
                 <div className={`metric-sub ${expo.total && foreignEur / expo.total > 0.3 ? "down" : "neutral"}`}>{pc(expo.total ? (foreignEur / expo.total) * 100 : 0)} du total · {foreign.length} devise{foreign.length > 1 ? "s" : ""}</div></div>
+              <div><div className="inv-lbl">Écart de change latent</div>
+                <div className={`fx-val num private ${gains.length ? (fxGainTotal >= 0 ? "pos" : "neg") : ""}`}>{gains.length ? `${fxGainTotal >= 0 ? "+ " : "− "}${eur(Math.abs(fxGainTotal))}` : "—"}</div>
+                <div className="metric-sub neutral">{gains.length ? "depuis l'ouverture des comptes en devise" : "aucun compte en devise suivi"}</div></div>
               <div><div className="inv-lbl">Impact d&apos;un {base} +5 %</div><div className="fx-val num private">− {eur(foreignEur * 0.05)}</div><div className="metric-sub neutral">et + {eur(foreignEur * 0.05)} si le {base} baisse de 5 %</div></div>
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "flex-end" }}>
                 <button className="btn btn-ghost" type="button" onClick={() => setFxOpen(true)}><i aria-hidden="true" className="ti ti-currency-euro" /> Taux &amp; devises</button>
@@ -174,12 +181,13 @@ export function AccountsClient({ household, members, banks, accounts, childGoals
           ownerFilter={ownerFilter}
           onOwnerFilter={setOwnerFilter}
           txCounts={txCounts}
+          fxRates={fx.rates}
           onEditAccount={(a) => setEditAccount(a)}
           childViewId={childViewId}
         />
       </div>
 
-      {fxOpen && <FxModal rates={fx.rates} source={fx.source} ts={fx.ts} onClose={() => setFxOpen(false)} onSaved={() => { setFxOpen(false); router.refresh() }} />}
+      {fxOpen && <FxModal rates={fx.rates} source={fx.source} ts={fx.ts} auto={fx.auto ?? false} onClose={() => setFxOpen(false)} onSaved={() => { setFxOpen(false); router.refresh() }} />}
 
       {showMemberModal && (
         <MemberModal

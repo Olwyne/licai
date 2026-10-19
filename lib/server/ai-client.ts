@@ -69,3 +69,24 @@ export async function* streamChat(opts: { provider: AiProvider; key: string; mod
     }
   }
 }
+
+/** Réponse complète (sans flux) — pour les tâches qui renvoient du JSON (catégorisation…). */
+export async function completeChat(opts: { provider: AiProvider; key: string; model: string; system: string; user: string; maxTokens?: number }): Promise<string> {
+  const { provider, key, model, system, user, maxTokens = 2000 } = opts
+  if (provider === "anthropic") {
+    const r = await new Anthropic({ apiKey: key }).messages.create({ model, max_tokens: maxTokens, system, messages: [{ role: "user", content: user }] })
+    return r.content.map((b) => (b.type === "text" ? b.text : "")).join("")
+  }
+  const res = provider === "openai"
+    ? await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+        body: JSON.stringify({ model, messages: [{ role: "system", content: system }, { role: "user", content: user }] }),
+      })
+    : await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts: [{ text: user }] }], generationConfig: { responseMimeType: "application/json" } }),
+      })
+  if (!res.ok) throw new AiHttpError(res.status, `HTTP ${res.status}`)
+  const j = (await res.json()) as { choices?: { message?: { content?: string } }[]; candidates?: { content?: { parts?: { text?: string }[] } }[] }
+  return provider === "openai" ? j.choices?.[0]?.message?.content ?? "" : (j.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? "").join("")
+}

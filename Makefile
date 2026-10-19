@@ -35,3 +35,20 @@ test:
 # Supprime aussi les volumes (node_modules, cache Next). Les données ./data sont conservées.
 clean:
 	docker compose down -v
+
+# ── Production (voir docker-compose.prod.yaml) ───────────────────────────────
+prod-up:
+	docker compose -f docker-compose.prod.yaml up -d --build
+
+prod-down:
+	docker compose -f docker-compose.prod.yaml down
+
+# Sauvegarde immédiate de la base (en plus de la sauvegarde quotidienne automatique)
+backup:
+	docker compose -f docker-compose.prod.yaml exec backup node scripts/backup.mjs
+
+# Restauration : make restore FILE=/app/data/backups/licai-AAAAMMJJ-HHMMSS.db (arrête l'app pendant l'opération)
+restore:
+	docker compose -f docker-compose.prod.yaml stop web backup
+	docker compose -f docker-compose.prod.yaml run --rm --no-deps backup node scripts/backup.mjs --restore $(FILE)
+	docker compose -f docker-compose.prod.yaml start web backup

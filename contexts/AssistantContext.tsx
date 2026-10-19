@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 export interface ChatProvider { mode: "builtin" | "custom"; endpoint: string; key: string; model: string }
 
 const PROV_KEY = "licai-chat-provider"
-interface StatusData { builtin?: boolean; source?: "account" | "server" | "none"; hint?: string; provider?: "anthropic" | "openai" | "gemini"; providerLabel?: string; chosenModel?: string; model?: string | null }
+interface StatusData { builtin?: boolean; unreadable?: boolean; source?: "account" | "server" | "none"; hint?: string; provider?: "anthropic" | "openai" | "gemini"; providerLabel?: string; chosenModel?: string; model?: string | null }
 const DEFAULT_PROVIDER: ChatProvider = { mode: "builtin", endpoint: "", key: "", model: "" }
 
 interface AssistantCtx {
@@ -16,6 +16,8 @@ interface AssistantCtx {
   /** D'où vient la clé : paramètres du compte, variable serveur, ou aucune. */
   keySource: "account" | "server" | "none"
   keyHint: string
+  /** Clé enregistrée mais illisible : à ressaisir. */
+  keyUnreadable: boolean
   aiProvider: "anthropic" | "openai" | "gemini"
   providerLabel: string
   /** Modèle choisi dans les paramètres (vide = automatique). */
@@ -40,6 +42,7 @@ export const AssistantContext = createContext<AssistantCtx>({
   builtinReady: false,
   keySource: "none",
   keyHint: "",
+  keyUnreadable: false,
   aiProvider: "anthropic",
   providerLabel: "Claude (Anthropic)",
   chosenModel: "",
@@ -58,6 +61,7 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false)
   const [keySource, setKeySource] = useState<"account" | "server" | "none">("none")
   const [keyHint, setKeyHint] = useState("")
+  const [keyUnreadable, setKeyUnreadable] = useState(false)
   const [aiProvider, setAiProvider] = useState<"anthropic" | "openai" | "gemini">("anthropic")
   const [providerLabel, setProviderLabel] = useState("Claude (Anthropic)")
   const [chosenModel, setChosenModel] = useState("")
@@ -68,7 +72,7 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
     try {
       const r = await fetch("/api/assistant/status")
       const j = (r.ok ? await r.json() : null) as { data?: StatusData } | null
-      setBuiltinReady(Boolean(j?.data?.builtin)); setKeySource(j?.data?.source ?? "none"); setKeyHint(j?.data?.hint ?? "")
+      setBuiltinReady(Boolean(j?.data?.builtin)); setKeySource(j?.data?.source ?? "none"); setKeyHint(j?.data?.hint ?? ""); setKeyUnreadable(Boolean(j?.data?.unreadable))
       setAiProvider(j?.data?.provider ?? "anthropic"); setProviderLabel(j?.data?.providerLabel ?? "Claude (Anthropic)"); setChosenModel(j?.data?.chosenModel ?? ""); setModel(j?.data?.model ?? "")
     } catch { /* statut indisponible : assistant masqué */ }
     setReady(true)
@@ -96,7 +100,7 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
   const available = external || (provider.mode === "builtin" && builtinReady)
 
   return (
-    <AssistantContext.Provider value={{ open, openAssistant: () => setOpen(true), closeAssistant: () => setOpen(false), builtinReady, keySource, keyHint, aiProvider, providerLabel, chosenModel, model, loadModel, refresh, provider, setProvider, available, ready }}>
+    <AssistantContext.Provider value={{ open, openAssistant: () => setOpen(true), closeAssistant: () => setOpen(false), builtinReady, keySource, keyHint, keyUnreadable, aiProvider, providerLabel, chosenModel, model, loadModel, refresh, provider, setProvider, available, ready }}>
       {children}
     </AssistantContext.Provider>
   )

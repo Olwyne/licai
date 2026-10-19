@@ -1,5 +1,6 @@
 "use client"
-import { fmtCurrency, getBaseCurrency } from "@/lib/finance/fx"
+import { fmtCurrency, fxRate, getBaseCurrency, type FxTable } from "@/lib/finance/fx"
+import { fxGain } from "@/lib/finance/fx-history"
 import { formatCents } from "@/lib/money"
 import { usePrivacy } from "@/contexts/PrivacyContext"
 import Link from "next/link"
@@ -25,6 +26,7 @@ interface Props {
   ownerFilter: string
   onOwnerFilter: (f: string) => void
   txCounts?: Record<string, number>
+  fxRates?: FxTable
   onEditAccount?: (account: EnrichedAccount) => void
   childViewId?: string | null
 }
@@ -36,6 +38,7 @@ export function AccountGroups({
   ownerFilter,
   onOwnerFilter,
   txCounts = {},
+  fxRates,
   onEditAccount,
   childViewId,
 }: Props) {
@@ -169,6 +172,14 @@ export function AccountGroups({
                     {account.currency !== getBaseCurrency() && (
                       <div className={`acct-cur num${isPrivate ? " private" : ""}`}>≈ {formatCents(account.balanceBaseCents)}</div>
                     )}
+                    {account.currency !== getBaseCurrency() && fxRates && (() => {
+                      const g = fxGain(account.balanceCents, fxRate(account.currency, fxRates), account.openedRate)
+                      return g ? (
+                        <div className={`acct-cur num${isPrivate ? " private" : ""}`} data-testid="fx-gain" style={{ color: g.cents >= 0 ? "var(--primary)" : "var(--danger)" }}>
+                          Écart de change : {g.cents >= 0 ? "+" : "−"}{formatCents(Math.abs(g.cents))} ({g.pct >= 0 ? "+" : ""}{g.pct.toFixed(1)} %)
+                        </div>
+                      ) : null
+                    })()}
                     <div className="acct-foot">
                       <span className="acct-sync">
                         <i aria-hidden="true" className="ti ti-refresh" /> {(txCounts[account.id] ?? 0) === 0 ? "Aucune opération" : `${txCounts[account.id]} opération${txCounts[account.id] > 1 ? "s" : ""}`}

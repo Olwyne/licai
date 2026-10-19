@@ -51,5 +51,12 @@
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "serialize-javascript": "^7.1.2",
+    "esbuild": "^0.28.2",
+    "next-auth": {
+      "nodemailer": "$nodemailer"
+    }
   }
 }

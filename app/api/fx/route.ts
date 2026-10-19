@@ -3,6 +3,7 @@ import { households } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
 import { FIAT_CODES, mergeFx } from "@/lib/finance/fx"
+import { markUpdated, recordSnapshot } from "@/lib/server/fx-history"
 
 // PUT /api/fx — enregistre les taux de change du foyer ({ rates, source, ts, currency? }).
 // Les taux sont exprimés dans la devise de référence ; changer `currency` ramène les taux existants à la nouvelle
@@ -11,7 +12,7 @@ export async function PUT(req: Request) {
   const householdId = await getHouseholdId()
   if (!householdId) return unauthorized()
   try {
-    const body = (await req.json()) as { rates?: Record<string, unknown>; source?: string; ts?: string; currency?: string }
+    const body = (await req.json()) as { rates?: Record<string, unknown>; source?: string; ts?: string; currency?: string; auto?: boolean }
     const hh = db.select().from(households).where(eq(households.id, householdId)).get()
     if (!hh) return err("Foyer introuvable", 404)
     let currency = hh.currency
@@ -29,8 +30,11 @@ export async function PUT(req: Request) {
     const rates = mergeFx(stored, currency)
     const source = ["demo", "manual", "api"].includes(body.source ?? "") ? body.source! : hh.fxSource
     const ts = typeof body.ts === "string" ? body.ts.slice(0, 80) : hh.fxTs
-    db.update(households).set({ fxRates: JSON.stringify(rates), fxSource: source, fxTs: ts, currency }).where(eq(households.id, householdId)).run()
-    return ok({ rates, source, ts, currency })
+    db.update(households).set({ fxRates: JSON.stringify(rates), fxSource: source, fxTs: ts, currency, ...(typeof body.auto === "boolean" ? { fxAuto: body.auto } : {}) }).where(eq(households.id, householdId)).run()
+    // le relevé du jour alimente l'historique (conversion à la date des opérations, écart de change)
+    recordSnapshot(householdId, currency, rates)
+    markUpdated(householdId)
+    return ok({ rates, source, ts, currency, auto: typeof body.auto === "boolean" ? body.auto : hh.fxAuto })
   } catch {
     return err("Erreur lors de l'enregistrement.", 500)
   }

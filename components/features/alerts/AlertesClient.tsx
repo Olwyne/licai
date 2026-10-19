@@ -7,13 +7,14 @@ import { eur } from "@/lib/finance/format"
 import { monthLabel } from "@/lib/finance/amort"
 import { Kpi, PageHeader } from "@/components/features/finance/ui"
 
-type FilterMode = "open" | "echeance" | "optim" | "budget" | "all" | "done"
+type FilterMode = "open" | "echeance" | "optim" | "budget" | "anomalie" | "all" | "done"
 
 const FILTERS: { value: FilterMode; label: string }[] = [
   { value: "open", label: "À traiter" },
   { value: "echeance", label: "Échéances" },
   { value: "optim", label: "Optimisations" },
   { value: "budget", label: "Budget" },
+  { value: "anomalie", label: "Anomalies" },
   { value: "all", label: "Tout" },
   { value: "done", label: "Traitées & reportées" },
 ]

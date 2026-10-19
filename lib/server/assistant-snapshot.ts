@@ -5,6 +5,7 @@ import { buildFinanceContext } from "@/lib/server/finance-context"
 import { ASSETS, INV_KINDS, computePortfolio } from "@/lib/finance/invest"
 import { computeTax, situationFor, taxInputs } from "@/lib/finance/tax"
 import { frequencyToMonthlyCents } from "@/lib/finance/recurring"
+import { buildAlertsData } from "@/lib/server/alerts-data"
 
 export const ASSISTANT_SYSTEM = `Tu es l'assistant financier du foyer dans l'application Lǐcái. Tu réponds en français, de façon directe et concrète, en t'appuyant EXCLUSIVEMENT sur les données du foyer fournies en JSON.
 Les montants sont exprimés dans la devise de référence du foyer (champ « devise »), sauf mention contraire.
@@ -38,6 +39,7 @@ export function buildAssistantSnapshot(householdId: string) {
       depenses_par_categorie: [...byCat].sort((a, b) => b[1] - a[1]).map(([categorie, c]) => ({ categorie, montant: e(c) })),
       dernieres: [...tx].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30).map((t) => ({ date: t.date, libelle: t.name, categorie: cats.get(t.categoryId ?? "") ?? "Autre", montant: e(t.amountCents) })),
     },
+    anomalies_detectees: buildAlertsData(householdId).items.filter((a) => a.kind === "anomalie" && a.status === "open").map((a) => ({ titre: a.title, detail: a.text })),
     budgets: bud.map((b) => ({ categorie: cats.get(b.categoryId) ?? "Autre", plafond: e(b.limitCents) })),
     recurrent: rec.map((r) => ({ nom: r.name, montant_mensuel: Math.abs(e(frequencyToMonthlyCents(r.amountCents, r.frequency))), frequence: r.frequency, nature: r.kind })),
     credits: ctx.loans.map((l) => ({ nom: l.name, capital_restant: Math.round(l.left), mensualite: Math.round(l.monthly), taux: l.rate })),

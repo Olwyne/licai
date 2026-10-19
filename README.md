@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lǐcái — finances personnelles du foyer
 
-## Getting Started
+Application Next.js (App Router) + SQLite (Drizzle) : comptes, transactions, budgets, crédits, immobilier, placements, impôts, prévoyance, assistant IA.
 
-First, run the development server:
+## Développement (Docker)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+make init   # crée .env (secret généré) et les certificats locaux (mkcert requis)
+make up     # https://licai.localhost — e-mails de dev sur https://mail.licai.localhost
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Il n'y a pas de conteneur de base de données : SQLite est un simple fichier (`data/licai.db`) lu par l'application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cp .env.example .env     # puis renseigner NEXTAUTH_SECRET (openssl rand -base64 32), NEXTAUTH_URL, SMTP…
+make prod-up             # docker compose -f docker-compose.prod.yaml up -d --build
+```
 
-## Learn More
+- **Secret obligatoire** : en production, l'application refuse de démarrer si `NEXTAUTH_SECRET` est absent, vaut `change-me` ou fait moins de 32 caractères. Il chiffre aussi les clés API IA enregistrées : le changer les rend illisibles (l'app le signale et demande de les ressaisir).
+- **Utilisateur non root**, système de fichiers en lecture seule, `no-new-privileges`, contrôle d'état `GET /api/health`.
+- **Sauvegardes** : le service `backup` copie la base (API de sauvegarde SQLite, cohérente même en cours d'écriture) toutes les 24 h dans `/app/data/backups`, en gardant les 14 dernières (`BACKUP_INTERVAL_HOURS`, `BACKUP_KEEP`). Sauvegarde immédiate : `make backup`. Restauration : `make restore FILE=/app/data/backups/licai-AAAAMMJJ-HHMMSS.db`.
+- Pensez à copier le dossier de sauvegardes **hors de la machine** (le volume `licai_data` contient la base et ses sauvegardes).
+- L'application écoute sur `127.0.0.1:3000` : placez-la derrière un reverse proxy HTTPS.
 
-To learn more about Next.js, take a look at the following resources:
+## Qualité
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run check      # typecheck + ESLint + tests unitaires + npm audit (lancé automatiquement avant chaque commit)
+npm run test:e2e   # tests fonctionnels Playwright (lancés en CI, à lancer avant de pousser)
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+La CI (`.github/workflows/ci.yml`) exécute les mêmes contrôles puis les tests e2e.

@@ -1,7 +1,22 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto"
+import { WEAK_SECRETS } from "./secret-check"
+export { secretProblem } from "./secret-check"
 
 // Chiffrement des secrets stockés en base (clé API IA) : AES-256-GCM, clé dérivée de NEXTAUTH_SECRET.
-const key = () => createHash("sha256").update(process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? "licai-dev-secret").digest()
+// En production, le secret est obligatoire (cf. instrumentation.ts) ; le secret de développement n'existe que hors production.
+
+export function appSecret(): string | null {
+  const s = (process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? "").trim()
+  return WEAK_SECRETS.includes(s) ? null : s
+}
+
+const key = () => {
+  const s = appSecret()
+  if (!s && process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
+    throw new Error("NEXTAUTH_SECRET manquant : impossible de chiffrer ou déchiffrer les secrets.")
+  }
+  return createHash("sha256").update(s ?? "licai-dev-secret").digest()
+}
 
 export function encryptSecret(plain: string): string {
   const iv = randomBytes(12)

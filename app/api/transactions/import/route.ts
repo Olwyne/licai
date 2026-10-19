@@ -1,5 +1,7 @@
 import { db } from "@/lib/db"
 import { transactions } from "@/db/schema"
+import { and, eq } from "drizzle-orm"
+import { suggestFromHistory } from "@/lib/finance/categorize"
 import { toBaseAmount } from "@/lib/server/fx-convert"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
 import { randomUUID } from "crypto"
@@ -32,7 +34,14 @@ export async function POST(req: Request) {
   const now = new Date()
   const inserted: string[] = []
 
-  for (const row of rows as ImportRow[]) {
+  // Lignes sans catégorie : on reprend celle des transactions déjà catégorisées du même commerçant (confiance ≥ 75 %)
+  const known = db.select().from(transactions).where(and(eq(transactions.householdId, householdId), eq(transactions.kind, "expense"))).all()
+    .filter((t) => t.categoryId).map((t) => ({ id: t.id, name: t.name, categoryId: t.categoryId, amountCents: t.amountCents }))
+  const pending = (rows as ImportRow[]).map((r, i) => ({ id: String(i), name: r.name ?? "", categoryId: null, amountCents: r.amountCents })).filter((t, i) => !(rows as ImportRow[])[i].categoryId && (rows as ImportRow[])[i].amountCents < 0)
+  const guessed = new Map(suggestFromHistory(pending, known, 0.75).map((s) => [Number(s.id), s.categoryId]))
+  let autoCategorized = 0
+
+  for (const [index, row] of (rows as ImportRow[]).entries()) {
     if (!row.name || typeof row.amountCents !== "number" || !row.date) continue
 
     const id = randomUUID()
@@ -41,9 +50,9 @@ export async function POST(req: Request) {
         id,
         householdId,
         accountId,
-        categoryId: row.categoryId ?? null,
+        categoryId: row.categoryId ?? guessed.get(index) ?? null,
         name: row.name,
-        ...toBaseAmount(householdId, accountId, row.amountCents),
+        ...toBaseAmount(householdId, accountId, row.amountCents, row.date),
         date: row.date,
         note: row.note ?? "",
         isCommon: ownerIds.length !== 1,
@@ -53,9 +62,10 @@ export async function POST(req: Request) {
       })
       .run()
 
+    if (!row.categoryId && guessed.has(index)) autoCategorized++
     inserted.push(id)
   }
 
   revalidateTag("transactions", { expire: 0 })
-  return ok({ imported: inserted.length }, 201)
+  return ok({ imported: inserted.length, autoCategorized }, 201)
 }

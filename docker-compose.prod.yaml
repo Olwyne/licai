@@ -1,0 +1,49 @@
+# Production : application + sauvegardes quotidiennes de la base SQLite.
+# Lancer : docker compose -f docker-compose.prod.yaml up -d --build   (variables dans .env, cf. .env.example)
+# L'application écoute sur 127.0.0.1:3000 : placez-la derrière votre reverse proxy HTTPS (Traefik, Caddy, nginx…).
+services:
+    web:
+        container_name: licai_web
+        build:
+            context: .
+            dockerfile: Dockerfile.prod
+        restart: unless-stopped
+        env_file: .env
+        ports:
+            - 127.0.0.1:3000:3000
+        volumes:
+            - licai_data:/app/data
+        read_only: true
+        tmpfs:
+            - /tmp
+            - /app/.next/cache
+        security_opt:
+            - no-new-privileges:true
+        cap_drop:
+            - ALL
+
+    backup:
+        container_name: licai_backup
+        build:
+            context: .
+            dockerfile: Dockerfile.prod
+        restart: unless-stopped
+        env_file: .env
+        command: ["node", "scripts/backup.mjs", "--loop"]
+        healthcheck:
+            disable: true
+        environment:
+            BACKUP_DIR: /app/data/backups
+            BACKUP_KEEP: ${BACKUP_KEEP:-14}
+            BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
+        volumes:
+            - licai_data:/app/data
+        depends_on:
+            - web
+        security_opt:
+            - no-new-privileges:true
+        cap_drop:
+            - ALL
+
+volumes:
+    licai_data:

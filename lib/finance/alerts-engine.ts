@@ -6,7 +6,7 @@ import { eur, pc } from "./format"
 // Alertes et échéancier dérivés des données du foyer (règles du prototype) — montants en euros.
 
 export type AlertTone = "high" | "mid" | "good" | "info"
-export type AlertKind = "echeance" | "optim" | "budget"
+export type AlertKind = "echeance" | "optim" | "budget" | "anomalie"
 
 export interface DerivedAlert {
   id: string
