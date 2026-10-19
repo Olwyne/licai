@@ -1,5 +1,7 @@
+import { debtRatio } from "@/lib/finance/credit"
+import { buildFinanceContext } from "@/lib/server/finance-context"
 import { db } from "@/lib/db"
-import { loans, recurring } from "@/db/schema"
+import { loans } from "@/db/schema"
 import { eq, desc } from "drizzle-orm"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
 import { randomUUID } from "crypto"
@@ -24,7 +26,6 @@ export async function GET() {
       .all()
 
     const enriched: EnrichedLoan[] = rows.map((loan) => {
-      const r = loan.ratePercent / 100 / 12
       let echeancesRestantes = 0
       if (loan.endDate) {
         const end = new Date(loan.endDate)
@@ -57,17 +58,8 @@ export async function GET() {
         ? enriched.reduce((s, l) => s + l.ratePercent * l.remainingCents, 0) / detteTotaleCents
         : 0
 
-    // Taux d'endettement from recurring revenues
-    const revenuRows = db
-      .select()
-      .from(recurring)
-      .where(eq(recurring.householdId, householdId))
-      .all()
-    const revenuMensuelCents = revenuRows
-      .filter((r) => r.amountCents > 0)
-      .reduce((s, r) => s + r.amountCents, 0)
-    const tauxEndettement =
-      revenuMensuelCents > 0 ? (mensualitesCents / revenuMensuelCents) * 100 : null
+    // Même formule que le tableau de bord (méthode HCSF)
+    const tauxEndettement = debtRatio(buildFinanceContext(householdId))
 
     return ok({
       loans: enriched,

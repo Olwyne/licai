@@ -105,7 +105,7 @@ export function RecurringList({
                 className="rec-ic"
                 style={{ background: `${kindColor}20`, color: kindColor }}
               >
-                <i className={`ti ${kindIcon}`} />
+                <i aria-hidden="true" className={`ti ${kindIcon}`} />
               </div>
 
               <div className="rec-main">
@@ -149,7 +149,7 @@ export function RecurringList({
                     }
                   }}
                 >
-                  <i className={`ti ${r.active ? "ti-player-pause" : "ti-player-play"}`} />
+                  <i aria-hidden="true" className={`ti ${r.active ? "ti-player-pause" : "ti-player-play"}`} />
                 </button>
                 <button
                   className="rec-act"
@@ -157,7 +157,7 @@ export function RecurringList({
                   type="button"
                   onClick={() => onEdit(r)}
                 >
-                  <i className="ti ti-pencil" />
+                  <i aria-hidden="true" className="ti ti-pencil" />
                 </button>
               </div>
             </div>

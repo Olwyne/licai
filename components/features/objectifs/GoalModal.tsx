@@ -119,11 +119,11 @@ export function GoalModal({ goal, accounts, members, onClose, onSaved, onDeleted
       <div className="modal modal-md">
         <div className="modal-head">
           <h3>{isEdit ? `${goal.emoji} ${goal.name}` : "Nouvel objectif"}</h3>
-          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
-            {error && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {error}</div>}
+            {error && <div className="obj-modal-err"><i aria-hidden="true" className="ti ti-alert-circle" /> {error}</div>}
             <div className="field-row">
               <div className="field" style={{ flex: "0 0 92px" }}><label>Emoji</label><input type="text" maxLength={4} value={emoji} onChange={(e) => setEmoji(e.target.value)} /></div>
               <div className="field"><label>Intitulé</label><input type="text" placeholder="ex. Apport maison familiale" value={name} onChange={(e) => setName(e.target.value)} required autoFocus /></div>
@@ -149,7 +149,7 @@ export function GoalModal({ goal, accounts, members, onClose, onSaved, onDeleted
                   const on = pockets[a.id] !== undefined
                   return (
                     <div key={a.id} className={`src-line ${on ? "on" : ""}`}>
-                      <button type="button" className="src-tog" onClick={() => togglePocket(a.id)}><i className={`ti ${on ? "ti-checkbox" : "ti-square"}`} /><span>{a.bankName ? `${a.bankName} · ` : ""}{a.name}</span></button>
+                      <button type="button" className="src-tog" onClick={() => togglePocket(a.id)}><i aria-hidden="true" className={`ti ${on ? "ti-checkbox" : "ti-square"}`} /><span>{a.bankName ? `${a.bankName} · ` : ""}{a.name}</span></button>
                       <b className="num private">{eur(a.balanceCents / 100)}</b>
                       <input className="src-share" type="text" inputMode="numeric" disabled={!on} value={on ? pockets[a.id] : 100} onChange={(e) => setPct(a.id, e.target.value)} /><span className="src-pc">%</span>
                     </div>
@@ -200,27 +200,27 @@ export function GoalModal({ goal, accounts, members, onClose, onSaved, onDeleted
                       <div className="env-tx-row" key={t.id}>
                         <span className="env-tx-info"><span className="env-tx-name">{t.name}</span><span className="env-tx-sub">{dateFr(t.date)}{t.note ? ` · ${t.note}` : ""}</span></span>
                         <span className={`num private env-tx-amt ${t.amountCents >= 0 ? "pos" : "neg"}`}>{t.amountCents >= 0 ? "+" : "−"}{formatCents(Math.abs(t.amountCents))}</span>
-                        <button type="button" className="rec-act" title="Délier" onClick={() => void setLink(t.id, null)}><i className="ti ti-link-off" /></button>
+                        <button type="button" className="rec-act" title="Délier" onClick={() => void setLink(t.id, null)}><i aria-hidden="true" className="ti ti-link-off" /></button>
                       </div>
                     ))}
                   </div>
-                ) : <div className="detect-empty"><i className="ti ti-inbox" /> Aucune transaction liée pour l&apos;instant.</div>}
+                ) : <div className="detect-empty"><i aria-hidden="true" className="ti ti-inbox" /> Aucune transaction liée pour l&apos;instant.</div>}
                 <div className="field" style={{ marginTop: 12 }}><label>Lier une transaction</label>
                   <div className="env-link-row">
                     <select value={linkId} onChange={(e) => setLinkId(e.target.value)}>
                       <option value="">Choisir une opération…</option>
                       {candidates.map((t) => <option key={t.id} value={t.id}>{dateFr(t.date)} · {t.name} · {t.amountCents >= 0 ? "+" : "−"}{formatCents(Math.abs(t.amountCents))}</option>)}
                     </select>
-                    <button type="button" className="btn btn-ghost" disabled={!linkId} onClick={() => void setLink(linkId, goal.id)}><i className="ti ti-link" /> Lier</button>
+                    <button type="button" className="btn btn-ghost" disabled={!linkId} onClick={() => void setLink(linkId, goal.id)}><i aria-hidden="true" className="ti ti-link" /> Lier</button>
                   </div>
                 </div>
               </div>
             )}
           </div>
           <div className="modal-foot">
-            {isEdit && <button type="button" className="btn btn-ghost" style={{ marginRight: "auto", color: "#D85A30" }} onClick={handleDelete} disabled={deleting}><i className="ti ti-trash" /> {deleting ? "Suppression…" : "Supprimer"}</button>}
+            {isEdit && <button type="button" className="btn btn-ghost" style={{ marginRight: "auto", color: "#D85A30" }} onClick={handleDelete} disabled={deleting}><i aria-hidden="true" className="ti ti-trash" /> {deleting ? "Suppression…" : "Supprimer"}</button>}
             <button type="button" className="btn btn-ghost" onClick={onClose}>Annuler</button>
-            <button type="submit" className="btn btn-primary" disabled={loading}><i className="ti ti-check" /> {loading ? "Enregistrement…" : "Enregistrer"}</button>
+            <button type="submit" className="btn btn-primary" disabled={loading}><i aria-hidden="true" className="ti ti-check" /> {loading ? "Enregistrement…" : "Enregistrer"}</button>
           </div>
         </form>
       </div>

@@ -74,7 +74,7 @@ export function PrevisionClient() {
             ))}
           </div>
           <button className="btn btn-ghost btn-sm" onClick={() => window.open("/rapport", "_blank")}>
-            <i className="ti ti-report" /> Rapport
+            <i aria-hidden="true" className="ti ti-report" /> Rapport
           </button>
         </div>
       </div>
@@ -84,7 +84,7 @@ export function PrevisionClient() {
         <div className="metric">
           <div className="metric-top">
             <span className="metric-label">Solde projeté</span>
-            <span className="metric-ic" style={{ background: "#1D9E7520" }}><i className="ti ti-coin-euro" style={{ color: "#1D9E75" }} /></span>
+            <span className="metric-ic" style={{ background: "#1D9E7520" }}><i aria-hidden="true" className="ti ti-coin-euro" style={{ color: "#1D9E75" }} /></span>
           </div>
           <div className="metric-value" style={{ color: kpi && kpi.soldeProjete >= 0 ? "var(--primary, #1D9E75)" : "var(--danger)" }}>
             {loading ? "—" : kpi ? formatCents(kpi.soldeProjete) : "—"}
@@ -96,7 +96,7 @@ export function PrevisionClient() {
         <div className="metric">
           <div className="metric-top">
             <span className="metric-label">Mois le plus tendu</span>
-            <span className="metric-ic" style={{ background: "#EF9F2720" }}><i className="ti ti-alert-triangle" style={{ color: "#EF9F27" }} /></span>
+            <span className="metric-ic" style={{ background: "#EF9F2720" }}><i aria-hidden="true" className="ti ti-alert-triangle" style={{ color: "#EF9F27" }} /></span>
           </div>
           <div className="metric-value metric-value--sm" style={{ color: "var(--accent, #EF9F27)" }}>
             {loading ? "—" : kpi?.moisLePlusTendu ? longLabel(kpi.moisLePlusTendu) : "—"}
@@ -108,7 +108,7 @@ export function PrevisionClient() {
         <div className="metric">
           <div className="metric-top">
             <span className="metric-label">Dépenses exceptionnelles</span>
-            <span className="metric-ic" style={{ background: "#6366F120" }}><i className="ti ti-calendar-event" style={{ color: "#6366F1" }} /></span>
+            <span className="metric-ic" style={{ background: "#6366F120" }}><i aria-hidden="true" className="ti ti-calendar-event" style={{ color: "#6366F1" }} /></span>
           </div>
           <div className="metric-value">
             {loading ? "—" : kpi ? formatCents(kpi.depensesExceptionnellesCents) : "—"}
@@ -120,7 +120,7 @@ export function PrevisionClient() {
         <div className="metric">
           <div className="metric-top">
             <span className="metric-label">Épargne placée</span>
-            <span className="metric-ic" style={{ background: "#1D9E7520" }}><i className="ti ti-pig-money" style={{ color: "#1D9E75" }} /></span>
+            <span className="metric-ic" style={{ background: "#1D9E7520" }}><i aria-hidden="true" className="ti ti-pig-money" style={{ color: "#1D9E75" }} /></span>
           </div>
           <div className="metric-value" style={{ color: "var(--primary)" }}>
             {loading ? "—" : kpi ? formatCents(kpi.epargneTotaleCents) : "—"}

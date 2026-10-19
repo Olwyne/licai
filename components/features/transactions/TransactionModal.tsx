@@ -104,15 +104,15 @@ export function TransactionModal({ editingTx, accounts, categories, goals, proje
       <div className={`modal${isEdit ? " modal-md" : ""}`}>
         <div className="modal-head">
           <h3>{isEdit ? "Détail de l'opération" : "Nouvelle transaction"}</h3>
-          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <form onSubmit={(e) => void handleSubmit(e)}>
           <div className="modal-body">
-            {error && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {error}</div>}
+            {error && <div className="obj-modal-err"><i aria-hidden="true" className="ti ti-alert-circle" /> {error}</div>}
 
             {isEdit && editingTx && (
               <div className="txm-head">
-                <div className="tx-icon" style={{ background: `${cat?.colorHex ?? "#888780"}22`, color: cat?.colorHex ?? "#888780" }}><i className={`ti ${cat?.icon ?? (isTransfer ? "ti-arrows-exchange" : "ti-tag")}`} /></div>
+                <div className="tx-icon" style={{ background: `${cat?.colorHex ?? "#888780"}22`, color: cat?.colorHex ?? "#888780" }}><i aria-hidden="true" className={`ti ${cat?.icon ?? (isTransfer ? "ti-arrows-exchange" : "ti-tag")}`} /></div>
                 <div className="txm-head-info">
                   <div className="txm-head-name">{editingTx.name}</div>
                   <div className="txm-head-sub">{dateLabel(editingTx.date)}{acct ? ` · ${acct.name}` : ""}</div>
@@ -122,9 +122,9 @@ export function TransactionModal({ editingTx, accounts, categories, goals, proje
             )}
 
             <div className="type-toggle">
-              <button type="button" className={`type-opt exp${txType === "expense" ? " active" : ""}`} onClick={() => setTxType("expense")}><i className="ti ti-arrow-up-right" /> Dépense</button>
-              <button type="button" className={`type-opt inc${txType === "income" ? " active" : ""}`} onClick={() => setTxType("income")}><i className="ti ti-arrow-down-left" /> Revenu</button>
-              <button type="button" className={`type-opt${txType === "transfer" ? " active" : ""}`} onClick={() => setTxType("transfer")}><i className="ti ti-arrows-exchange" /> Transfert</button>
+              <button type="button" className={`type-opt exp${txType === "expense" ? " active" : ""}`} onClick={() => setTxType("expense")}><i aria-hidden="true" className="ti ti-arrow-up-right" /> Dépense</button>
+              <button type="button" className={`type-opt inc${txType === "income" ? " active" : ""}`} onClick={() => setTxType("income")}><i aria-hidden="true" className="ti ti-arrow-down-left" /> Revenu</button>
+              <button type="button" className={`type-opt${txType === "transfer" ? " active" : ""}`} onClick={() => setTxType("transfer")}><i aria-hidden="true" className="ti ti-arrows-exchange" /> Transfert</button>
             </div>
 
             <div className="field-row">
@@ -188,8 +188,8 @@ export function TransactionModal({ editingTx, accounts, categories, goals, proje
               <div className="field">
                 <label>Type de dépense</label>
                 <div className="type-toggle">
-                  <button type="button" className={`type-opt${!isCommon ? " active" : ""}`} onClick={() => setIsCommon(false)}><i className="ti ti-user" /> Personnelle</button>
-                  <button type="button" className={`type-opt${isCommon ? " active" : ""}`} onClick={() => setIsCommon(true)}><i className="ti ti-users" /> Commune au foyer</button>
+                  <button type="button" className={`type-opt${!isCommon ? " active" : ""}`} onClick={() => setIsCommon(false)}><i aria-hidden="true" className="ti ti-user" /> Personnelle</button>
+                  <button type="button" className={`type-opt${isCommon ? " active" : ""}`} onClick={() => setIsCommon(true)}><i aria-hidden="true" className="ti ti-users" /> Commune au foyer</button>
                 </div>
               </div>
             )}
@@ -222,11 +222,11 @@ export function TransactionModal({ editingTx, accounts, categories, goals, proje
           <div className="modal-foot">
             {isEdit && (
               <button type="button" className="btn btn-ghost" style={{ marginRight: "auto", color: "#D85A30" }} onClick={() => void handleDelete()} disabled={loading}>
-                <i className="ti ti-trash" /> Supprimer
+                <i aria-hidden="true" className="ti ti-trash" /> Supprimer
               </button>
             )}
             <button type="button" className="btn btn-ghost" onClick={onClose} disabled={loading}>Annuler</button>
-            <button type="submit" className="btn btn-primary" disabled={loading}><i className="ti ti-check" /> {loading ? "Enregistrement…" : "Enregistrer"}</button>
+            <button type="submit" className="btn btn-primary" disabled={loading}><i aria-hidden="true" className="ti ti-check" /> {loading ? "Enregistrement…" : "Enregistrer"}</button>
           </div>
         </form>
       </div>

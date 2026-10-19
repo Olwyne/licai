@@ -10,6 +10,9 @@ export const households = sqliteTable("households", {
   fxSource: text("fx_source").notNull().default("demo"), // demo | manual | api
   fxTs: text("fx_ts").notNull().default(""),
   currency: text("currency").notNull().default("EUR"), // devise de référence choisie à l'inscription
+  aiKeyEnc: text("ai_key_enc").notNull().default(""), // clé API IA du foyer (chiffrée, cf. lib/server/secret.ts)
+  aiProvider: text("ai_provider").notNull().default("anthropic"), // anthropic | openai | gemini
+  aiModel: text("ai_model").notNull().default(""), // vide = choix automatique du modèle le plus pertinent
 })
 
 export const users = sqliteTable("users", {

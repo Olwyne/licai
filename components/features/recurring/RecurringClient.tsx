@@ -135,7 +135,7 @@ export function RecurringClient({
           <div className="page-sub">Abonnements, assurances et charges fixes</div>
         </div>
         <Button size="sm" onClick={() => setShowModal(true)}>
-          <i className="ti ti-plus" /> Ajouter une dépense récurrente
+          <i aria-hidden="true" className="ti ti-plus" /> Ajouter une dépense récurrente
         </Button>
       </div>
 
@@ -145,7 +145,7 @@ export function RecurringClient({
           <div className="metric-top">
             <span className="metric-label">Charges fixes / mois</span>
             <span className="metric-ic" style={{ background: "#6366F120" }}>
-              <i className="ti ti-calendar-repeat" style={{ color: "#6366F1" }} />
+              <i aria-hidden="true" className="ti ti-calendar-repeat" style={{ color: "#6366F1" }} />
             </span>
           </div>
           <div className="metric-value">{formatCents(chargesFixesMensuelCents)}</div>
@@ -155,7 +155,7 @@ export function RecurringClient({
           <div className="metric-top">
             <span className="metric-label">Avec les crédits</span>
             <span className="metric-ic" style={{ background: "#D85A3020" }}>
-              <i className="ti ti-credit-card" style={{ color: "#D85A30" }} />
+              <i aria-hidden="true" className="ti ti-credit-card" style={{ color: "#D85A30" }} />
             </span>
           </div>
           <div className="metric-value">{formatCents(avecCreditsCents)}</div>
@@ -165,7 +165,7 @@ export function RecurringClient({
           <div className="metric-top">
             <span className="metric-label">Abonnements</span>
             <span className="metric-ic" style={{ background: "#EF9F2720" }}>
-              <i className="ti ti-device-tv" style={{ color: "#EF9F27" }} />
+              <i aria-hidden="true" className="ti ti-device-tv" style={{ color: "#EF9F27" }} />
             </span>
           </div>
           <div className="metric-value">{formatCents(abonnementsCents)}</div>
@@ -177,7 +177,7 @@ export function RecurringClient({
           <div className="metric-top">
             <span className="metric-label">Épargne automatique</span>
             <span className="metric-ic" style={{ background: "#1D9E7520" }}>
-              <i className="ti ti-pig-money" style={{ color: "#1D9E75" }} />
+              <i aria-hidden="true" className="ti ti-pig-money" style={{ color: "#1D9E75" }} />
             </span>
           </div>
           <div className="metric-value">{formatCents(epargneCents)}</div>
@@ -205,7 +205,7 @@ export function RecurringClient({
                 <div key={r.id} className="rec-ech-row">
                   <div className="rec-ech-date">{shortMonthDay(r.nextDate)}</div>
                   <span className="rec-ech-icon" style={{ background: color + "22", color }}>
-                    <i className={`ti ${icon}`} />
+                    <i aria-hidden="true" className={`ti ${icon}`} />
                   </span>
                   <div className="rec-ech-name">
                     {r.name}

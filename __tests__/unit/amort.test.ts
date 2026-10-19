@@ -111,3 +111,16 @@ describe("capacité d'emprunt", () => {
     expect(K.ratioDiff).toBe(0)
   })
 })
+
+import { debtRatio } from "@/lib/finance/credit"
+describe("taux d'endettement de référence", () => {
+  it("est celui de la méthode classique HCSF (le même partout dans l'app)", () => {
+    const K = capacity(fixtureCtx, DEFAULT_CAPACITY)
+    expect(debtRatio(fixtureCtx)).toBeCloseTo(K.ratioClassic, 8)
+    // (890 + 430 + 320) / (2 400 + 2 050 + 640 × 0,7)
+    expect(debtRatio(fixtureCtx)).toBeCloseTo((1640 / (4450 + 448)) * 100, 6)
+  })
+  it("vaut null sans revenu déclaré", () => {
+    expect(debtRatio({ ...fixtureCtx, members: fixtureCtx.members.map((m) => ({ ...m, incomeMonthly: 0 })), properties: [] })).toBeNull()
+  })
+})

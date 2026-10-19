@@ -25,11 +25,6 @@ function fmtDelta(cents: number): string {
   return `${sign} ${fmt(Math.abs(cents))}`
 }
 
-function monthLabel(dateStr: string): string {
-  const [y, m] = dateStr.split("-").map(Number)
-  return new Date(y, m - 1).toLocaleDateString("fr-FR", { month: "short", year: "numeric" })
-}
-
 function computeIFMonths(
   capitalCents: number,
   monthlyCents: number,
@@ -405,7 +400,7 @@ export function TrajectoireClient() {
 
       {error && (
         <div className="card" style={{ color: "var(--danger)" }}>
-          <i className="ti ti-alert-circle" /> {error}
+          <i aria-hidden="true" className="ti ti-alert-circle" /> {error}
         </div>
       )}
 
@@ -415,14 +410,14 @@ export function TrajectoireClient() {
           <div className="metric-top">
             <div className="metric-label">Patrimoine net</div>
             <div className="metric-ic" style={{ background: "var(--primary-muted)" }}>
-              <i className="ti ti-database" style={{ color: "var(--primary)" }} />
+              <i aria-hidden="true" className="ti ti-database" style={{ color: "var(--primary)" }} />
             </div>
           </div>
           <div className="metric-value">
             {loading ? "—" : data ? fmt(data.patrimoineNetCents) : "—"}
           </div>
           <div className={`metric-sub ${delta12NetCents >= 0 ? "up" : "down"}`}>
-            <i className={`ti ti-trending-${delta12NetCents >= 0 ? "up" : "down"}`} />
+            <i aria-hidden="true" className={`ti ti-trending-${delta12NetCents >= 0 ? "up" : "down"}`} />
             {loading ? "—" : fmtDelta(delta12NetCents)} sur 12 mois
           </div>
         </div>
@@ -430,7 +425,7 @@ export function TrajectoireClient() {
           <div className="metric-top">
             <div className="metric-label">Épargne mensuelle</div>
             <div className="metric-ic" style={{ background: "var(--primary-muted)" }}>
-              <i className="ti ti-refresh" style={{ color: "var(--primary)" }} />
+              <i aria-hidden="true" className="ti ti-refresh" style={{ color: "var(--primary)" }} />
             </div>
           </div>
           <div className="metric-value">
@@ -444,7 +439,7 @@ export function TrajectoireClient() {
           <div className="metric-top">
             <div className="metric-label">Capital cible</div>
             <div className="metric-ic" style={{ background: "#7C6BD622" }}>
-              <i className="ti ti-target" style={{ color: "#7C6BD6" }} />
+              <i aria-hidden="true" className="ti ti-target" style={{ color: "#7C6BD6" }} />
             </div>
           </div>
           <div className="metric-value">
@@ -458,7 +453,7 @@ export function TrajectoireClient() {
           <div className="metric-top">
             <div className="metric-label">Indépendance financière</div>
             <div className="metric-ic" style={{ background: "#EF9F2722" }}>
-              <i className="ti ti-flag" style={{ color: "#EF9F27" }} />
+              <i aria-hidden="true" className="ti ti-flag" style={{ color: "#EF9F27" }} />
             </div>
           </div>
           <div className="metric-value" style={{ fontSize: 22 }}>
@@ -548,7 +543,7 @@ export function TrajectoireClient() {
                 <div key={item.label} style={{ padding: "12px 0", borderBottom: "1px solid var(--border-subtle)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <i className={`ti ${item.icon}`} style={{ color: item.color, fontSize: 14 }} />
+                      <i aria-hidden="true" className={`ti ${item.icon}`} style={{ color: item.color, fontSize: 14 }} />
                       <span style={{ fontSize: 13, color: "var(--fg-secondary)" }}>{item.label}</span>
                     </div>
                     <span style={{ fontWeight: 600, fontSize: 14, color: item.sign < 0 ? "var(--danger)" : "var(--fg)" }}>
@@ -570,7 +565,7 @@ export function TrajectoireClient() {
               </div>
               {data.dettesCents > 0 && (
                 <div style={{ fontSize: 11, color: "var(--fg-muted)" }}>
-                  Taux d'endettement patrimonial{" "}
+                  Taux d&apos;endettement patrimonial{" "}
                   {Math.round(data.dettesCents / (data.liquiditesCents + data.placementsCents + data.immobilierCents) * 100 * 10) / 10} %
                 </div>
               )}
@@ -583,7 +578,7 @@ export function TrajectoireClient() {
       {!loading && data && sim && (
         <div className="card">
           <div className="card-header">
-            <div className="card-title">Simulateur d'indépendance financière</div>
+            <div className="card-title">Simulateur d&apos;indépendance financière</div>
             <div className="card-sub">Règle des {withdrawalRate} % · rendement réel {sim.realReturn} %</div>
           </div>
 
@@ -692,7 +687,7 @@ export function TrajectoireClient() {
           </div>
 
           <p style={{ fontSize: 11.5, color: "var(--fg-muted)", marginTop: 14, lineHeight: 1.5 }}>
-            <i className="ti ti-info-circle" /> Projection déterministe à rendement constant : la réalité est volatile et la séquence des rendements compte autant que leur moyenne. Aucune garantie de résultat.
+            <i aria-hidden="true" className="ti ti-info-circle" /> Projection déterministe à rendement constant : la réalité est volatile et la séquence des rendements compte autant que leur moyenne. Aucune garantie de résultat.
           </p>
         </div>
       )}
@@ -704,7 +699,7 @@ export function TrajectoireClient() {
             <div className="card-title">Objectifs fléchés</div>
             <div className="card-sub">
               {fmt(data.totalMonthlyGoalEffortCents)} / mois fléchés ·{" "}
-              {fmt(data.epargneMenusuelleCents)} d'épargne dégagée
+              {fmt(data.epargneMenusuelleCents)} d&apos;épargne dégagée
             </div>
             <Link className="card-link" href="/objectifs">Gérer</Link>
           </div>
@@ -717,7 +712,7 @@ export function TrajectoireClient() {
         <div className="card">
           <div className="card-header">
             <div className="card-title">Projection du patrimoine</div>
-            <div className="card-sub">À effort d'épargne constant</div>
+            <div className="card-sub">À effort d&apos;épargne constant</div>
           </div>
           <div className="table-scroll">
             <table className="traj-table">
@@ -756,7 +751,7 @@ export function TrajectoireClient() {
             </table>
           </div>
           <p style={{ fontSize: 11.5, color: "var(--fg-muted)", marginTop: 12 }}>
-            Hypothèses : {(R_FINANCIER * 100).toFixed(1)} % de rendement financier, +{(R_IMMO * 100).toFixed(1)} %/an sur l'immobilier, amortissement linéaire des crédits, épargne constante de {fmt(data.epargneMenusuelleCents)}/mois.
+            Hypothèses : {(R_FINANCIER * 100).toFixed(1)} % de rendement financier, +{(R_IMMO * 100).toFixed(1)} %/an sur l&apos;immobilier, amortissement linéaire des crédits, épargne constante de {fmt(data.epargneMenusuelleCents)}/mois.
           </p>
         </div>
       )}

@@ -5,6 +5,7 @@ import { frequencyToMonthlyCents } from "@/lib/finance/recurring"
 import { buildFinanceContext } from "@/lib/server/finance-context"
 import { buildSeries, dailySolde, type Series } from "@/lib/server/dashboard-series"
 import type { FinanceContext } from "@/lib/finance/types"
+import { debtRatio } from "@/lib/finance/credit"
 
 // Données du tableau de bord. Tous les montants sont en euros (nombres), sauf mention contraire.
 
@@ -110,7 +111,8 @@ export function buildDashboardData(hid: string, sessionName: string | null | und
   const chargesFixes = activeRec.filter((r) => r.kind !== "saving").reduce((s, r) => s + Math.abs(monthlyOf(r)), 0)
   const autoSaving = activeRec.filter((r) => r.kind === "saving").reduce((s, r) => s + Math.abs(monthlyOf(r)), 0)
   const baseIncome = salaires + loyers > 0 ? salaires + loyers : revenus
-  const tauxEndett = baseIncome > 0 ? (mensualites / baseIncome) * 100 : null
+  // même formule que la page Crédits (méthode HCSF) ; sans revenu déclaré, repli sur les revenus du mois
+  const tauxEndett = debtRatio(ctx) ?? (revenus > 0 ? (mensualites / revenus) * 100 : null)
   const resteJour = Math.max(0, baseIncome - mensualites - chargesFixes) / 30
 
   // Séries

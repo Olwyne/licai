@@ -11,7 +11,12 @@
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "npx tsx db/seed.ts"
+    "db:seed": "npx tsx db/seed.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "audit": "npm audit --audit-level=critical",
+    "check": "npm run typecheck && npm run lint && vitest run && npm run audit",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
@@ -23,9 +28,9 @@
     "chart.js": "^4.5.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
-    "next": "16.3.3",
+    "next": "^16.4.2",
     "next-auth": "^5.0.0-beta.32",
-    "nodemailer": "^8.0.11",
+    "nodemailer": "^10.1.7",
     "react": "19.2.8",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "19.2.8"
@@ -41,6 +46,8 @@
     "@vitejs/plugin-react": "^6.1.0",
     "@vitest/coverage-v8": "^4.1.11",
     "drizzle-kit": "^0.31.10",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.4.2",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.11"

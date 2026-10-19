@@ -380,7 +380,7 @@ export function CsvImportWizard({
       <div className="modal modal-lg">
         <div className="modal-head">
           <h3>Importer un relevé CSV</h3>
-          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
 
         <div className="steps">
@@ -401,12 +401,12 @@ export function CsvImportWizard({
               onDrop={handleFileDrop}
             >
               <input ref={fileRef} type="file" accept=".csv,.txt,text/csv" hidden onChange={handleFileInput} />
-              <i className="ti ti-upload dz-ic" />
+              <i aria-hidden="true" className="ti ti-upload dz-ic" />
               <div className="dz-title">Dépose ton fichier CSV ici</div>
               <div className="dz-sub">ou clique pour parcourir · CSV exporté depuis ta banque</div>
               <div className="dz-file">{fileName ? `✓ ${fileName}` : ""}</div>
             </label>
-            <button type="button" className="link-btn" onClick={loadSample}><i className="ti ti-flask" /> Utiliser un relevé d&apos;exemple</button>
+            <button type="button" className="link-btn" onClick={loadSample}><i aria-hidden="true" className="ti ti-flask" /> Utiliser un relevé d&apos;exemple</button>
             <div className="field-row" style={{ marginTop: 18 }}>
               <div className="field"><label>Banque</label>
                 <select value={bankId} onChange={(e) => setBankId(e.target.value)}>
@@ -419,7 +419,7 @@ export function CsvImportWizard({
                   {filteredAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select></div>
             </div>
-            {presetHint && <div className="preset-hint on"><i className="ti ti-bookmark" /> <span>Format reconnu : <strong>{presetHint.name}</strong></span></div>}
+            {presetHint && <div className="preset-hint on"><i aria-hidden="true" className="ti ti-bookmark" /> <span>Format reconnu : <strong>{presetHint.name}</strong></span></div>}
             <div className="field">
               <label>Attribuer les opérations à</label>
               <div className="owner-picker">
@@ -437,18 +437,18 @@ export function CsvImportWizard({
           {/* Étape 2 */}
           <div className={`import-step${step === 2 ? " active" : ""}`}>
             <div className="preset-bar">
-              <i className="ti ti-bookmark" />
+              <i aria-hidden="true" className="ti ti-bookmark" />
               <div className="select" style={{ minWidth: 190 }}>
                 <select value={presetSel} onChange={(e) => setPresetSel(e.target.value)}>
                   <option value="">{presets.length ? "Formats enregistrés…" : "Aucun format enregistré"}</option>
                   {presets.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
                 </select>
               </div>
-              <button type="button" className="btn btn-ghost" disabled={!presetSel} onClick={() => { const p = presets.find((x) => x.name === presetSel); if (p) { applyPreset(p); setPresetMsg({ text: `Format « ${p.name} » appliqué.`, ok: true }) } }}><i className="ti ti-wand" /> Appliquer</button>
-              <button type="button" className="btn btn-ghost" title="Oublier ce format" disabled={!presetSel} onClick={deletePreset}><i className="ti ti-trash" /></button>
+              <button type="button" className="btn btn-ghost" disabled={!presetSel} onClick={() => { const p = presets.find((x) => x.name === presetSel); if (p) { applyPreset(p); setPresetMsg({ text: `Format « ${p.name} » appliqué.`, ok: true }) } }}><i aria-hidden="true" className="ti ti-wand" /> Appliquer</button>
+              <button type="button" className="btn btn-ghost" title="Oublier ce format" disabled={!presetSel} onClick={deletePreset}><i aria-hidden="true" className="ti ti-trash" /></button>
               <div style={{ flex: 1 }} />
               <input className="preset-input" type="text" placeholder="Nom du format" value={presetName} onChange={(e) => setPresetName(e.target.value)} />
-              <button type="button" className="btn btn-primary" onClick={handleSavePreset}><i className="ti ti-device-floppy" /> Enregistrer</button>
+              <button type="button" className="btn btn-primary" onClick={handleSavePreset}><i aria-hidden="true" className="ti ti-device-floppy" /> Enregistrer</button>
             </div>
             {presetMsg && <div className={`preset-msg${presetMsg.ok ? " ok" : ""}`}>{presetMsg.text}</div>}
             <div className="field-row">
@@ -511,7 +511,7 @@ export function CsvImportWizard({
                 <div><div className="isum-lbl">Attribué à</div><div className="isum-val">{ownerNames.length ? ownerNames.join(", ") : "—"}</div></div>
                 <div><div className="isum-lbl">Solde net</div><div className={`isum-val num ${netCents >= 0 ? "pos" : "neg"}`}>{netCents >= 0 ? "+" : "−"}{formatCents(Math.abs(netCents))}</div></div>
               </div>
-              {dups > 0 && <div className="warn"><i className="ti ti-alert-triangle" /> {dups} ligne{dups > 1 ? "s" : ""} ignorée{dups > 1 ? "s" : ""} — doublon probable avec l&apos;historique.</div>}
+              {dups > 0 && <div className="warn"><i aria-hidden="true" className="ti ti-alert-triangle" /> {dups} ligne{dups > 1 ? "s" : ""} ignorée{dups > 1 ? "s" : ""} — doublon probable avec l&apos;historique.</div>}
             </div>
             <div className="preview-list">
               {previewRows.map((row, i) => {
@@ -519,7 +519,7 @@ export function CsvImportWizard({
                 return (
                   <label key={i} className={`pv-row${row.isDup ? " dup" : ""}`}>
                     <input type="checkbox" checked={row.checked} onChange={() => toggleRow(i)} />
-                    <span className="tx-icon" style={{ width: 32, height: 32, background: `${cat?.colorHex ?? "#888780"}22`, color: cat?.colorHex ?? "#888780" }}><i className={`ti ${cat?.icon ?? "ti-tag"}`} /></span>
+                    <span className="tx-icon" style={{ width: 32, height: 32, background: `${cat?.colorHex ?? "#888780"}22`, color: cat?.colorHex ?? "#888780" }}><i aria-hidden="true" className={`ti ${cat?.icon ?? "ti-tag"}`} /></span>
                     <span className="pv-info"><span className="pv-name">{row.name}</span>{row.isDup && <span className="pv-raw">Doublon détecté</span>}</span>
                     <select className="pv-cat" value={row.categoryId} onChange={(e) => setRowCat(i, e.target.value)}>
                       <option value="">Catégorie…</option>
@@ -531,7 +531,7 @@ export function CsvImportWizard({
                 )
               })}
             </div>
-            {importError && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {importError}</div>}
+            {importError && <div className="obj-modal-err"><i aria-hidden="true" className="ti ti-alert-circle" /> {importError}</div>}
           </div>
         </div>
 
@@ -540,7 +540,7 @@ export function CsvImportWizard({
           <div style={{ flex: 1 }} />
           <button type="button" className="btn btn-ghost" onClick={onClose}>Annuler</button>
           <button type="button" className="btn btn-primary" disabled={nextDisabled} onClick={() => (step === 1 ? goToStep2() : step === 2 ? goToStep3() : void handleImport())}>
-            {nextLabel} {step < 3 && <i className="ti ti-arrow-right" />}
+            {nextLabel} {step < 3 && <i aria-hidden="true" className="ti ti-arrow-right" />}
           </button>
         </div>
       </div>

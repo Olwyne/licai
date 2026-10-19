@@ -188,10 +188,10 @@ export function TransactionsClient({
         <div className="tx-page-actions">
           <PeriodPill />
           <Button variant="ghost" size="sm" onClick={() => setShowImportModal(true)}>
-            <i className="ti ti-upload" /> Importer CSV
+            <i aria-hidden="true" className="ti ti-upload" /> Importer CSV
           </Button>
           <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
-            <i className="ti ti-plus" /> Ajouter une transaction
+            <i aria-hidden="true" className="ti ti-plus" /> Ajouter une transaction
           </Button>
         </div>
       </div>
@@ -208,9 +208,9 @@ export function TransactionsClient({
 
       {totalPages > 1 && (
         <div className="tx-count-bar" style={{ justifyContent: "flex-end" }}>
-          <button className="pagination-btn" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={safePage === 0}><i className="ti ti-chevron-left" /></button>
+          <button className="pagination-btn" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={safePage === 0}><i aria-hidden="true" className="ti ti-chevron-left" /></button>
           <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>{safePage + 1} / {totalPages}</span>
-          <button className="pagination-btn" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={safePage === totalPages - 1}><i className="ti ti-chevron-right" /></button>
+          <button className="pagination-btn" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={safePage === totalPages - 1}><i aria-hidden="true" className="ti ti-chevron-right" /></button>
         </div>
       )}
 
@@ -230,6 +230,7 @@ export function TransactionsClient({
         categories={categories}
         banks={banks}
         members={members}
+        showCommon={txList.some((t) => t.kind !== "transfer" && !t.isCommon)}
         selected={selected}
         onToggleSelect={toggleSelect}
         allPageSelected={allPageSelected}

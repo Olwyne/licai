@@ -134,11 +134,11 @@ function ContractModal({ contract, onClose, onSaved, onDeleted }: ContractModalP
       <div className="modal">
         <div className="modal-head">
           <h3>{isEdit ? "Modifier le contrat" : "Ajouter un contrat"}</h3>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}><i className="ti ti-x" /></button>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
-            {error && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {error}</div>}
+            {error && <div className="obj-modal-err"><i aria-hidden="true" className="ti ti-alert-circle" /> {error}</div>}
             <div className="field">
               <label>Nom du contrat</label>
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Assurance-vie Linxea" required />
@@ -216,7 +216,7 @@ export function PrevoyanceClient() {
 
   useEffect(() => { void load() }, [load])
 
-  function onSaved(_c: ContractRow) {
+  function onSaved() {
     setModal({ open: false, item: null })
     void load()
     setReloadKey((k) => k + 1)
@@ -246,12 +246,12 @@ export function PrevoyanceClient() {
           className="btn btn-primary btn-sm"
           onClick={() => setModal({ open: true, item: null })}
         >
-          <i className="ti ti-plus" /> Ajouter
+          <i aria-hidden="true" className="ti ti-plus" /> Ajouter
         </button>
       </div>
 
-      {loadError && <div className="empty"><i className="ti ti-alert-circle" />{loadError}</div>}
-      {!data && !loadError && <div className="empty"><i className="ti ti-loader" />Chargement…</div>}
+      {loadError && <div className="empty"><i aria-hidden="true" className="ti ti-alert-circle" />{loadError}</div>}
+      {!data && !loadError && <div className="empty"><i aria-hidden="true" className="ti ti-loader" />Chargement…</div>}
 
       {/* KPI cards */}
       <div className="metrics metrics-3">
@@ -259,12 +259,12 @@ export function PrevoyanceClient() {
           <div className="metric-top">
             <span className="metric-label">Valeur épargnée</span>
             <div className="metric-ic metric-ic-info">
-              <i className="ti ti-piggy-bank" />
+              <i aria-hidden="true" className="ti ti-piggy-bank" />
             </div>
           </div>
           <div className="metric-value num">{formatCents(kpis.totalValueCents)}</div>
           <div className="metric-sub neutral">
-            <i className="ti ti-info-circle" />
+            <i aria-hidden="true" className="ti ti-info-circle" />
             Assurance-vie &amp; retraite
           </div>
         </div>
@@ -273,12 +273,12 @@ export function PrevoyanceClient() {
           <div className="metric-top">
             <span className="metric-label">Cotisations mensuelles</span>
             <div className="metric-ic metric-ic-info">
-              <i className="ti ti-calendar-repeat" />
+              <i aria-hidden="true" className="ti ti-calendar-repeat" />
             </div>
           </div>
           <div className="metric-value num">{formatCents(kpis.totalMonthlyPremiumCents)}</div>
           <div className="metric-sub neutral">
-            <i className="ti ti-info-circle" />
+            <i aria-hidden="true" className="ti ti-info-circle" />
             Total mensuel
           </div>
         </div>
@@ -287,12 +287,12 @@ export function PrevoyanceClient() {
           <div className="metric-top">
             <span className="metric-label">Nombre de contrats</span>
             <div className="metric-ic metric-ic-info">
-              <i className="ti ti-file-description" />
+              <i aria-hidden="true" className="ti ti-file-description" />
             </div>
           </div>
           <div className="metric-value num">{kpis.count}</div>
           <div className="metric-sub neutral">
-            <i className="ti ti-info-circle" />
+            <i aria-hidden="true" className="ti ti-info-circle" />
             Contrats actifs
           </div>
         </div>
@@ -300,7 +300,7 @@ export function PrevoyanceClient() {
 
       {/* Contracts list */}
       {rows.length === 0 ? (
-        <div className="empty"><i className="ti ti-shield-off" />Aucun contrat. Ajoutez-en un !</div>
+        <div className="empty"><i aria-hidden="true" className="ti ti-shield-off" />Aucun contrat. Ajoutez-en un !</div>
       ) : (
         <div className="prev-list">
           <div className="prev-head">

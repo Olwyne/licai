@@ -80,11 +80,11 @@ export function LoanModal({ loan, defaultPropertyId, onClose, onDone }: {
       <div className="modal modal-md">
         <div className="modal-head">
           <h3>{isEdit ? "Modifier le crédit" : "Ajouter un crédit"}</h3>
-          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <form onSubmit={save}>
           <div className="modal-body">
-            {error && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {error}</div>}
+            {error && <div className="obj-modal-err"><i aria-hidden="true" className="ti ti-alert-circle" /> {error}</div>}
             <div className="field-row">
               <div className="field"><label>Intitulé</label><input type="text" placeholder="ex. Prêt résidence principale" value={f.name} onChange={(e) => set("name")(e.target.value)} required autoFocus /></div>
               <div className="field"><label>Type</label>
@@ -119,9 +119,9 @@ export function LoanModal({ loan, defaultPropertyId, onClose, onDone }: {
             <div className="field"><label>Note</label><input type="text" placeholder="BNP Paribas, PEL…" value={f.note} onChange={(e) => set("note")(e.target.value)} /></div>
           </div>
           <div className="modal-foot">
-            {isEdit && <button type="button" className="btn btn-ghost" style={{ marginRight: "auto", color: "#D85A30" }} onClick={remove} disabled={busy}><i className="ti ti-trash" /> Supprimer</button>}
+            {isEdit && <button type="button" className="btn btn-ghost" style={{ marginRight: "auto", color: "#D85A30" }} onClick={remove} disabled={busy}><i aria-hidden="true" className="ti ti-trash" /> Supprimer</button>}
             <button type="button" className="btn btn-ghost" onClick={onClose}>Annuler</button>
-            <button type="submit" className="btn btn-primary" disabled={busy}><i className="ti ti-check" /> {busy ? "Enregistrement…" : "Enregistrer"}</button>
+            <button type="submit" className="btn btn-primary" disabled={busy}><i aria-hidden="true" className="ti ti-check" /> {busy ? "Enregistrement…" : "Enregistrer"}</button>
           </div>
         </form>
       </div>

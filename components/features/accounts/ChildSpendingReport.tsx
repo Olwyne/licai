@@ -17,14 +17,14 @@ interface ChildSpending {
 }
 
 interface Props {
-  children: Member[]
+  kids: Member[]
   spending: Record<string, ChildSpending>
 }
 
-export function ChildSpendingReport({ children, spending }: Props) {
+export function ChildSpendingReport({ kids, spending }: Props) {
   const { private: isPrivate } = usePrivacy()
 
-  const childrenWithSpending = children.filter(
+  const childrenWithSpending = kids.filter(
     (c) => spending[c.id] && (spending[c.id].totalCents !== 0 || spending[c.id].transactions.length > 0)
   )
 

@@ -23,7 +23,7 @@ export function AuthShell({ title, text, items, children }: Props) {
         <div className="aside-list">
           {items.map((it) => (
             <div className="aside-item" key={it.label}>
-              <i className={`ti ${it.icon}`} /> <span>{it.label}</span>
+              <i aria-hidden="true" className={`ti ${it.icon}`} /> <span>{it.label}</span>
             </div>
           ))}
         </div>
@@ -40,7 +40,7 @@ export function AuthShell({ title, text, items, children }: Props) {
           </div>
           {children}
           <div className="disclaimer">
-            <i className="ti ti-alert-triangle" />
+            <i aria-hidden="true" className="ti ti-alert-triangle" />
             <span>
               <b>Information, pas conseil.</b> Lǐcái agrège et analyse vos données à titre informatif. Ni conseil en
               investissement, ni recommandation personnalisée, ni conseil fiscal ou juridique. Tout placement comporte un

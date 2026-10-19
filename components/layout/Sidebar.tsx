@@ -6,7 +6,6 @@ import { useSession } from "next-auth/react"
 import { usePrivacy } from "@/contexts/PrivacyContext"
 import { useTheme } from "@/contexts/ThemeContext"
 import { useSearch } from "@/contexts/SearchContext"
-import { useAssistant } from "@/contexts/AssistantContext"
 import { useNav } from "@/contexts/NavContext"
 
 const NAV = [
@@ -37,7 +36,6 @@ export function Sidebar() {
   const { private: priv, toggle: togglePrivacy } = usePrivacy()
   const { theme, toggle: toggleTheme } = useTheme()
   const { openSearch } = useSearch()
-  const { openAssistant } = useAssistant()
   const { open, close } = useNav()
   const [alertCount, setAlertCount] = useState(0)
   useEffect(() => {
@@ -66,7 +64,7 @@ export function Sidebar() {
         ) : (
           <Link key={item.href} href={item.href}
             className={`nav-item ${path === item.href ? "active" : ""}`}>
-            <i className={`ti ${item.icon}`} />
+            <i aria-hidden="true" className={`ti ${item.icon}`} />
             {item.label}
             {item.href === "/alertes" && alertCount > 0 && <span className="nav-badge">{alertCount}</span>}
           </Link>
@@ -76,21 +74,17 @@ export function Sidebar() {
       <div className="nav-spacer" />
 
       <div className="sidebar-tools">
-        <button className="sidebar-tool accent" onClick={openAssistant}>
-          <i className="ti ti-sparkles" />
-          <span>Assistant IA</span>
-        </button>
         <button className="sidebar-tool" onClick={openSearch}>
-          <i className="ti ti-search" />
+          <i aria-hidden="true" className="ti ti-search" />
           <span>Rechercher</span>
           <kbd className="sidebar-kbd">⌘K</kbd>
         </button>
         <button className="sidebar-tool" onClick={togglePrivacy}>
-          <i className={`ti ${priv ? "ti-eye-off" : "ti-eye"}`} />
+          <i aria-hidden="true" className={`ti ${priv ? "ti-eye-off" : "ti-eye"}`} />
           <span>{priv ? "Afficher les chiffres" : "Cacher les chiffres"}</span>
         </button>
         <button className="sidebar-tool" onClick={toggleTheme}>
-          <i className={`ti ${theme === "dark" ? "ti-sun" : "ti-moon"}`} />
+          <i aria-hidden="true" className={`ti ${theme === "dark" ? "ti-sun" : "ti-moon"}`} />
           <span>{theme === "dark" ? "Mode clair" : "Mode sombre"}</span>
         </button>
       </div>
@@ -103,7 +97,7 @@ export function Sidebar() {
           <div className="user-name">{userName}</div>
           <div className="user-plan">Paramètres du compte</div>
         </div>
-        <i className="ti ti-settings user-row-ic" />
+        <i aria-hidden="true" className="ti ti-settings user-row-ic" />
       </Link>
     </aside>
     </>

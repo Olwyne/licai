@@ -13,7 +13,7 @@ export function Topbar({ title, sub, action }: Props) {
       </div>
       <div className="topbar-right">
         <button className="btn btn-ghost btn-sm cmd-trigger" onClick={openSearch}>
-          <i className="ti ti-search" />
+          <i aria-hidden="true" className="ti ti-search" />
           <span className="cmd-hint">⌘K</span>
         </button>
         {action}

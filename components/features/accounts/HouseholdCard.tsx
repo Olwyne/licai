@@ -53,7 +53,7 @@ export function HouseholdCard({
   return (
     <Card>
       <div className="hh-head">
-        <div className="hh-mark"><i className="ti ti-home-heart" /></div>
+        <div className="hh-mark"><i aria-hidden="true" className="ti ti-home-heart" /></div>
         <div>
           <div className="hh-name">{householdName}</div>
           <div className="hh-sub">
@@ -63,10 +63,11 @@ export function HouseholdCard({
           </div>
         </div>
         <div className="hh-total">
-          <div className="hh-total-lbl">Patrimoine total</div>
+          <div className="hh-total-lbl">Trésorerie du foyer</div>
           <div className={`hh-total-val${isPrivate ? " private" : ""}`}>
             {formatCents(totalBalance)}
           </div>
+          <div className="hh-total-lbl">hors placements et immobilier</div>
         </div>
       </div>
       <div className="member-grid">
@@ -93,7 +94,7 @@ export function HouseholdCard({
               )}
               {m.isChild && m.allowanceCents > 0 && (
                 <div className="allowance-line">
-                  <i className="ti ti-coins" /> Argent de poche : {formatCents(m.allowanceCents)}/mois
+                  <i aria-hidden="true" className="ti ti-coins" /> Argent de poche : {formatCents(m.allowanceCents)}/mois
                 </div>
               )}
               {m.isChild && m.goals.length > 0 && (
@@ -136,7 +137,7 @@ export function HouseholdCard({
                   onClick={() => onChildView(m.id)}
                   title={`Voir le foyer comme ${m.short ?? m.name.split(" ")[0]}`}
                 >
-                  <i className="ti ti-eye" /> Vue {m.short ?? m.name.split(" ")[0]}
+                  <i aria-hidden="true" className="ti ti-eye" /> Vue {m.short ?? m.name.split(" ")[0]}
                 </button>
               )}
             </div>

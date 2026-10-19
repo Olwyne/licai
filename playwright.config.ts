@@ -48,6 +48,7 @@ export default defineConfig({
       NEXTAUTH_SECRET: "test-secret-32-chars-minimum-abc",
       NEXTAUTH_URL: `http://localhost:${PORT}`,
       AUTH_TRUST_HOST: "true",
+      AI_SKIP_KEY_CHECK: "1", // pas d'appel réseau pour vérifier les clés IA des tests
     },
   },
 })

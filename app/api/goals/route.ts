@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { goals, goalPockets, accounts, transactions } from "@/db/schema"
+import { goals, goalPockets, transactions } from "@/db/schema"
 import { eq, desc, inArray } from "drizzle-orm"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
 import { randomUUID } from "crypto"

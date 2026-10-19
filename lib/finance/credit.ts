@@ -39,3 +39,12 @@ export function capacity(ctx: Pick<FinanceContext, "members" | "properties" | "l
   const budget = borrow > 0 ? (borrow + c.apport) * 0.925 : 0 // ≈ 7,5 % de frais de notaire et garantie
   return { sal, rents, charges, rentalCharge, revClassic, ratioClassic, revDiff, chargeDiff, ratioDiff, maxDiff, maxClassic, best, borrow, budget }
 }
+
+/**
+ * Taux d'endettement de référence du foyer (méthode classique HCSF : loyers pondérés à 70 %), utilisé partout (tableau de bord, crédits).
+ * `null` si le foyer n'a aucun revenu déclaré.
+ */
+export function debtRatio(ctx: Pick<FinanceContext, "members" | "properties" | "loans">): number | null {
+  const c = capacity(ctx, DEFAULT_CAPACITY)
+  return c.revClassic > 0 ? c.ratioClassic : null
+}

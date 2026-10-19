@@ -29,8 +29,6 @@ const FILTERS: { value: FilterMode; label: string }[] = [
   { value: "atteints", label: "Atteints" },
 ]
 
-const PRESET_COLORS = ["#1D9E75", "#378ADD", "#7C6BD6", "#D4537E", "#EF9F27", "#D85A30"]
-
 // ─── AddFundsModal ────────────────────────────────────────────────────────────
 
 interface AddFundsModalProps {
@@ -77,7 +75,7 @@ function AddFundsModal({ goal, onClose, onSaved }: AddFundsModalProps) {
         <div className="modal-header">
           <h2 className="modal-title">Ajouter des fonds — {goal.name}</h2>
           <button className="modal-close" onClick={onClose} type="button">
-            <i className="ti ti-x" />
+            <i aria-hidden="true" className="ti ti-x" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="modal-body">
@@ -131,6 +129,7 @@ function GoalCard({ goal, onEdit, onAddFunds }: GoalCardProps) {
   // Probabilité heuristique: high if pct >= expected pct at this point in time
   let probabilite: number | null = null
   if (goal.deadline && days !== null && days > 0) {
+    // eslint-disable-next-line react-hooks/purity -- affichage dépendant de la date du jour
     const totalDays = (new Date(goal.deadline).getTime() - (Date.now() - days * 86400000)) / 86400000
     const expectedPct = totalDays > 0 ? Math.round(((totalDays - days) / totalDays) * 100) : 0
     const lead = pct - expectedPct
@@ -178,7 +177,7 @@ function GoalCard({ goal, onEdit, onAddFunds }: GoalCardProps) {
           type="button"
           onClick={(e) => { e.stopPropagation(); onAddFunds(goal) }}
         >
-          <i className="ti ti-plus icon-sm" />
+          <i aria-hidden="true" className="ti ti-plus icon-sm" />
           Ajouter
         </button>
       </div>
@@ -229,7 +228,7 @@ function GoalCard({ goal, onEdit, onAddFunds }: GoalCardProps) {
 
       {isAtteint && (
         <div className="goal-atteint">
-          <i className="ti ti-circle-check" /> Objectif atteint !
+          <i aria-hidden="true" className="ti ti-circle-check" /> Objectif atteint !
         </div>
       )}
     </div>
@@ -264,7 +263,7 @@ function KpiRow({ goalList }: { goalList: Goal[] }) {
         <div className="metric-top">
           <span className="metric-label">Constitué</span>
           <span className="metric-ic" style={{ background: "#1D9E7520" }}>
-            <i className="ti ti-pig-money" style={{ color: "#1D9E75" }} />
+            <i aria-hidden="true" className="ti ti-pig-money" style={{ color: "#1D9E75" }} />
           </span>
         </div>
         <div className="metric-value">{formatCents(totalCurrent)}</div>
@@ -274,7 +273,7 @@ function KpiRow({ goalList }: { goalList: Goal[] }) {
         <div className="metric-top">
           <span className="metric-label">Reste à réunir</span>
           <span className="metric-ic" style={{ background: "#6366F120" }}>
-            <i className="ti ti-target" style={{ color: "#6366F1" }} />
+            <i aria-hidden="true" className="ti ti-target" style={{ color: "#6366F1" }} />
           </span>
         </div>
         <div className="metric-value">{formatCents(resteARéunir)}</div>
@@ -284,7 +283,7 @@ function KpiRow({ goalList }: { goalList: Goal[] }) {
         <div className="metric-top">
           <span className="metric-label">Effort mensuel</span>
           <span className="metric-ic" style={{ background: "#EF9F2720" }}>
-            <i className="ti ti-calendar-month" style={{ color: "#EF9F27" }} />
+            <i aria-hidden="true" className="ti ti-calendar-month" style={{ color: "#EF9F27" }} />
           </span>
         </div>
         <div className="metric-value">{formatCents(effortMensuelCents)}</div>
@@ -294,7 +293,7 @@ function KpiRow({ goalList }: { goalList: Goal[] }) {
         <div className="metric-top">
           <span className="metric-label">Objectifs à risque</span>
           <span className="metric-ic" style={{ background: aRisque > 0 ? "#D85A3020" : "#1D9E7520" }}>
-            <i className="ti ti-alert-triangle" style={{ color: aRisque > 0 ? "#D85A30" : "#1D9E75" }} />
+            <i aria-hidden="true" className="ti ti-alert-triangle" style={{ color: aRisque > 0 ? "#D85A30" : "#1D9E75" }} />
           </span>
         </div>
         <div className="metric-value" style={{ color: aRisque > 0 ? "var(--danger)" : undefined }}>
@@ -387,7 +386,7 @@ export default function ObjectifsClient() {
           type="button"
           onClick={() => setModalGoal("new")}
         >
-          <i className="ti ti-plus" />
+          <i aria-hidden="true" className="ti ti-plus" />
           Nouvel objectif
         </button>
       </div>

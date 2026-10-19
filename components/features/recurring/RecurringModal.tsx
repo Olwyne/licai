@@ -102,11 +102,11 @@ export function RecurringModal({ item, accounts, categories, members, onClose, o
       <div className="modal modal-md">
         <div className="modal-head">
           <h3>{isEdit ? "Modifier la dépense récurrente" : "Ajouter une dépense récurrente"}</h3>
-          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
-            {error && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {error}</div>}
+            {error && <div className="obj-modal-err"><i aria-hidden="true" className="ti ti-alert-circle" /> {error}</div>}
             <div className="field-row">
               <div className="field"><label htmlFor="rec-name">Intitulé</label>
                 <input id="rec-name" type="text" placeholder="ex. Assurance habitation" value={name} onChange={(e) => setName(e.target.value)} required autoFocus /></div>
@@ -144,9 +144,9 @@ export function RecurringModal({ item, accounts, categories, members, onClose, o
             </div>
           </div>
           <div className="modal-foot">
-            {isEdit && <button type="button" className="btn btn-ghost" style={{ marginRight: "auto", color: "#D85A30" }} onClick={handleDelete} disabled={deleting}><i className="ti ti-trash" /> {deleting ? "Suppression…" : "Supprimer"}</button>}
+            {isEdit && <button type="button" className="btn btn-ghost" style={{ marginRight: "auto", color: "#D85A30" }} onClick={handleDelete} disabled={deleting}><i aria-hidden="true" className="ti ti-trash" /> {deleting ? "Suppression…" : "Supprimer"}</button>}
             <button type="button" className="btn btn-ghost" onClick={onClose}>Annuler</button>
-            <button type="submit" className="btn btn-primary" disabled={loading}><i className="ti ti-check" /> {loading ? "Enregistrement…" : "Enregistrer"}</button>
+            <button type="submit" className="btn btn-primary" disabled={loading}><i aria-hidden="true" className="ti ti-check" /> {loading ? "Enregistrement…" : "Enregistrer"}</button>
           </div>
         </form>
       </div>

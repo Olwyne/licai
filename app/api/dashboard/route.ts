@@ -74,11 +74,6 @@ export async function GET(req: Request) {
     return max
   }, null)
 
-  // Trésorerie variation vs prev month
-  const prevExpTotal = prevTxRows.reduce((s, t) => s + t.amountCents, 0)
-  const tresoVariationPct = prevExpTotal !== 0
-    ? Math.round(((balanceCents) / Math.abs(prevExpTotal)) * 100)
-    : 0
 
   // Dépense moy / jour
   const today = new Date().toISOString().slice(0, 10)

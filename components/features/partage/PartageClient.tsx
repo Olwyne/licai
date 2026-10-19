@@ -201,14 +201,14 @@ export function PartageClient() {
                   </div>
                   <div className="tr-amt num private">{eur(t.amount)}</div>
                   <button type="button" className={`tr-btn${isDone ? " on" : ""}`} onClick={() => toggleDone(id)}>
-                    <i className={`ti ${isDone ? "ti-circle-check" : "ti-check"}`} /> {isDone ? "Fait" : "Marquer fait"}
+                    <i aria-hidden="true" className={`ti ${isDone ? "ti-circle-check" : "ti-check"}`} /> {isDone ? "Fait" : "Marquer fait"}
                   </button>
                 </div>
               )
             })}
           </div>
         ) : (
-          <div className="detect-empty"><i className="ti ti-checkbox" /> Les comptes sont équilibrés — aucun virement à faire.</div>
+          <div className="detect-empty"><i aria-hidden="true" className="ti ti-checkbox" /> Les comptes sont équilibrés — aucun virement à faire.</div>
         )}
       </div>
     </div>

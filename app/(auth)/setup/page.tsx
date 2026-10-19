@@ -98,7 +98,7 @@ export default function SetupPage() {
         </label>
         {error && <div className="err on">{error}</div>}
         <button className="btn btn-primary" type="submit" disabled={loading}>
-          <i className="ti ti-user-plus" /> {loading ? "Création…" : "Créer mon foyer"}
+          <i aria-hidden="true" className="ti ti-user-plus" /> {loading ? "Création…" : "Créer mon foyer"}
         </button>
       </form>
       <div className="alt">Déjà inscrit(e) ? <a href="/login">Se connecter</a></div>

@@ -8,7 +8,7 @@ import { eur, eurS, pc, pcS } from "@/lib/finance/format"
 import { loadProfile, loadQuotes, overrides } from "@/components/features/finance/quotes"
 import type { ProfileKey } from "@/lib/finance/invest"
 import { useFinanceContext } from "@/components/features/finance/useFinanceContext"
-import { AdviceRow, Kpi, LoadingOrError, MiniAv, PageHeader, StatRow } from "@/components/features/finance/ui"
+import { AdviceRow, FrenchTaxNotice, Kpi, LoadingOrError, MiniAv, PageHeader, StatRow } from "@/components/features/finance/ui"
 
 const DISCLAIMER =
   "Les calculs de succession, d'IFI et de plus-values reposent sur des barèmes simplifiés et sur les données saisies dans l'application. Ils ne remplacent ni un notaire, ni un conseiller fiscal, et ne tiennent pas compte des régimes matrimoniaux, clauses bénéficiaires particulières, démembrements ou régimes de faveur applicables à votre situation. Vous demeurez seul responsable de vos décisions."
@@ -43,6 +43,7 @@ export function PrevoyanceAnalysis({ reloadKey }: { reloadKey: number }) {
   return (
     <>
       <PageHeader title="Prévoyance & transmission" sub="Succession, IFI, plus-values et prélèvements" />
+      <FrenchTaxNotice />
 
       <div className="metrics">
         <Kpi label="Patrimoine transmissible" icon="ti-users" color="#1D9E75" value={eur(data.net)} sub="Foyer entier, dettes déduites" />
@@ -116,7 +117,7 @@ export function PrevoyanceAnalysis({ reloadKey }: { reloadKey: number }) {
             </div>
           </>
         ) : (
-          <div className="empty"><i className="ti ti-users" />Ajoutez au moins un membre avec un revenu pour simuler la transmission.</div>
+          <div className="empty"><i aria-hidden="true" className="ti ti-users" />Ajoutez au moins un membre avec un revenu pour simuler la transmission.</div>
         )}
       </div>
 
@@ -212,7 +213,7 @@ export function PrevoyanceAnalysis({ reloadKey }: { reloadKey: number }) {
 
       <div className="card mb-16">
         <div className="card-header"><span className="card-title">Avertissement</span></div>
-        <div className="disclaimer"><i className="ti ti-alert-triangle" /> <span><b>Information, pas conseil.</b> {DISCLAIMER}</span></div>
+        <div className="disclaimer"><i aria-hidden="true" className="ti ti-alert-triangle" /> <span><b>Information, pas conseil.</b> {DISCLAIMER}</span></div>
       </div>
     </>
   )

@@ -15,8 +15,12 @@ test.describe("Budget", () => {
 
   test("month selector chips visible", async ({ page }) => {
     await page.goto("/budget")
-    // Month chips exist
-    await expect(page.locator(".budget-month-select").first()).toBeVisible()
+    // Pastille de période partagée (même composant que les transactions) : précédent / mois / suivant
+    const pills = page.locator(".period-row .pill")
+    await expect(pills).toHaveCount(3)
+    const before = await pills.nth(1).innerText()
+    await pills.nth(0).click()
+    await expect(pills.nth(1)).not.toHaveText(before)
   })
 
   test("edit budget limit → bar updates", async ({ page }) => {

@@ -76,7 +76,7 @@ interface Props {
   householdId: string
 }
 
-export function RapportView({ month, householdId: _householdId }: Props) {
+export function RapportView({ month }: Props) {
   const router = useRouter()
   const [data, setData] = useState<RapportData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -145,7 +145,7 @@ export function RapportView({ month, householdId: _householdId }: Props) {
             onClick={() => goMonth(prevMonth(month))}
             aria-label="Mois précédent"
           >
-            <i className="ti ti-chevron-left" />
+            <i aria-hidden="true" className="ti ti-chevron-left" />
           </button>
           <span className="rapport-month-label">{formatMonth(month)}</span>
           <button
@@ -153,11 +153,11 @@ export function RapportView({ month, householdId: _householdId }: Props) {
             onClick={() => goMonth(nextMonthStr(month))}
             aria-label="Mois suivant"
           >
-            <i className="ti ti-chevron-right" />
+            <i aria-hidden="true" className="ti ti-chevron-right" />
           </button>
         </div>
         <button className="btn-primary" onClick={() => window.print()}>
-          <i className="ti ti-file-download" />
+          <i aria-hidden="true" className="ti ti-file-download" />
           Télécharger PDF
         </button>
       </div>

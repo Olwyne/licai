@@ -65,12 +65,12 @@ export default function LoginPage() {
         </div>
         {error && <div className="err on">{error}</div>}
         <button className="btn btn-primary" type="submit" disabled={loading}>
-          <i className="ti ti-login-2" /> {loading ? "Connexion…" : "Se connecter"}
+          <i aria-hidden="true" className="ti ti-login-2" /> {loading ? "Connexion…" : "Se connecter"}
         </button>
       </form>
       <div className="sep">ou</div>
       <button className="btn btn-ghost" type="button" onClick={startDemo} disabled={loading}>
-        <i className="ti ti-eye" /> Explorer la démonstration
+        <i aria-hidden="true" className="ti ti-eye" /> Explorer la démonstration
       </button>
       <div className="alt">Pas encore de compte ? <a href="/setup">Créer un compte</a></div>
     </AuthShell>

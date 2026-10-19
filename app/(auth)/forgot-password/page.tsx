@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
       <p className="auth-p">Saisissez l&apos;adresse de votre compte : nous vous envoyons un lien pour en choisir un nouveau.</p>
       {sent ? (
         <div className="disclaimer">
-          <i className="ti ti-mail" />
+          <i aria-hidden="true" className="ti ti-mail" />
           <span>Si un compte existe pour cette adresse, un lien de réinitialisation vient d&apos;être envoyé (valable 1 heure).</span>
         </div>
       ) : (
@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
             <input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="sophie.lambert@email.fr" required />
           </div>
           <button className="btn btn-primary" type="submit" disabled={loading}>
-            <i className="ti ti-mail" /> {loading ? "Envoi…" : "Envoyer le lien"}
+            <i aria-hidden="true" className="ti ti-mail" /> {loading ? "Envoi…" : "Envoyer le lien"}
           </button>
         </form>
       )}

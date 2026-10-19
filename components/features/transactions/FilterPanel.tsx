@@ -48,7 +48,7 @@ export function FilterPanel({ filters, accounts, categories, members, count, tot
   return (
     <>
       <div className="toolbar">
-        <div className="search"><i className="ti ti-search" />
+        <div className="search"><i aria-hidden="true" className="ti ti-search" />
           <input type="text" placeholder="Rechercher une transaction…" value={localQ} onChange={(e) => setLocalQ(e.target.value)} /></div>
         <div className="select">
           <select value={filters.sort} onChange={(e) => set({ sort: e.target.value as Filters["sort"] })}>
@@ -110,7 +110,7 @@ export function FilterPanel({ filters, accounts, categories, members, count, tot
           <span>→</span>
           <input type="text" inputMode="decimal" placeholder="Max €" value={filters.max} onChange={(e) => set({ max: e.target.value })} />
         </div>
-        <button className="btn btn-ghost" onClick={() => { setLocalQ(""); onChange(DEFAULT_FILTERS) }} disabled={!active}><i className="ti ti-filter-off" /> Réinitialiser</button>
+        <button className="btn btn-ghost" onClick={() => { setLocalQ(""); onChange(DEFAULT_FILTERS) }} disabled={!active}><i aria-hidden="true" className="ti ti-filter-off" /> Réinitialiser</button>
         <span className="filters-count">{count === total ? `${total} opération${total > 1 ? "s" : ""}` : `${count} sur ${total}`}</span>
       </div>
     </>

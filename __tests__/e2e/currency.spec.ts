@@ -21,7 +21,7 @@ test.describe("Devises", () => {
     expect(t.amountCents).toBe(Math.round(-100000 * 0.00591)) // taux de référence JPY → EUR
   })
 
-  test("la démonstration crée un foyer isolé et la purge fonctionne", async ({ page, request }) => {
+  test("la démonstration crée un foyer isolé et la purge fonctionne", async ({ request }) => {
     const a = await (await request.post("/api/demo")).json()
     const b = await (await request.post("/api/demo")).json()
     expect(a.data.email).toMatch(/@licai\.demo$/)
@@ -94,5 +94,33 @@ test.describe("Réinitialisation du mot de passe & purge", () => {
     const body = { householdName: "Foyer", email, password: "Motdepasse-2026" }
     expect((await request.post("/api/setup", { data: body })).ok()).toBeTruthy()
     expect((await request.post("/api/setup", { data: body })).status()).toBe(409)
+  })
+})
+
+test.describe("Devise par défaut et crypto en direct", () => {
+  test.beforeEach(async ({ page }) => { await loginOk(page) })
+
+  test("un nouveau compte sans devise prend la devise de référence du foyer", async ({ page }) => {
+    const res = await page.request.post("/api/accounts", { data: { name: "Compte sans devise", type: "checking", balanceCents: 1000, ownerIds: [] } })
+    const { data } = await res.json()
+    expect(data.currency).toBe("EUR")
+    await page.request.delete(`/api/accounts/${data.id}`)
+  })
+
+  test("le mode « Crypto en direct » met à jour les cours (fournisseur simulé)", async ({ page }) => {
+    await page.route("**/api/market/quotes*", (route) => route.fulfill({ json: { data: { BTC: { price: 99999, prev: 98000 }, ETH: { price: 3333, prev: null } } } }))
+    await page.goto("/placements")
+    await page.getByRole("button", { name: /cours/i }).first().click()
+    await page.getByRole("button", { name: /crypto en direct/i }).click()
+    await page.getByRole("button", { name: /mettre à jour les cryptos/i }).click()
+    await expect(page.getByText(/2 cours crypto mis à jour/)).toBeVisible()
+  })
+
+  test("l'échec du fournisseur de taux conserve les valeurs précédentes", async ({ page }) => {
+    await page.route("**/api/market/fx", (route) => route.fulfill({ status: 502, json: { error: "injoignable" } }))
+    await page.goto("/comptes")
+    await page.getByRole("button", { name: /taux & devises/i }).click()
+    await page.getByRole("button", { name: /rafraîchir/i }).click()
+    await expect(page.getByText(/taux précédents conservés/)).toBeVisible()
   })
 })

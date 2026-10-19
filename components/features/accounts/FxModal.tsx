@@ -78,14 +78,14 @@ export function FxModal({ rates, source, ts, onClose, onSaved }: {
       <div className="modal modal-md">
         <div className="modal-head">
           <h3>Taux de change</h3>
-          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <div className="modal-body">
           <div className="field">
             <label>Source des taux</label>
             <div className="type-toggle">
               {([["demo", "ti-flask", "Référence"], ["manual", "ti-pencil", "Saisie manuelle"], ["api", "ti-cloud-data-connection", "Fournisseur"]] as [FxSource, string, string][]).map(([m, ic, l]) => (
-                <button key={m} type="button" className={`type-opt ${src === m ? "active" : ""}`} onClick={() => setSrc(m)}><i className={`ti ${ic}`} /> {l}</button>
+                <button key={m} type="button" className={`type-opt ${src === m ? "active" : ""}`} onClick={() => setSrc(m)}><i aria-hidden="true" className={`ti ${ic}`} /> {l}</button>
               ))}
             </div>
             <div className="field-hint">
@@ -99,7 +99,7 @@ export function FxModal({ rates, source, ts, onClose, onSaved }: {
               <div className="field"><label>Clé d&apos;API</label><input type="text" placeholder="Bearer token" value={api.key} onChange={(e) => setApi({ ...api, key: e.target.value })} /></div>
             </div>
           )}
-          <div className="q-status">{status ? <><i className="ti ti-info-circle" /> {status}</> : <><i className="ti ti-clock" /> Dernière mise à jour : {stamp}</>}</div>
+          <div className="q-status">{status ? <><i aria-hidden="true" className="ti ti-info-circle" /> {status}</> : <><i aria-hidden="true" className="ti ti-clock" /> Dernière mise à jour : {stamp}</>}</div>
           <div className="q-list">
             {Object.entries(CURRENCIES).map(([k, c]) => (
               <div className="q-row" key={k}>
@@ -114,10 +114,10 @@ export function FxModal({ rates, source, ts, onClose, onSaved }: {
           <div className="field-hint">La devise de référence du foyer est le {base} : tous les totaux, budgets et impôts sont exprimés dans cette devise.</div>
         </div>
         <div className="modal-foot">
-          <button className="btn btn-ghost" onClick={refresh}><i className="ti ti-refresh" /> Rafraîchir via le fournisseur</button>
+          <button className="btn btn-ghost" onClick={refresh}><i aria-hidden="true" className="ti ti-refresh" /> Rafraîchir via le fournisseur</button>
           <div style={{ flex: 1 }} />
           <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
-          <button className="btn btn-primary" onClick={save} disabled={busy}><i className="ti ti-check" /> Appliquer</button>
+          <button className="btn btn-primary" onClick={save} disabled={busy}><i aria-hidden="true" className="ti ti-check" /> Appliquer</button>
         </div>
       </div>
     </div>

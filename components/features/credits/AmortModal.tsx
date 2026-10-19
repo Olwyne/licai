@@ -31,11 +31,11 @@ export function AmortModal({ loan, onClose }: { loan: Loan; onClose: () => void 
       <div className="modal modal-lg">
         <div className="modal-head">
           <h3>{loan.name}</h3>
-          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <div className="modal-body">
           {impossible ? (
-            <div className="empty"><i className="ti ti-alert-circle" />Mensualité trop faible pour amortir le capital : vérifiez le taux et la mensualité.</div>
+            <div className="empty"><i aria-hidden="true" className="ti ti-alert-circle" />Mensualité trop faible pour amortir le capital : vérifiez le taux et la mensualité.</div>
           ) : (
             <>
               <div className="fi-out four">

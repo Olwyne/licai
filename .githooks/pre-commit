@@ -1,0 +1,5 @@
+#!/bin/sh
+# Qualité avant chaque commit : typecheck, lint, tests unitaires, audit des dépendances (cf. npm run check).
+# Les tests e2e (npm run test:e2e) tournent en CI et doivent être lancés avant de pousser.
+echo "[pre-commit] npm run check"
+npm run check || { echo "[pre-commit] échec : commit annulé"; exit 1; }

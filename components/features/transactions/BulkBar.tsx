@@ -55,10 +55,10 @@ export function BulkBar({ selected, txList, categories, members, onBulkPatch, on
           {categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
         </select>
       </div>
-      <button className="btn btn-ghost" type="button" disabled={loading} onClick={() => void patchAll({ isCommon: true })}><i className="ti ti-users" /> Marquer commune</button>
-      <button className="btn btn-ghost" type="button" disabled={loading} onClick={() => void patchAll({ isCommon: false })}><i className="ti ti-user" /> Marquer perso</button>
+      <button className="btn btn-ghost" type="button" disabled={loading} onClick={() => void patchAll({ isCommon: true })}><i aria-hidden="true" className="ti ti-users" /> Marquer commune</button>
+      <button className="btn btn-ghost" type="button" disabled={loading} onClick={() => void patchAll({ isCommon: false })}><i aria-hidden="true" className="ti ti-user" /> Marquer perso</button>
       <div style={{ flex: 1 }} />
-      <button className="btn btn-ghost" type="button" style={{ color: "#D85A30" }} disabled={loading} onClick={() => void remove()}><i className="ti ti-trash" /> Supprimer</button>
+      <button className="btn btn-ghost" type="button" style={{ color: "#D85A30" }} disabled={loading} onClick={() => void remove()}><i aria-hidden="true" className="ti ti-trash" /> Supprimer</button>
       <button className="btn btn-ghost" type="button" disabled={loading} onClick={onClearSelection}>Annuler la sélection</button>
     </div>
   )
