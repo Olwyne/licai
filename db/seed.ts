@@ -43,6 +43,7 @@ export function seedDemoData(householdId: string): void {
     { id: acctSophieId, householdId, bankId: bnpId, name: "Compte courant", type: "checking", balanceCents: 114000, currency: "EUR", ownerIds: JSON.stringify([sophieId]) },
     { id: acctLddId, householdId, bankId: bnpId, name: "Livret développement durable", type: "savings", balanceCents: 600000, currency: "EUR", ownerIds: JSON.stringify([sophieId, thomasId]) },
     { id: acctRevId, householdId, bankId: revId, name: "Revolut perso", type: "checking", balanceCents: 31000, currency: "EUR", ownerIds: JSON.stringify([sophieId]) },
+    { id: randomUUID(), householdId, bankId: revId, name: "Poche Yen", type: "checking", purpose: "Voyages & achats au Japon", balanceCents: 18000000, currency: "JPY", ownerIds: JSON.stringify([sophieId]) },
     { id: acctThomasId, householdId, bankId: boursoId, name: "Compte courant", type: "checking", balanceCents: 89000, currency: "EUR", ownerIds: JSON.stringify([thomasId]) },
     { id: acctLeaId, householdId, bankId: caId, name: "Livret jeune", type: "savings", balanceCents: 48000, currency: "EUR", ownerIds: JSON.stringify([leaId]) },
   ]).run()

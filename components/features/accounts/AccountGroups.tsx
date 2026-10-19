@@ -89,7 +89,7 @@ export function AccountGroups({
               Comptes partagés
             </Chip>
           </div>
-          <Link className="btn btn-primary" href="/transactions?import=1"><i className="ti ti-file-import" /> Importer un CSV</Link>
+          <Link className="btn btn-primary" href="/transactions?import=1"><i aria-hidden="true" className="ti ti-file-import" /> Importer un CSV</Link>
         </div>
       )}
 
@@ -131,18 +131,19 @@ export function AccountGroups({
                     key={account.id}
                     className={`acct-card${onEditAccount ? " acct-card--clickable" : ""}`}
                     onClick={() => onEditAccount?.(account)}
-                    role={onEditAccount ? "button" : undefined}
-                    tabIndex={onEditAccount ? 0 : undefined}
-                    onKeyDown={(e) => e.key === "Enter" && onEditAccount?.(account)}
                   >
                     <div className="acct-top">
                       <div>
-                        <div className="acct-name">{account.name}</div>
+                        <div className="acct-name">
+                          {onEditAccount ? (
+                            <button type="button" className="acct-name-btn" onClick={(e) => { e.stopPropagation(); onEditAccount(account) }} aria-label={`Modifier le compte ${account.name}`}>{account.name}</button>
+                          ) : account.name}
+                        </div>
                         <div className="acct-meta">
                           {typeLabel}{account.last4 ? ` · •••• ${account.last4}` : ""}
                           {isShared && <> · <span className="acct-shared">Partagé</span></>}
                         </div>
-                        {account.purpose && <div className="acct-purpose"><i className="ti ti-target-arrow" /> {account.purpose}</div>}
+                        {account.purpose && <div className="acct-purpose"><i aria-hidden="true" className="ti ti-target-arrow" /> {account.purpose}</div>}
                       </div>
                       {account.ownerIds.length > 0 && (
                         <div className="acct-owners">
@@ -170,11 +171,11 @@ export function AccountGroups({
                     )}
                     <div className="acct-foot">
                       <span className="acct-sync">
-                        <i className="ti ti-refresh" /> {(txCounts[account.id] ?? 0) === 0 ? "Aucune opération" : `${txCounts[account.id]} opération${txCounts[account.id] > 1 ? "s" : ""}`}
+                        <i aria-hidden="true" className="ti ti-refresh" /> {(txCounts[account.id] ?? 0) === 0 ? "Aucune opération" : `${txCounts[account.id]} opération${txCounts[account.id] > 1 ? "s" : ""}`}
                       </span>
                       {!childOnly && (
                         <Link className="acct-import" href="/transactions?import=1" onClick={(e) => e.stopPropagation()}>
-                          <i className="ti ti-file-import" /> Importer
+                          <i aria-hidden="true" className="ti ti-file-import" /> Importer
                         </Link>
                       )}
                     </div>

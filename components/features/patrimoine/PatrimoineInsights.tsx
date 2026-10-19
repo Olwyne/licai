@@ -139,7 +139,7 @@ export function PatrimoineInsights({ reloadKey }: { reloadKey: number }) {
             Les intérêts d&apos;emprunt ({eur(firstRented.y.interest)}/an) sont déduits du revenu foncier mais restent une sortie de trésorerie.
           </div>
         )}
-        <div className="disclaimer sm"><i className="ti ti-info-circle" /> <span>Simulation informative : le régime réel suppose des charges justifiées et un engagement de conservation. Ni conseil fiscal, ni conseil en investissement immobilier.</span></div>
+        <div className="disclaimer sm"><i aria-hidden="true" className="ti ti-info-circle" /> <span>Simulation informative : le régime réel suppose des charges justifiées et un engagement de conservation. Ni conseil fiscal, ni conseil en investissement immobilier.</span></div>
       </div>
     </>
   )

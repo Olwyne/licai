@@ -94,7 +94,7 @@ export function AccountsClient({ household, members, banks, accounts, childGoals
           {!childViewId && (
             <div style={{ display: "flex", gap: 8 }}>
               <button className="btn btn-primary btn-sm" type="button" onClick={() => setShowAccountModal(true)}>
-                <i className="ti ti-plus" /> Nouveau compte
+                <i aria-hidden="true" className="ti ti-plus" /> Nouveau compte
               </button>
             </div>
           )}
@@ -102,7 +102,7 @@ export function AccountsClient({ household, members, banks, accounts, childGoals
 
         {childViewId && childViewMember && (
           <div className="child-view-banner">
-            <i className="ti ti-eye" />
+            <i aria-hidden="true" className="ti ti-eye" />
             <span>Vous voyez le foyer comme <strong>{childViewMember.short ?? childViewMember.name.split(" ")[0]}</strong></span>
             <button
               type="button"
@@ -134,12 +134,12 @@ export function AccountsClient({ household, members, banks, accounts, childGoals
               <span className="card-sub">{fxSourceLabel} · {fx.ts || FX_DEMO_TS}</span>
             </div>
             <div className="fx-top">
-              <div><div className="inv-lbl">Contre-valeur totale</div><div className="fx-val num private">{eur(expo.total)}</div><div className="metric-sub neutral">comptes {eur(expo.cash)} + placements {eur(expo.total - expo.cash)}</div></div>
+              <div><div className="inv-lbl">Comptes + placements</div><div className="fx-val num private">{eur(expo.total)}</div><div className="metric-sub neutral">comptes {eur(expo.cash)} + placements {eur(expo.total - expo.cash)}</div></div>
               <div><div className="inv-lbl">Exposition hors {base}</div><div className="fx-val num private">{eur(foreignEur)}</div>
                 <div className={`metric-sub ${expo.total && foreignEur / expo.total > 0.3 ? "down" : "neutral"}`}>{pc(expo.total ? (foreignEur / expo.total) * 100 : 0)} du total · {foreign.length} devise{foreign.length > 1 ? "s" : ""}</div></div>
               <div><div className="inv-lbl">Impact d&apos;un {base} +5 %</div><div className="fx-val num private">− {eur(foreignEur * 0.05)}</div><div className="metric-sub neutral">et + {eur(foreignEur * 0.05)} si le {base} baisse de 5 %</div></div>
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "flex-end" }}>
-                <button className="btn btn-ghost" type="button" onClick={() => setFxOpen(true)}><i className="ti ti-currency-euro" /> Taux &amp; devises</button>
+                <button className="btn btn-ghost" type="button" onClick={() => setFxOpen(true)}><i aria-hidden="true" className="ti ti-currency-euro" /> Taux &amp; devises</button>
               </div>
             </div>
             <div className="fx-rows">

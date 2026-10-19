@@ -33,7 +33,7 @@ function ResetForm() {
       <p className="auth-p">Choisissez un mot de passe pour votre compte.</p>
       {done ? (
         <>
-          <div className="disclaimer"><i className="ti ti-circle-check" /><span>Mot de passe mis à jour. Vous pouvez vous connecter.</span></div>
+          <div className="disclaimer"><i aria-hidden="true" className="ti ti-circle-check" /><span>Mot de passe mis à jour. Vous pouvez vous connecter.</span></div>
           <div className="alt"><a href="/login">Se connecter</a></div>
         </>
       ) : (
@@ -46,7 +46,7 @@ function ResetForm() {
           </div>
           {error && <div className="err on">{error}</div>}
           <button className="btn btn-primary" type="submit" disabled={loading || !token}>
-            <i className="ti ti-key" /> {loading ? "Enregistrement…" : "Enregistrer"}
+            <i aria-hidden="true" className="ti ti-key" /> {loading ? "Enregistrement…" : "Enregistrer"}
           </button>
         </form>
       )}

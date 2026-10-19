@@ -75,7 +75,7 @@ function ProfileModal({
         <div className="modal-head">
           <h3>Modifier le profil</h3>
           <button className="icon-btn" onClick={onClose} aria-label="Fermer">
-            <i className="ti ti-x" />
+            <i aria-hidden="true" className="ti ti-x" />
           </button>
         </div>
         <div className="modal-body">
@@ -140,7 +140,7 @@ function PasswordModal({ onClose }: { onClose: () => void }) {
         <div className="modal-head">
           <h3>Changer le mot de passe</h3>
           <button className="icon-btn" onClick={onClose} aria-label="Fermer">
-            <i className="ti ti-x" />
+            <i aria-hidden="true" className="ti ti-x" />
           </button>
         </div>
         <div className="modal-body">
@@ -213,9 +213,9 @@ function DataCard({ anon, onAnon, onPassword }: { anon: boolean; onAnon: () => v
 
   const action = (icon: string, name: string, desc: React.ReactNode, onClick?: () => void, cls = "") => (
     <button className={`set-action ${cls}`} onClick={onClick} type="button">
-      <i className={`ti ${icon}`} />
+      <i aria-hidden="true" className={`ti ${icon}`} />
       <div className="flex-1"><div className="set-name">{name}</div><div className="set-desc">{desc}</div></div>
-      <i className="ti ti-chevron-right set-chev" />
+      <i aria-hidden="true" className="ti ti-chevron-right set-chev" />
     </button>
   )
 
@@ -228,9 +228,9 @@ function DataCard({ anon, onAnon, onPassword }: { anon: boolean; onAnon: () => v
         {action("ti-file-text", "Rapport patrimonial", "Synthèse imprimable ou PDF", () => { window.open("/rapport", "_blank") })}
         {action("ti-database-export", "Sauvegarde complète", "Fichier JSON de toutes les données du foyer", () => { window.location.href = "/api/export" })}
         <label className="set-action" style={{ cursor: "pointer" }}>
-          <i className="ti ti-database-import" />
+          <i aria-hidden="true" className="ti ti-database-import" />
           <div className="flex-1"><div className="set-name">Importer une sauvegarde</div><div className="set-desc">{importing ? "Lecture…" : "Fichier JSON exporté depuis Lǐcái"}</div></div>
-          <i className="ti ti-chevron-right set-chev" />
+          <i aria-hidden="true" className="ti ti-chevron-right set-chev" />
           <input type="file" accept=".json" style={{ display: "none" }} onChange={handleImport} />
         </label>
         {importMsg && <p className="set-desc" style={{ padding: "8px 14px" }}>{importMsg}</p>}
@@ -239,19 +239,19 @@ function DataCard({ anon, onAnon, onPassword }: { anon: boolean; onAnon: () => v
           <button className="switch" aria-pressed={anon} onClick={onAnon} type="button"><span /></button>
         </div>
         <Link className="set-action" href="/comptes">
-          <i className="ti ti-building-bank" />
+          <i aria-hidden="true" className="ti ti-building-bank" />
           <div className="flex-1"><div className="set-name">Comptes bancaires</div><div className="set-desc">{acctDesc}</div></div>
-          <i className="ti ti-chevron-right set-chev" />
+          <i aria-hidden="true" className="ti ti-chevron-right set-chev" />
         </Link>
         <a className="set-action" href="/legal/mentions-legales.html" target="_blank" rel="noreferrer">
-          <i className="ti ti-gavel" />
+          <i aria-hidden="true" className="ti ti-gavel" />
           <div className="flex-1"><div className="set-name">Mentions légales</div><div className="set-desc">Statut, responsabilité, données personnelles</div></div>
-          <i className="ti ti-chevron-right set-chev" />
+          <i aria-hidden="true" className="ti ti-chevron-right set-chev" />
         </a>
         <a className="set-action" href="/legal/conditions.html" target="_blank" rel="noreferrer">
-          <i className="ti ti-file-text" />
+          <i aria-hidden="true" className="ti ti-file-text" />
           <div className="flex-1"><div className="set-name">Conditions d&apos;utilisation</div><div className="set-desc">Version 1.2 · 1er juin 2026</div></div>
-          <i className="ti ti-chevron-right set-chev" />
+          <i aria-hidden="true" className="ti ti-chevron-right set-chev" />
         </a>
         {action("ti-key", "Changer le mot de passe", "Mise à jour de votre accès", onPassword)}
         <ResetDataButton />
@@ -296,17 +296,17 @@ function ResetDataButton() {
   return (
     <>
       <button className="set-action danger" onClick={handleOpen}>
-        <i className="ti ti-trash" />
+        <i aria-hidden="true" className="ti ti-trash" />
         <div className="flex-1">
           <div className="set-name">Supprimer toutes les données</div>
           <div className="set-desc">Transactions, comptes, objectifs… Le compte utilisateur est conservé.</div>
         </div>
-        <i className="ti ti-chevron-right set-chev" />
+        <i aria-hidden="true" className="ti ti-chevron-right set-chev" />
       </button>
 
       {done && (
         <p className="set-desc" style={{ padding: "8px 14px", color: "var(--primary)" }}>
-          <i className="ti ti-circle-check" /> Toutes les données ont été supprimées.
+          <i aria-hidden="true" className="ti ti-circle-check" /> Toutes les données ont été supprimées.
         </p>
       )}
 
@@ -315,10 +315,10 @@ function ResetDataButton() {
           <div className="modal" style={{ maxWidth: 440 }} onClick={e => e.stopPropagation()}>
             <div className="modal-head">
               <h3 style={{ color: "var(--danger)" }}>
-                <i className="ti ti-alert-triangle" /> Supprimer toutes les données
+                <i aria-hidden="true" className="ti ti-alert-triangle" /> Supprimer toutes les données
               </h3>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowConfirm(false)}>
-                <i className="ti ti-x" />
+                <i aria-hidden="true" className="ti ti-x" />
               </button>
             </div>
             <div className="modal-body">

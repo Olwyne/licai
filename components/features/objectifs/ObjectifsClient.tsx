@@ -77,7 +77,7 @@ function AddFundsModal({ goal, onClose, onSaved }: AddFundsModalProps) {
         <div className="modal-header">
           <h2 className="modal-title">Ajouter des fonds — {goal.name}</h2>
           <button className="modal-close" onClick={onClose} type="button">
-            <i className="ti ti-x" />
+            <i aria-hidden="true" className="ti ti-x" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="modal-body">
@@ -178,7 +178,7 @@ function GoalCard({ goal, onEdit, onAddFunds }: GoalCardProps) {
           type="button"
           onClick={(e) => { e.stopPropagation(); onAddFunds(goal) }}
         >
-          <i className="ti ti-plus icon-sm" />
+          <i aria-hidden="true" className="ti ti-plus icon-sm" />
           Ajouter
         </button>
       </div>
@@ -229,7 +229,7 @@ function GoalCard({ goal, onEdit, onAddFunds }: GoalCardProps) {
 
       {isAtteint && (
         <div className="goal-atteint">
-          <i className="ti ti-circle-check" /> Objectif atteint !
+          <i aria-hidden="true" className="ti ti-circle-check" /> Objectif atteint !
         </div>
       )}
     </div>
@@ -264,7 +264,7 @@ function KpiRow({ goalList }: { goalList: Goal[] }) {
         <div className="metric-top">
           <span className="metric-label">Constitué</span>
           <span className="metric-ic" style={{ background: "#1D9E7520" }}>
-            <i className="ti ti-pig-money" style={{ color: "#1D9E75" }} />
+            <i aria-hidden="true" className="ti ti-pig-money" style={{ color: "#1D9E75" }} />
           </span>
         </div>
         <div className="metric-value">{formatCents(totalCurrent)}</div>
@@ -274,7 +274,7 @@ function KpiRow({ goalList }: { goalList: Goal[] }) {
         <div className="metric-top">
           <span className="metric-label">Reste à réunir</span>
           <span className="metric-ic" style={{ background: "#6366F120" }}>
-            <i className="ti ti-target" style={{ color: "#6366F1" }} />
+            <i aria-hidden="true" className="ti ti-target" style={{ color: "#6366F1" }} />
           </span>
         </div>
         <div className="metric-value">{formatCents(resteARéunir)}</div>
@@ -284,7 +284,7 @@ function KpiRow({ goalList }: { goalList: Goal[] }) {
         <div className="metric-top">
           <span className="metric-label">Effort mensuel</span>
           <span className="metric-ic" style={{ background: "#EF9F2720" }}>
-            <i className="ti ti-calendar-month" style={{ color: "#EF9F27" }} />
+            <i aria-hidden="true" className="ti ti-calendar-month" style={{ color: "#EF9F27" }} />
           </span>
         </div>
         <div className="metric-value">{formatCents(effortMensuelCents)}</div>
@@ -294,7 +294,7 @@ function KpiRow({ goalList }: { goalList: Goal[] }) {
         <div className="metric-top">
           <span className="metric-label">Objectifs à risque</span>
           <span className="metric-ic" style={{ background: aRisque > 0 ? "#D85A3020" : "#1D9E7520" }}>
-            <i className="ti ti-alert-triangle" style={{ color: aRisque > 0 ? "#D85A30" : "#1D9E75" }} />
+            <i aria-hidden="true" className="ti ti-alert-triangle" style={{ color: aRisque > 0 ? "#D85A30" : "#1D9E75" }} />
           </span>
         </div>
         <div className="metric-value" style={{ color: aRisque > 0 ? "var(--danger)" : undefined }}>
@@ -387,7 +387,7 @@ export default function ObjectifsClient() {
           type="button"
           onClick={() => setModalGoal("new")}
         >
-          <i className="ti ti-plus" />
+          <i aria-hidden="true" className="ti ti-plus" />
           Nouvel objectif
         </button>
       </div>

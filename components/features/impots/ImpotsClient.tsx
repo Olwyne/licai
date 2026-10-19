@@ -10,7 +10,7 @@ import { eur, eurS, pc } from "@/lib/finance/format"
 import { loadProfile, loadQuotes, overrides } from "@/components/features/finance/quotes"
 import type { ProfileKey } from "@/lib/finance/invest"
 import { useFinanceContext } from "@/components/features/finance/useFinanceContext"
-import { AdviceRow, Disclaimer, Kpi, LoadingOrError, PageHeader, StatRow } from "@/components/features/finance/ui"
+import { AdviceRow, FrenchTaxNotice, Disclaimer, Kpi, LoadingOrError, PageHeader, StatRow } from "@/components/features/finance/ui"
 
 // ─── Modal : situation fiscale ───────────────────────────────────────────────
 
@@ -61,7 +61,7 @@ function SituationModal({ situation, onClose, onSave }: {
       <div className="modal modal-md">
         <div className="modal-head">
           <h3>Situation fiscale du foyer</h3>
-          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <div className="modal-body">
           <div className="field-row">
@@ -118,7 +118,7 @@ function SituationModal({ situation, onClose, onSave }: {
         <div className="modal-foot">
           <button className="btn btn-ghost" style={{ marginRight: "auto" }} onClick={() => setD(toDraft({ ...DEFAULT_SITUATION, year: situation.year }))}>Valeurs par défaut</button>
           <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
-          <button className="btn btn-primary" onClick={save} disabled={saving}><i className="ti ti-check" /> Recalculer</button>
+          <button className="btn btn-primary" onClick={save} disabled={saving}><i aria-hidden="true" className="ti ti-check" /> Recalculer</button>
         </div>
       </div>
     </div>
@@ -161,8 +161,10 @@ export function ImpotsClient() {
   return (
     <div className="page-impots">
       <PageHeader title="Impôts" sub="Calcul, analyse et pistes d'optimisation du foyer">
-        <button className="btn btn-primary" onClick={() => setOpen(true)}><i className="ti ti-adjustments" /> Situation fiscale</button>
+        <button className="btn btn-primary" onClick={() => setOpen(true)}><i aria-hidden="true" className="ti ti-adjustments" /> Situation fiscale</button>
       </PageHeader>
+
+      <FrenchTaxNotice />
 
       <div className="toolbar">
         <div className="chips" style={{ margin: 0 }}>

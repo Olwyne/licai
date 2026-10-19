@@ -128,17 +128,17 @@ export function CategoryModal({ month, categories, budget, onClose, onSaved, onR
       <div className="modal">
         <div className="modal-head">
           <h3>{isEdit ? "Modifier la catégorie" : "Ajouter une catégorie"}</h3>
-          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <form onSubmit={save}>
           <div className="modal-body">
-            {error && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {error}</div>}
+            {error && <div className="obj-modal-err"><i aria-hidden="true" className="ti ti-alert-circle" /> {error}</div>}
             {!isEdit && (existing.length > 0 || suggestions.length > 0) && (
               <div className="field">
                 <label>Suggestions</label>
                 <div className="chips">
-                  {existing.map((c) => <button key={c.id} type="button" className={`chip${existingId === c.id ? " active" : ""}`} onClick={() => pick(c, c.id)}><i className={`ti ${c.icon}`} /> {c.label}</button>)}
-                  {suggestions.map((d) => <button key={d.label} type="button" className="chip" onClick={() => pick(d, null)}><i className={`ti ${d.icon}`} /> {d.label}</button>)}
+                  {existing.map((c) => <button key={c.id} type="button" className={`chip${existingId === c.id ? " active" : ""}`} onClick={() => pick(c, c.id)}><i aria-hidden="true" className={`ti ${c.icon}`} /> {c.label}</button>)}
+                  {suggestions.map((d) => <button key={d.label} type="button" className="chip" onClick={() => pick(d, null)}><i aria-hidden="true" className={`ti ${d.icon}`} /> {d.label}</button>)}
                 </div>
               </div>
             )}
@@ -150,12 +150,12 @@ export function CategoryModal({ month, categories, budget, onClose, onSaved, onR
             <div className="field"><label>Couleur</label>
               <div className="color-picker">{palette.map((c) => <button key={c} type="button" className={`swatch${c === color ? " on" : ""}`} style={{ background: c }} onClick={() => setColor(c)} aria-label={c} disabled={!!existingId} />)}</div></div>
             <div className="field"><label>Icône</label>
-              <div className="icon-picker">{icons.map((i) => <button key={i} type="button" className={`icon-opt${i === icon ? " on" : ""}`} onClick={() => setIcon(i)} aria-label={i} disabled={!!existingId}><i className={`ti ${i}`} /></button>)}</div></div>
+              <div className="icon-picker">{icons.map((i) => <button key={i} type="button" className={`icon-opt${i === icon ? " on" : ""}`} onClick={() => setIcon(i)} aria-label={i} disabled={!!existingId}><i aria-hidden="true" className={`ti ${i}`} /></button>)}</div></div>
           </div>
           <div className="modal-foot">
-            {isEdit && <button type="button" className="btn btn-ghost" style={{ marginRight: "auto", color: "#D85A30" }} onClick={() => void remove()} disabled={busy}><i className="ti ti-trash" /> Retirer du budget</button>}
+            {isEdit && <button type="button" className="btn btn-ghost" style={{ marginRight: "auto", color: "#D85A30" }} onClick={() => void remove()} disabled={busy}><i aria-hidden="true" className="ti ti-trash" /> Retirer du budget</button>}
             <button type="button" className="btn btn-ghost" onClick={onClose}>Annuler</button>
-            <button type="submit" className="btn btn-primary" disabled={busy}><i className="ti ti-check" /> {busy ? "Enregistrement…" : "Enregistrer"}</button>
+            <button type="submit" className="btn btn-primary" disabled={busy}><i aria-hidden="true" className="ti ti-check" /> {busy ? "Enregistrement…" : "Enregistrer"}</button>
           </div>
         </form>
       </div>

@@ -16,6 +16,7 @@ interface Props {
   onEdit: (tx: Transaction) => void
   allPageSelected?: boolean
   somePageSelected?: boolean
+  showCommon?: boolean
   onSelectAll?: () => void
 }
 
@@ -39,6 +40,7 @@ export function TransactionList({
   onEdit,
   allPageSelected = false,
   somePageSelected = false,
+  showCommon: showCommonProp,
   onSelectAll,
 }: Props) {
   const { private: isPrivate } = usePrivacy()
@@ -53,6 +55,8 @@ export function TransactionList({
   const categoryMap = new Map(categories.map((c) => [c.id, c]))
   const bankMap = new Map(banks.map((b) => [b.id, b]))
   const memberMap = new Map(members.map((m) => [m.id, m]))
+  // « Commune » n'a de sens que si le foyer distingue aussi des opérations personnelles
+  const showCommon = showCommonProp ?? transactions.some((t) => t.kind !== "transfer" && !t.isCommon)
 
   // Group by day (YYYY-MM-DD), sorted descending
   const months = [...new Set(transactions.map((tx) => tx.date))].sort().reverse()
@@ -101,11 +105,11 @@ export function TransactionList({
                     <input type="checkbox" checked={isSel} onChange={() => onToggleSelect(tx.id)} />
                   </label>
                   {transfer ? (
-                    <span className="tx-icon tx-icon-transfer"><i className="ti ti-arrows-exchange" /></span>
+                    <span className="tx-icon tx-icon-transfer"><i aria-hidden="true" className="ti ti-arrows-exchange" /></span>
                   ) : cat ? (
-                    <span className="tx-icon" style={{ background: `${cat.colorHex}22`, color: cat.colorHex }}><i className={`ti ${cat.icon}`} /></span>
+                    <span className="tx-icon" style={{ background: `${cat.colorHex}22`, color: cat.colorHex }}><i aria-hidden="true" className={`ti ${cat.icon}`} /></span>
                   ) : (
-                    <span className="tx-icon tx-icon-empty"><i className="ti ti-receipt" /></span>
+                    <span className="tx-icon tx-icon-empty"><i aria-hidden="true" className="ti ti-receipt" /></span>
                   )}
                   <div className="tx-info">
                     <div className="tx-name">{tx.name}</div>
@@ -119,7 +123,7 @@ export function TransactionList({
                         </span>
                       )}
                       {payer && <span className="tx-payer" style={{ borderColor: `${payer.colorHex}55`, color: payer.colorHex }}>{payer.short || payer.name}</span>}
-                      {!transfer && tx.isCommon && <span className="tx-payer shared">Commune</span>}
+                      {showCommon && !transfer && tx.isCommon && <span className="tx-payer shared">Commune</span>}
                     </div>
                     {tx.note && <div className="tx-row-note">{tx.note}</div>}
                   </div>

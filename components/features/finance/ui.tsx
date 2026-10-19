@@ -1,3 +1,4 @@
+import { getBaseCurrency } from "@/lib/finance/fx"
 import type { ReactNode } from "react"
 import type { Advice } from "@/lib/finance/format"
 import { initials } from "@/lib/finance/format"
@@ -9,7 +10,7 @@ export const DISCLAIMER_INVEST =
 export function Disclaimer({ children, small }: { children?: ReactNode; small?: boolean }) {
   return (
     <div className={`disclaimer${small ? " sm" : ""}`}>
-      <i className="ti ti-alert-triangle" />
+      <i aria-hidden="true" className="ti ti-alert-triangle" />
       <span><b>Information, pas conseil.</b> {children ?? DISCLAIMER_INVEST}</span>
     </div>
   )
@@ -22,7 +23,7 @@ export function Kpi({ label, icon, color, value, sub, tone }: {
     <div className="metric">
       <div className="metric-top">
         <span className="metric-label">{label}</span>
-        <span className="metric-ic" style={{ background: `${color}1f`, color }}><i className={`ti ${icon}`} /></span>
+        <span className="metric-ic" style={{ background: `${color}1f`, color }}><i aria-hidden="true" className={`ti ${icon}`} /></span>
       </div>
       <div className="metric-value num private">{value}</div>
       <div className={`metric-sub ${tone ?? "neutral"}`}>{sub}</div>
@@ -42,11 +43,11 @@ export function StatRow({ label, value, hint, cls }: { label: ReactNode; value: 
 export function AdviceRow({ a, arrow = "ti-arrow-right", gainTag }: { a: Advice; arrow?: string; gainTag?: ReactNode }) {
   return (
     <div className={`adv-row ${a.sev}`}>
-      <i className={`ti ${a.icon}`} />
+      <i aria-hidden="true" className={`ti ${a.icon}`} />
       <div>
         <div className="adv-title">{a.title}{gainTag}</div>
         <div className="adv-text">{a.text}</div>
-        {a.action ? <div className="adv-action"><i className={`ti ${arrow}`} /> <span>{a.action}</span></div> : null}
+        {a.action ? <div className="adv-action"><i aria-hidden="true" className={`ti ${arrow}`} /> <span>{a.action}</span></div> : null}
       </div>
     </div>
   )
@@ -73,13 +74,24 @@ export function PageHeader({ title, sub, children }: { title: string; sub: strin
   )
 }
 
+/** Les calculs fiscaux (barèmes, plafonds, abattements) sont ceux de la France, en euros. */
+export function FrenchTaxNotice() {
+  if (getBaseCurrency() === "EUR") return null
+  return (
+    <div className="disclaimer sm">
+      <i aria-hidden="true" className="ti ti-info-circle" />
+      <span>Barèmes, plafonds et abattements appliqués : ceux de la <b>fiscalité française, en euros</b>. Les montants affichés en {getBaseCurrency()} sont indicatifs : ils ne sont pas convertis avant le calcul.</span>
+    </div>
+  )
+}
+
 export function LoadingOrError({ title, sub, error }: { title: string; sub: string; error: string }) {
   return (
     <div>
       <PageHeader title={title} sub={sub} />
       {error
-        ? <div className="empty"><i className="ti ti-alert-circle" />{error}</div>
-        : <div className="empty"><i className="ti ti-loader" />Chargement…</div>}
+        ? <div className="empty"><i aria-hidden="true" className="ti ti-alert-circle" />{error}</div>
+        : <div className="empty"><i aria-hidden="true" className="ti ti-loader" />Chargement…</div>}
     </div>
   )
 }

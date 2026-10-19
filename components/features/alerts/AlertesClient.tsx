@@ -71,14 +71,14 @@ export function AlertesClient({ data }: { data: AlertsPageData }) {
 
       <div className="card mb-16" style={{ padding: 14 }}>
         <div>
-          {list.length === 0 && <div className="empty"><i className="ti ti-check" /> Rien à signaler avec ce filtre.</div>}
+          {list.length === 0 && <div className="empty"><i aria-hidden="true" className="ti ti-check" /> Rien à signaler avec ce filtre.</div>}
           {list.map((a) => (
             <div key={a.id} className={`al-row ${a.tone} ${a.status !== "open" ? "muted" : ""}`}>
-              <i className={`ti ${a.icon}`} />
+              <i aria-hidden="true" className={`ti ${a.icon}`} />
               <div className="al-body">
                 <div className="al-title">{a.title}</div>
                 <div className="al-text">{a.text}</div>
-                {a.action ? <div className="adv-action"><i className="ti ti-arrow-narrow-right" /><span>{a.action}</span></div> : null}
+                {a.action ? <div className="adv-action"><i aria-hidden="true" className="ti ti-arrow-narrow-right" /><span>{a.action}</span></div> : null}
               </div>
               <div className="al-side">
                 <span className={`al-due ${a.due && days(a.due) < 30 ? "soon" : ""}`}>{dateLabel(a.due)}</span>

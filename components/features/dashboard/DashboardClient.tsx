@@ -38,7 +38,7 @@ function RangeModal({ anchor, initial, onClose, onApply }: {
       <div className="modal">
         <div className="modal-head">
           <h3>Choisir une période</h3>
-          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <div className="modal-body">
           <div className="field-row">
@@ -53,7 +53,7 @@ function RangeModal({ anchor, initial, onClose, onApply }: {
         </div>
         <div className="modal-foot">
           <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
-          <button className="btn btn-primary" disabled={!from || !to || from > to} onClick={() => onApply({ from, to })}><i className="ti ti-check" /> Appliquer</button>
+          <button className="btn btn-primary" disabled={!from || !to || from > to} onClick={() => onApply({ from, to })}><i aria-hidden="true" className="ti ti-check" /> Appliquer</button>
         </div>
       </div>
     </div>
@@ -130,27 +130,27 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
           {PERIODS.map((p) => (
             <button key={p.key} className={`chip${period === p.key ? " active" : ""}`} onClick={() => choose(p.key)}>{p.label}</button>
           ))}
-          <button className={`chip${period === "c" ? " active" : ""}`} onClick={() => setRangeOpen(true)}><i className="ti ti-calendar-month" /> Période…</button>
+          <button className={`chip${period === "c" ? " active" : ""}`} onClick={() => setRangeOpen(true)}><i aria-hidden="true" className="ti ti-calendar-month" /> Période…</button>
         </div>
         <div style={{ flex: 1 }} />
         <span className="ov-range-label">{rangeLabel}</span>
-        <button className="btn btn-ghost" onClick={() => window.open(`/rapport?month=${d.month}`, "_blank")}><i className="ti ti-download" /> Exporter le rapport</button>
+        <button className="btn btn-ghost" onClick={() => window.open(`/rapport?month=${d.month}`, "_blank")}><i aria-hidden="true" className="ti ti-download" /> Exporter le rapport</button>
       </div>
 
       <div className="metrics">
         <Kpi label={`Trésorerie · ${d.nbAccounts} comptes`} icon="ti-wallet" color="#1D9E75" value={eur(d.cash)}
-          sub={d.cashPrevMonthPct != null ? <><i className="ti ti-trending-up" /> {pcS(d.cashPrevMonthPct)} vs mois précédent</> : d.monthLabel} tone={d.cashPrevMonthPct != null && d.cashPrevMonthPct < 0 ? "down" : "up"} />
+          sub={d.cashPrevMonthPct != null ? <><i aria-hidden="true" className="ti ti-trending-up" /> {pcS(d.cashPrevMonthPct)} vs mois précédent</> : d.monthLabel} tone={d.cashPrevMonthPct != null && d.cashPrevMonthPct < 0 ? "down" : "up"} />
         <Kpi label="Revenus du foyer" icon="ti-arrow-down-left" color="#1D9E75" value={eur(d.revenus)}
           sub={d.salaires + d.loyers > 0 ? `Salaires ${eur(d.salaires)} · loyers ${eur(d.loyers)}` : "Entrées du mois"} />
         <Kpi label={`Dépenses · ${d.monthLabel.split(" ")[0]}`} icon="ti-arrow-up-right" color="#D85A30" value={eur(d.depenses)} sub={`${d.nbExpenseTx} opérations`} />
         <Kpi label="Épargne du mois" icon="ti-pig-money" color="#378ADD" value={eur(d.epargne)}
-          sub={<><i className="ti ti-percentage" /> Taux d&apos;épargne {pc(d.tauxEpargne)}</>} tone={d.tauxEpargne >= 20 ? "up" : "down"} />
+          sub={<><i aria-hidden="true" className="ti ti-percentage" /> Taux d&apos;épargne {pc(d.tauxEpargne)}</>} tone={d.tauxEpargne >= 20 ? "up" : "down"} />
       </div>
       <div className="metrics">
         <Kpi label="Reste à vivre / jour" icon="ti-calendar-dollar" color="#EF9F27" value={eur(d.resteJour)} sub="Après charges fixes et crédits" />
         <Kpi label="Charges fixes" icon="ti-repeat" color="#7C6BD6" value={eur(d.chargesFixes)} sub={`${d.nbRecurring} prélèvements actifs`} />
         <Kpi label="Taux d'endettement" icon="ti-percentage" color="#D4537E" value={d.tauxEndett != null ? pc(d.tauxEndett) : "—"}
-          sub={d.tauxEndett != null && d.tauxEndett > 35 ? <><i className="ti ti-alert-triangle" /> Seuil 35 % dépassé</> : "Sous le seuil de 35 %"} tone={d.tauxEndett != null && d.tauxEndett > 35 ? "down" : "up"} />
+          sub={d.tauxEndett != null && d.tauxEndett > 35 ? <><i aria-hidden="true" className="ti ti-alert-triangle" /> Seuil 35 % dépassé</> : "Sous le seuil de 35 %"} tone={d.tauxEndett != null && d.tauxEndett > 35 ? "down" : "up"} />
         <Kpi label="Patrimoine net" icon="ti-home-stats" color="#888780" value={eur(m.net)} sub={`Dettes ${eur(m.dette)} déduites`} tone="up" />
       </div>
 
@@ -172,7 +172,7 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
               ))}</div></div>
           </div>
         )}
-        <div className="disclaimer sm"><i className="ti ti-info-circle" /> <span>Analyses informatives — ni conseil en investissement, ni conseil fiscal. Risque de perte en capital ; décisions et conséquences à votre seule charge.</span></div>
+        <div className="disclaimer sm"><i aria-hidden="true" className="ti ti-info-circle" /> <span>Analyses informatives — ni conseil en investissement, ni conseil fiscal. Risque de perte en capital ; décisions et conséquences à votre seule charge.</span></div>
       </div>
 
       <div className="grid-7-5 mb-16">
@@ -239,7 +239,7 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
             return (
               <div className="cat-row" key={c.categoryId}>
                 <span className="cat-name">
-                  <span className="tx-icon" style={{ width: 26, height: 26, borderRadius: 8, fontSize: 14, background: `${c.colorHex}22`, color: c.colorHex }}><i className={`ti ${c.icon}`} /></span>{c.label}
+                  <span className="tx-icon" style={{ width: 26, height: 26, borderRadius: 8, fontSize: 14, background: `${c.colorHex}22`, color: c.colorHex }}><i aria-hidden="true" className={`ti ${c.icon}`} /></span>{c.label}
                 </span>
                 <div className="cat-track">
                   <div className="cat-fill" style={{ width: `${Math.round((c.amount / maxCat) * 100)}%`, background: c.colorHex }} />
@@ -247,7 +247,7 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
                 </div>
                 <span className="cat-val num private">{eur(c.amount)}</span>
                 <span className="cat-pc num">{pc(totalCats ? (c.amount / totalCats) * 100 : 0, 0)}</span>
-                <span className={`cat-var num ${up ? "neg" : "pos"}`}>{c.prev ? <><i className={`ti ti-${up ? "arrow-up-right" : "arrow-down-right"}`} />{pc(Math.abs(varPc), 0)}</> : "—"}</span>
+                <span className={`cat-var num ${up ? "neg" : "pos"}`}>{c.prev ? <><i aria-hidden="true" className={`ti ti-${up ? "arrow-up-right" : "arrow-down-right"}`} />{pc(Math.abs(varPc), 0)}</> : "—"}</span>
                 <span className={`cat-state ${overLim ? "over" : warn ? "warn" : "ok"}`}>{c.limit <= 0 ? "—" : overLim ? "dépassé" : warn ? "limite" : "ok"}</span>
               </div>
             )
@@ -338,7 +338,7 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
                 </div>
               )
             })}
-            {over.length > 0 && <div className="alert"><i className="ti ti-alert-triangle" /> {over.length} budget{over.length > 1 ? "s" : ""} dépassé{over.length > 1 ? "s" : ""} · {eur(over.reduce((s, b) => s + (b.spent - b.limit), 0))} au-delà des plafonds</div>}
+            {over.length > 0 && <div className="alert"><i aria-hidden="true" className="ti ti-alert-triangle" /> {over.length} budget{over.length > 1 ? "s" : ""} dépassé{over.length > 1 ? "s" : ""} · {eur(over.reduce((s, b) => s + (b.spent - b.limit), 0))} au-delà des plafonds</div>}
           </div>
         </div>
         <div className="card">
@@ -347,7 +347,7 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
             {d.top.length === 0 && <div className="empty" style={{ padding: 20 }}>Aucune dépense ce mois</div>}
             {d.top.map((t) => (
               <div className="top-row" key={t.id}>
-                <div className="tx-icon" style={{ width: 30, height: 30, borderRadius: 9, fontSize: 15, background: `${t.categoryColor}22`, color: t.categoryColor }}><i className={`ti ${t.categoryIcon}`} /></div>
+                <div className="tx-icon" style={{ width: 30, height: 30, borderRadius: 9, fontSize: 15, background: `${t.categoryColor}22`, color: t.categoryColor }}><i aria-hidden="true" className={`ti ${t.categoryIcon}`} /></div>
                 <div className="tx-info"><div className="tx-name">{t.name}</div><div className="tx-meta"><span className="tx-cat-tag">{t.categoryLabel}</span>{dLabel(t.date)}</div></div>
                 <div><div className="tx-amount num private neg">{eur(t.amount)}</div><div className="top-share num">{pc(t.pct, 0)} du total</div></div>
               </div>
@@ -414,7 +414,7 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
           <div>
             {signals.length === 0 && <div className="empty" style={{ padding: 20 }}>Rien à signaler</div>}
             {signals.map((s, i) => (
-              <div className={`sig-row ${s.tone}`} key={i}><i className={`ti ${s.icon}`} /><div><div className="sig-title">{s.title}</div><div className="sig-sub">{s.sub}</div></div></div>
+              <div className={`sig-row ${s.tone}`} key={i}><i aria-hidden="true" className={`ti ${s.icon}`} /><div><div className="sig-title">{s.title}</div><div className="sig-sub">{s.sub}</div></div></div>
             ))}
           </div>
         </div>
@@ -429,7 +429,7 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
             const when = t.date === today ? "Aujourd'hui" : t.date === addDays(today, -1) ? "Hier" : dLabel(t.date)
             return (
               <div className="tx-row" key={t.id}>
-                <div className="tx-icon" style={{ background: `${t.categoryColor}22`, color: t.categoryColor }}><i className={`ti ${t.categoryIcon}`} /></div>
+                <div className="tx-icon" style={{ background: `${t.categoryColor}22`, color: t.categoryColor }}><i aria-hidden="true" className={`ti ${t.categoryIcon}`} /></div>
                 <div className="tx-info"><div className="tx-name">{t.name}</div><div className="tx-meta"><span className="tx-cat-tag">{when}</span>{t.accountName}</div></div>
                 <div className={`tx-amount num private ${t.amount >= 0 ? "pos" : "neg"}`}>{t.amount >= 0 ? "+" : "−"}{eur(Math.abs(t.amount))}</div>
               </div>

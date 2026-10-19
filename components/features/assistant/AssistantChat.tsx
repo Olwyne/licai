@@ -101,23 +101,23 @@ export function AssistantChat() {
   return (
     <>
       {!open && (
-        <button className="chat-fab" onClick={openAssistant} aria-label="Ouvrir l'assistant IA"><i className="ti ti-message-circle-2" /></button>
+        <button className="chat-fab" onClick={openAssistant} aria-label="Ouvrir l'assistant IA"><i aria-hidden="true" className="ti ti-message-circle-2" /></button>
       )}
       <aside className={`chat-panel${open ? " open" : ""}`}>
         <div className="chat-head">
-          <div className="chat-mark"><i className="ti ti-sparkles" /></div>
+          <div className="chat-mark"><i aria-hidden="true" className="ti ti-sparkles" /></div>
           <div>
             <div className="chat-title">Assistant Lǐcái</div>
             <div className="chat-sub">{providerLabel} · lecture de vos données</div>
           </div>
-          <button className="icon-btn" title="Connecter un fournisseur" onClick={() => setConnOpen(true)}><i className="ti ti-plug-connected" /></button>
-          <button className="icon-btn" title="Effacer la conversation" onClick={() => commit([])}><i className="ti ti-eraser" /></button>
-          <button className="icon-btn" title="Fermer" onClick={closeAssistant}><i className="ti ti-x" /></button>
+          <button className="icon-btn" title="Connecter un fournisseur" onClick={() => setConnOpen(true)}><i aria-hidden="true" className="ti ti-plug-connected" /></button>
+          <button className="icon-btn" title="Effacer la conversation" onClick={() => commit([])}><i aria-hidden="true" className="ti ti-eraser" /></button>
+          <button className="icon-btn" title="Fermer" onClick={closeAssistant}><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <div className="chat-log" ref={logRef}>
           {history.length === 0 ? (
             <div className="ch-empty">
-              <i className="ti ti-sparkles" />
+              <i aria-hidden="true" className="ti ti-sparkles" />
               <div className="ch-empty-t">L&apos;assistant lit vos comptes, budgets, crédits, placements et impôts</div>
               <div className="ch-empty-s">Posez une question ou choisissez une suggestion. Aucune donnée n&apos;est envoyée avant votre premier message.</div>
               <div className="ch-empty-s" style={{ marginTop: 10 }}>Ses réponses sont informatives : ni conseil en investissement, ni conseil fiscal. Risque de perte en capital.</div>
@@ -132,11 +132,11 @@ export function AssistantChat() {
         <div className="chips chat-suggest">
           {SUGGESTIONS.map((s) => <button key={s} className="chip" disabled={busy} onClick={() => void send(s)}>{s}</button>)}
         </div>
-        <div className="disclaimer sm chat-disc"><i className="ti ti-info-circle" /> <span>Analyses informatives — ni conseil en investissement, ni conseil fiscal. Risque de perte en capital ; décisions et conséquences à votre seule charge.</span></div>
+        <div className="disclaimer sm chat-disc"><i aria-hidden="true" className="ti ti-info-circle" /> <span>Analyses informatives — ni conseil en investissement, ni conseil fiscal. Risque de perte en capital ; décisions et conséquences à votre seule charge.</span></div>
         <div className="chat-input-row">
           <textarea ref={inputRef} rows={1} placeholder="Poser une question sur vos finances…" value={input} onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(input) } }} />
-          <button className="btn btn-primary" onClick={() => void send(input)} disabled={busy || !input.trim()} aria-label="Envoyer"><i className="ti ti-send" /></button>
+          <button className="btn btn-primary" onClick={() => void send(input)} disabled={busy || !input.trim()} aria-label="Envoyer"><i aria-hidden="true" className="ti ti-send" /></button>
         </div>
       </aside>
       {connOpen && <ConnModal provider={provider} onClose={() => setConnOpen(false)} onSave={(p) => { setProvider(p); write(PROV_KEY, p); setConnOpen(false) }} />}

@@ -405,7 +405,7 @@ export function TrajectoireClient() {
 
       {error && (
         <div className="card" style={{ color: "var(--danger)" }}>
-          <i className="ti ti-alert-circle" /> {error}
+          <i aria-hidden="true" className="ti ti-alert-circle" /> {error}
         </div>
       )}
 
@@ -415,14 +415,14 @@ export function TrajectoireClient() {
           <div className="metric-top">
             <div className="metric-label">Patrimoine net</div>
             <div className="metric-ic" style={{ background: "var(--primary-muted)" }}>
-              <i className="ti ti-database" style={{ color: "var(--primary)" }} />
+              <i aria-hidden="true" className="ti ti-database" style={{ color: "var(--primary)" }} />
             </div>
           </div>
           <div className="metric-value">
             {loading ? "—" : data ? fmt(data.patrimoineNetCents) : "—"}
           </div>
           <div className={`metric-sub ${delta12NetCents >= 0 ? "up" : "down"}`}>
-            <i className={`ti ti-trending-${delta12NetCents >= 0 ? "up" : "down"}`} />
+            <i aria-hidden="true" className={`ti ti-trending-${delta12NetCents >= 0 ? "up" : "down"}`} />
             {loading ? "—" : fmtDelta(delta12NetCents)} sur 12 mois
           </div>
         </div>
@@ -430,7 +430,7 @@ export function TrajectoireClient() {
           <div className="metric-top">
             <div className="metric-label">Épargne mensuelle</div>
             <div className="metric-ic" style={{ background: "var(--primary-muted)" }}>
-              <i className="ti ti-refresh" style={{ color: "var(--primary)" }} />
+              <i aria-hidden="true" className="ti ti-refresh" style={{ color: "var(--primary)" }} />
             </div>
           </div>
           <div className="metric-value">
@@ -444,7 +444,7 @@ export function TrajectoireClient() {
           <div className="metric-top">
             <div className="metric-label">Capital cible</div>
             <div className="metric-ic" style={{ background: "#7C6BD622" }}>
-              <i className="ti ti-target" style={{ color: "#7C6BD6" }} />
+              <i aria-hidden="true" className="ti ti-target" style={{ color: "#7C6BD6" }} />
             </div>
           </div>
           <div className="metric-value">
@@ -458,7 +458,7 @@ export function TrajectoireClient() {
           <div className="metric-top">
             <div className="metric-label">Indépendance financière</div>
             <div className="metric-ic" style={{ background: "#EF9F2722" }}>
-              <i className="ti ti-flag" style={{ color: "#EF9F27" }} />
+              <i aria-hidden="true" className="ti ti-flag" style={{ color: "#EF9F27" }} />
             </div>
           </div>
           <div className="metric-value" style={{ fontSize: 22 }}>
@@ -548,7 +548,7 @@ export function TrajectoireClient() {
                 <div key={item.label} style={{ padding: "12px 0", borderBottom: "1px solid var(--border-subtle)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <i className={`ti ${item.icon}`} style={{ color: item.color, fontSize: 14 }} />
+                      <i aria-hidden="true" className={`ti ${item.icon}`} style={{ color: item.color, fontSize: 14 }} />
                       <span style={{ fontSize: 13, color: "var(--fg-secondary)" }}>{item.label}</span>
                     </div>
                     <span style={{ fontWeight: 600, fontSize: 14, color: item.sign < 0 ? "var(--danger)" : "var(--fg)" }}>
@@ -692,7 +692,7 @@ export function TrajectoireClient() {
           </div>
 
           <p style={{ fontSize: 11.5, color: "var(--fg-muted)", marginTop: 14, lineHeight: 1.5 }}>
-            <i className="ti ti-info-circle" /> Projection déterministe à rendement constant : la réalité est volatile et la séquence des rendements compte autant que leur moyenne. Aucune garantie de résultat.
+            <i aria-hidden="true" className="ti ti-info-circle" /> Projection déterministe à rendement constant : la réalité est volatile et la séquence des rendements compte autant que leur moyenne. Aucune garantie de résultat.
           </p>
         </div>
       )}

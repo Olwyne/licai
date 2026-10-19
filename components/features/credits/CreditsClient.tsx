@@ -75,7 +75,7 @@ function CapaciteEmprunt() {
     try { localStorage.setItem(CAP_KEY, JSON.stringify(v)) } catch { /* stockage indisponible */ }
   }
 
-  if (!ctx) return <div className="card"><div className="empty"><i className="ti ti-loader" />Chargement…</div></div>
+  if (!ctx) return <div className="card"><div className="empty"><i aria-hidden="true" className="ti ti-loader" />Chargement…</div></div>
   const K = capacity(ctx, c)
   const field = (label: string, k: keyof typeof raw, unit: string, inputMode: "decimal" | "numeric") => (
     <div className="fi-field"><label>{label}</label>
@@ -102,7 +102,7 @@ function CapaciteEmprunt() {
         <StatRow label={<b>Budget d&apos;acquisition</b>} value={eur(K.budget)} hint={`Avec ${eur(c.apport)} d'apport, frais de notaire et garantie déduits (≈ 7,5 %)`} />
       </div>
       {K.best <= 0 && (
-        <div className="disclaimer sm"><i className="ti ti-alert-triangle" /> <span>Aucune capacité résiduelle avec la méthode classique : rembourser {eur(Math.max(0, K.charges - K.revClassic * 0.35))} de mensualités{nextEnd ? `, ou attendre la fin de ${nextEnd.name} pour libérer de la marge` : ""}.</span></div>
+        <div className="disclaimer sm"><i aria-hidden="true" className="ti ti-alert-triangle" /> <span>Aucune capacité résiduelle avec la méthode classique : rembourser {eur(Math.max(0, K.charges - K.revClassic * 0.35))} de mensualités{nextEnd ? `, ou attendre la fin de ${nextEnd.name} pour libérer de la marge` : ""}.</span></div>
       )}
     </div>
   )
@@ -159,7 +159,7 @@ function LoanCard({ loan, onClick, onAmort }: LoanCardProps) {
       )}
       <div className="cred-links" style={{ marginTop: 10 }}>
         <button type="button" className="cred-link amort-btn" onClick={(e) => { e.stopPropagation(); onAmort() }}>
-          <i className="ti ti-table" /> Tableau &amp; anticipé
+          <i aria-hidden="true" className="ti ti-table" /> Tableau &amp; anticipé
         </button>
       </div>
     </div>
@@ -198,14 +198,14 @@ export function CreditsClient() {
   if (loadErr) return (
     <div className="page-credits">
       <div className="page-header"><h1 className="page-title">Crédits</h1></div>
-      <div className="empty"><i className="ti ti-alert-circle" />{loadErr}</div>
+      <div className="empty"><i aria-hidden="true" className="ti ti-alert-circle" />{loadErr}</div>
     </div>
   )
 
   if (!data) return (
     <div className="page-credits">
       <div className="page-header"><h1 className="page-title">Crédits</h1></div>
-      <div className="empty"><i className="ti ti-loader" />Chargement…</div>
+      <div className="empty"><i aria-hidden="true" className="ti ti-loader" />Chargement…</div>
     </div>
   )
 
@@ -224,7 +224,7 @@ export function CreditsClient() {
           <div className="page-sub">Prêts en cours, comptes prélevés et biens financés</div>
         </div>
         <button className="btn btn-primary btn-sm" onClick={() => setModal({ open: true, loan: null })}>
-          <i className="ti ti-plus" /> Ajouter un crédit
+          <i aria-hidden="true" className="ti ti-plus" /> Ajouter un crédit
         </button>
       </div>
 
@@ -234,7 +234,7 @@ export function CreditsClient() {
           <div className="metric-top">
             <span className="metric-label">Dette totale</span>
             <span className="metric-ic" style={{ background: "#D85A3020" }}>
-              <i className="ti ti-credit-card" style={{ color: "#D85A30" }} />
+              <i aria-hidden="true" className="ti ti-credit-card" style={{ color: "#D85A30" }} />
             </span>
           </div>
           <div className="metric-value">{formatCents(totals.detteTotaleCents)}</div>
@@ -244,7 +244,7 @@ export function CreditsClient() {
           <div className="metric-top">
             <span className="metric-label">Mensualités</span>
             <span className="metric-ic" style={{ background: "#6366F120" }}>
-              <i className="ti ti-calendar-repeat" style={{ color: "#6366F1" }} />
+              <i aria-hidden="true" className="ti ti-calendar-repeat" style={{ color: "#6366F1" }} />
             </span>
           </div>
           <div className="metric-value">{formatCents(totals.mensualitesCents)}</div>
@@ -254,7 +254,7 @@ export function CreditsClient() {
           <div className="metric-top">
             <span className="metric-label">Taux moyen pondéré</span>
             <span className="metric-ic" style={{ background: "#1D9E7520" }}>
-              <i className="ti ti-trending-up" style={{ color: "#1D9E75" }} />
+              <i aria-hidden="true" className="ti ti-trending-up" style={{ color: "#1D9E75" }} />
             </span>
           </div>
           <div className="metric-value">{totals.tauxMoyenPondere.toFixed(2)} %</div>
@@ -264,7 +264,7 @@ export function CreditsClient() {
           <div className="metric-top">
             <span className="metric-label">Taux d&apos;endettement</span>
             <span className="metric-ic" style={{ background: "#EF9F2720" }}>
-              <i className="ti ti-scale" style={{ color: "#EF9F27" }} />
+              <i aria-hidden="true" className="ti ti-scale" style={{ color: "#EF9F27" }} />
             </span>
           </div>
           <div className="metric-value">
@@ -272,7 +272,7 @@ export function CreditsClient() {
               ? `${totals.tauxEndettement.toFixed(1)} %`
               : "—"}
           </div>
-          <div className="metric-sub neutral">Mensualités / revenus</div>
+          <div className="metric-sub neutral">Méthode HCSF · loyers à 70 %</div>
         </div>
       </div>
 
@@ -334,7 +334,7 @@ export function CreditsClient() {
       <div className="cred-list">
         {filtered.length === 0 && (
           <div className="empty">
-            <i className="ti ti-seeding" />
+            <i aria-hidden="true" className="ti ti-seeding" />
             {loanList.length === 0
               ? "Aucun crédit. Ajoutez-en un !"
               : "Aucun crédit dans cette catégorie."}

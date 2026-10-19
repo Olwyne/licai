@@ -79,14 +79,14 @@ function QuoteModal({ ctx, state, onClose, onApply }: {
       <div className="modal modal-lg">
         <div className="modal-head">
           <h3>Cours des supports</h3>
-          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <div className="modal-body">
           <div className="field">
             <label>Source des cours</label>
             <div className="type-toggle">
               {([["demo", "ti-flask", "Enregistrés"], ["manual", "ti-pencil", "Saisie manuelle"], ["auto", "ti-currency-bitcoin", "Crypto en direct"], ["api", "ti-cloud-data-connection", "Fournisseur"]] as [QuoteMode, string, string][]).map(([m, ic, label]) => (
-                <button key={m} className={`type-opt ${q.mode === m ? "active" : ""}`} onClick={() => setQ((p) => ({ ...p, mode: m }))}><i className={`ti ${ic}`} /> {label}</button>
+                <button key={m} className={`type-opt ${q.mode === m ? "active" : ""}`} onClick={() => setQ((p) => ({ ...p, mode: m }))}><i aria-hidden="true" className={`ti ${ic}`} /> {label}</button>
               ))}
             </div>
             <div className="field-hint">
@@ -101,7 +101,7 @@ function QuoteModal({ ctx, state, onClose, onApply }: {
             </div>
           )}
           <div className="q-status">
-            {q.status ? <><i className="ti ti-info-circle" /> {q.status}</> : <><i className="ti ti-clock" /> Dernière mise à jour : {q.ts || "cours enregistrés"}</>}
+            {q.status ? <><i aria-hidden="true" className="ti ti-info-circle" /> {q.status}</> : <><i aria-hidden="true" className="ti ti-clock" /> Dernière mise à jour : {q.ts || "cours enregistrés"}</>}
           </div>
           <div className="q-list">
             {tickers.map((tk) => {
@@ -122,9 +122,9 @@ function QuoteModal({ ctx, state, onClose, onApply }: {
         </div>
         <div className="modal-foot">
           <button className="btn btn-ghost" style={{ marginRight: "auto" }} onClick={() => onApply({ ...q, mode: "demo", manual: {}, live: null, ts: "", status: "" })}>Revenir aux cours enregistrés</button>
-          <button className="btn btn-ghost" onClick={refresh}><i className="ti ti-refresh" /> {q.mode === "auto" ? "Mettre à jour les cryptos" : "Rafraîchir via le fournisseur"}</button>
+          <button className="btn btn-ghost" onClick={refresh}><i aria-hidden="true" className="ti ti-refresh" /> {q.mode === "auto" ? "Mettre à jour les cryptos" : "Rafraîchir via le fournisseur"}</button>
           <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
-          <button className="btn btn-primary" onClick={apply}><i className="ti ti-check" /> Appliquer</button>
+          <button className="btn btn-primary" onClick={apply}><i aria-hidden="true" className="ti ti-check" /> Appliquer</button>
         </div>
       </div>
     </div>
@@ -150,7 +150,7 @@ function FlowModal({ onClose, onDone }: { onClose: () => void; onDone: () => voi
   return (
     <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className="modal">
-        <div className="modal-head"><h3>Ajouter un versement</h3><button className="icon-btn" onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button></div>
+        <div className="modal-head"><h3>Ajouter un versement</h3><button className="icon-btn" onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button></div>
         <div className="modal-body">
           <div className="field"><label>Mois</label><input type="month" value={f.ym} onChange={(e) => setF({ ...f, ym: e.target.value })} /></div>
           <div className="field-row">
@@ -215,10 +215,10 @@ function LineModal({ ctx, holding, onClose, onDone }: {
       <div className="modal modal-md">
         <div className="modal-head">
           <h3>{isEdit ? "Modifier la ligne" : "Ajouter une ligne au portefeuille"}</h3>
-          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <div className="modal-body">
-          {err && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {err}</div>}
+          {err && <div className="obj-modal-err"><i aria-hidden="true" className="ti ti-alert-circle" /> {err}</div>}
           <div className="field">
             <label>Enveloppe</label>
             <select value={f.acct} onChange={(e) => set("acct")(e.target.value)}>
@@ -255,7 +255,7 @@ function LineModal({ ctx, holding, onClose, onDone }: {
         <div className="modal-foot">
           {isEdit && <button className="btn btn-danger" style={{ marginRight: "auto" }} onClick={remove} disabled={busy}>Supprimer</button>}
           <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
-          <button className="btn btn-primary" onClick={save} disabled={busy || ctx.invAccounts.length === 0}><i className="ti ti-check" /> {isEdit ? "Enregistrer" : "Ajouter la ligne"}</button>
+          <button className="btn btn-primary" onClick={save} disabled={busy || ctx.invAccounts.length === 0}><i aria-hidden="true" className="ti ti-check" /> {isEdit ? "Enregistrer" : "Ajouter la ligne"}</button>
         </div>
       </div>
     </div>
@@ -310,10 +310,10 @@ function EnvelopeModal({ ctx, account, onClose, onDone }: {
       <div className="modal modal-md">
         <div className="modal-head">
           <h3>{isEdit ? "Modifier l'enveloppe" : "Ajouter une enveloppe"}</h3>
-          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <div className="modal-body">
-          {err && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {err}</div>}
+          {err && <div className="obj-modal-err"><i aria-hidden="true" className="ti ti-alert-circle" /> {err}</div>}
           <div className="field-row">
             <div className="field"><label>Type</label>
               <select value={f.kind} onChange={(e) => set("kind")(e.target.value)}>{(Object.keys(INV_KINDS) as InvKind[]).map((k) => <option key={k} value={k}>{INV_KINDS[k].label}</option>)}</select></div>
@@ -349,7 +349,7 @@ function EnvelopeModal({ ctx, account, onClose, onDone }: {
         <div className="modal-foot">
           {isEdit && <button className="btn btn-danger" style={{ marginRight: "auto" }} onClick={remove} disabled={busy}>Supprimer</button>}
           <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
-          <button className="btn btn-primary" onClick={save} disabled={busy}><i className="ti ti-check" /> {isEdit ? "Enregistrer" : "Ajouter l'enveloppe"}</button>
+          <button className="btn btn-primary" onClick={save} disabled={busy}><i aria-hidden="true" className="ti ti-check" /> {isEdit ? "Enregistrer" : "Ajouter l'enveloppe"}</button>
         </div>
       </div>
     </div>
@@ -427,7 +427,7 @@ export function PlacementsClient() {
   return (
     <div className="page-placements">
       <PageHeader title="Placements" sub="Enveloppes, lignes, diversification et fiscalité">
-        <button className="btn btn-primary" onClick={() => setLineModal({ open: true, item: null })}><i className="ti ti-plus" /> Ajouter une ligne</button>
+        <button className="btn btn-primary" onClick={() => setLineModal({ open: true, item: null })}><i aria-hidden="true" className="ti ti-plus" /> Ajouter une ligne</button>
       </PageHeader>
 
       <div className="toolbar">
@@ -440,9 +440,9 @@ export function PlacementsClient() {
         </div>
         <div style={{ flex: 1 }} />
         <button className="pill" onClick={() => setQuoteOpen(true)}>
-          <i className={`ti ti-${quotes.mode === "api" ? "cloud-data-connection" : quotes.mode === "auto" ? "currency-bitcoin" : quotes.mode === "manual" ? "pencil" : "flask"}`} /> {srcLabel(quotes.mode)}{quotes.ts ? ` · ${quotes.ts}` : ""}
+          <i aria-hidden="true" className={`ti ti-${quotes.mode === "api" ? "cloud-data-connection" : quotes.mode === "auto" ? "currency-bitcoin" : quotes.mode === "manual" ? "pencil" : "flask"}`} /> {srcLabel(quotes.mode)}{quotes.ts ? ` · ${quotes.ts}` : ""}
         </button>
-        <button className="btn btn-ghost" onClick={() => setQuoteOpen(true)}><i className="ti ti-refresh" /> Cours</button>
+        <button className="btn btn-ghost" onClick={() => setQuoteOpen(true)}><i aria-hidden="true" className="ti ti-refresh" /> Cours</button>
       </div>
 
       <div className="metrics">
@@ -547,7 +547,7 @@ export function PlacementsClient() {
             return (
               <div className="inv-card" key={a.id} style={{ cursor: "pointer" }} onClick={() => setEnvModal({ open: true, item: a })}>
                 <div className="inv-head">
-                  <span className="inv-badge" style={{ background: `${k.color}1f`, color: k.color }}><i className={`ti ${k.icon}`} /> {k.short}</span>
+                  <span className="inv-badge" style={{ background: `${k.color}1f`, color: k.color }}><i aria-hidden="true" className={`ti ${k.icon}`} /> {k.short}</span>
                   <div className="inv-title"><div className="inv-name">{a.name}</div><div className="inv-bank">{a.bank} · ouvert en {a.since} ({age} ans)</div></div>
                   <span className="inv-owners">{a.ownerIds.map((o) => <MiniAv key={o} m={ctx.members.find((x) => x.id === o)} size={26} />)}</span>
                 </div>
@@ -560,7 +560,7 @@ export function PlacementsClient() {
                   <div><div className="inv-lbl">{ceil != null ? "Plafond restant" : "Poids"}</div><div className="inv-val num private">{ceil != null ? eur(ceil) : pc(S.total ? (val / S.total) * 100 : 0, 0)}</div></div>
                 </div>
                 <div className="inv-fisc">
-                  <i className="ti ti-scale" /> {k.fisc}
+                  <i aria-hidden="true" className="ti ti-scale" /> {k.fisc}
                   {a.kind === "pea" && age >= 5 ? <> · <b className="pos">exonération d&apos;IR acquise</b></> : a.kind === "pea" ? ` · exonération dans ${5 - age} an${5 - age > 1 ? "s" : ""}` : null}
                 </div>
               </div>
@@ -639,7 +639,7 @@ export function PlacementsClient() {
         <div className="card">
           <div className="card-header">
             <span className="card-title">Versements du foyer</span>
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setFlowModal(true)}><i className="ti ti-plus" /> Ajouter</button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setFlowModal(true)}><i aria-hidden="true" className="ti ti-plus" /> Ajouter</button>
           </div>
           <div className="table-wrap">
             <table className="dtable">
@@ -654,7 +654,7 @@ export function PlacementsClient() {
                       <td className="r num private">{eur(f.match)}</td>
                       <td className="r num private">{eur(f.amount + f.match)}</td>
                       <td className="flow-note">{f.note}</td>
-                      <td className="r"><button type="button" className="icon-btn" title="Supprimer" onClick={async () => { await fetch(`/api/investment-flows/${f.id}`, { method: "DELETE" }); reload() }}><i className="ti ti-trash" /></button></td>
+                      <td className="r"><button type="button" className="icon-btn" title="Supprimer" onClick={async () => { await fetch(`/api/investment-flows/${f.id}`, { method: "DELETE" }); reload() }}><i aria-hidden="true" className="ti ti-trash" /></button></td>
                     </tr>
                   )
                 })}

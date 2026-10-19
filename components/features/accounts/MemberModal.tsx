@@ -52,11 +52,11 @@ export function MemberModal({ onClose, onSaved }: Props) {
       <div className="modal">
         <div className="modal-head">
           <h3>Ajouter une personne au foyer</h3>
-          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
-            {error && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {error}</div>}
+            {error && <div className="obj-modal-err"><i aria-hidden="true" className="ti ti-alert-circle" /> {error}</div>}
             <div className="field"><label htmlFor="member-name">Nom complet</label>
               <input id="member-name" type="text" placeholder="ex. Thomas Roux" value={name} onChange={(e) => setName(e.target.value)} required autoFocus /></div>
             <div className="field"><label htmlFor="member-role">Rôle dans le foyer</label>
@@ -78,7 +78,7 @@ export function MemberModal({ onClose, onSaved }: Props) {
           </div>
           <div className="modal-foot">
             <button type="button" className="btn btn-ghost" onClick={onClose} disabled={loading}>Annuler</button>
-            <button type="submit" className="btn btn-primary" disabled={loading}><i className="ti ti-check" /> {loading ? "Enregistrement…" : "Ajouter"}</button>
+            <button type="submit" className="btn btn-primary" disabled={loading}><i aria-hidden="true" className="ti ti-check" /> {loading ? "Enregistrement…" : "Ajouter"}</button>
           </div>
         </form>
       </div>

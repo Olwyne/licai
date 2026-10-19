@@ -7,7 +7,7 @@ export function MobileBar() {
   return (
     <div className="mobile-bar">
       <button type="button" className="icon-btn" onClick={toggle} aria-label={open ? "Fermer le menu" : "Ouvrir le menu"} aria-expanded={open}>
-        <i className={`ti ${open ? "ti-x" : "ti-menu-2"}`} />
+        <i aria-hidden="true" className={`ti ${open ? "ti-x" : "ti-menu-2"}`} />
       </button>
       <div className="brand">
         <div className="brand-mark">L</div>

@@ -167,7 +167,7 @@ function AddressInput({ value, onChange, placeholder }: AddressInputProps) {
         <ul className="address-suggestions">
           {suggestions.map((s, i) => (
             <li key={i} onMouseDown={() => pick(s.properties.label)} className="address-suggestion">
-              <i className="ti ti-map-pin" />
+              <i aria-hidden="true" className="ti ti-map-pin" />
               {s.properties.label}
             </li>
           ))}
@@ -358,11 +358,11 @@ function PropertyModal({ property, members, loans, onClose, onSaved, onDeleted }
       <div className="modal modal-lg">
         <div className="modal-head">
           <h3>{isEdit ? "Modifier le bien" : "Ajouter un bien immobilier"}</h3>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}><i className="ti ti-x" /></button>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
-            {error && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {error}</div>}
+            {error && <div className="obj-modal-err"><i aria-hidden="true" className="ti ti-alert-circle" /> {error}</div>}
 
             {/* Section 1 — Identification */}
             <div className="modal-section-title">Bien</div>
@@ -433,7 +433,7 @@ function PropertyModal({ property, members, loans, onClose, onSaved, onDeleted }
                     disabled={!canEstimate || estimating}
                     title={canEstimate ? "Estimer via DVF" : "Renseignez l'adresse et la surface"}
                   >
-                    {estimating ? <i className="ti ti-loader" /> : <i className="ti ti-sparkles" />}
+                    {estimating ? <i aria-hidden="true" className="ti ti-loader" /> : <i aria-hidden="true" className="ti ti-sparkles" />}
                     {isEdit ? "Réévaluer" : "Estimer"}
                   </button>
                 )}
@@ -513,7 +513,7 @@ function PropertyModal({ property, members, loans, onClose, onSaved, onDeleted }
                 <div className="modal-section-title">
                   Lots annexes
                   <button type="button" className="btn btn-ghost btn-xs" onClick={addLot}>
-                    <i className="ti ti-plus" /> Ajouter
+                    <i aria-hidden="true" className="ti ti-plus" /> Ajouter
                   </button>
                 </div>
                 {lots.length === 0 && (
@@ -537,7 +537,7 @@ function PropertyModal({ property, members, loans, onClose, onSaved, onDeleted }
                       </div>
                     </div>
                     <button type="button" className="btn btn-ghost btn-xs lot-del" onClick={() => removeLot(i)}>
-                      <i className="ti ti-x" />
+                      <i aria-hidden="true" className="ti ti-x" />
                     </button>
                   </div>
                 ))}
@@ -556,7 +556,7 @@ function PropertyModal({ property, members, loans, onClose, onSaved, onDeleted }
                     const nextYear = taxeHistory.length > 0 ? Math.max(...taxeHistory.map(e => e.year)) + 1 : new Date().getFullYear()
                     setTaxeHistory([...taxeHistory, { year: nextYear, amountCents: 0 }])
                   }}>
-                    <i className="ti ti-plus" /> Ajouter une année
+                    <i aria-hidden="true" className="ti ti-plus" /> Ajouter une année
                   </button>
                 </div>
                 {taxeHistory.length === 0 && (
@@ -589,7 +589,7 @@ function PropertyModal({ property, members, loans, onClose, onSaved, onDeleted }
                       />
                       <span className="taxe-unit">€</span>
                       <button type="button" className="btn btn-ghost btn-xs taxe-del" onClick={() => setTaxeHistory(taxeHistory.filter((_, idx) => idx !== realIdx))}>
-                        <i className="ti ti-x" />
+                        <i aria-hidden="true" className="ti ti-x" />
                       </button>
                     </div>
                   )
@@ -728,10 +728,10 @@ function EstimModal({ property, onClose, onDone }: { property: PropertyWithOwner
       <div className="modal">
         <div className="modal-head">
           <h3>Mettre à jour l&apos;estimation</h3>
-          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i className="ti ti-x" /></button>
+          <button className="icon-btn" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
         <div className="modal-body">
-          {error && <div className="obj-modal-err"><i className="ti ti-alert-circle" /> {error}</div>}
+          {error && <div className="obj-modal-err"><i aria-hidden="true" className="ti ti-alert-circle" /> {error}</div>}
           <div className="estim-ctx">
             <div className="estim-ctx-name">{property.name}</div>
             <div className="estim-ctx-sub">{[property.address, property.surfaceSqm ? `${property.surfaceSqm} m²` : ""].filter(Boolean).join(" · ")} · achat {formatCents(property.purchasePriceCents)}</div>
@@ -749,7 +749,7 @@ function EstimModal({ property, onClose, onDone }: { property: PropertyWithOwner
         </div>
         <div className="modal-foot">
           <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
-          <button className="btn btn-primary" onClick={save} disabled={busy}><i className="ti ti-check" /> Mettre à jour</button>
+          <button className="btn btn-primary" onClick={save} disabled={busy}><i aria-hidden="true" className="ti ti-check" /> Mettre à jour</button>
         </div>
       </div>
     </div>
@@ -807,7 +807,7 @@ export function PatrimoineClient() {
     return (
       <div className="page-patrimoine">
         <div className="page-header"><h1 className="page-title">Patrimoine immobilier</h1></div>
-        <div className="empty"><i className="ti ti-alert-circle" />{loadError}</div>
+        <div className="empty"><i aria-hidden="true" className="ti ti-alert-circle" />{loadError}</div>
       </div>
     )
   }
@@ -816,7 +816,7 @@ export function PatrimoineClient() {
     return (
       <div className="page-patrimoine">
         <div className="page-header"><h1 className="page-title">Patrimoine immobilier</h1></div>
-        <div className="empty"><i className="ti ti-loader" />Chargement…</div>
+        <div className="empty"><i aria-hidden="true" className="ti ti-loader" />Chargement…</div>
       </div>
     )
   }
@@ -839,7 +839,7 @@ export function PatrimoineClient() {
           <div className="page-sub">Estimations actuelles, valeur nette et quotes-parts</div>
         </div>
         <button className="btn btn-primary btn-sm" onClick={() => setPropertyModal({ open: true, item: null })}>
-          <i className="ti ti-plus" /> Ajouter un bien
+          <i aria-hidden="true" className="ti ti-plus" /> Ajouter un bien
         </button>
       </div>
 
@@ -849,7 +849,7 @@ export function PatrimoineClient() {
           <div className="metric-top">
             <span className="metric-label">Immobilier net</span>
             <div className="metric-ic" style={{ background: "#1D9E7520" }}>
-              <i className="ti ti-building-estate" style={{ color: "#1D9E75" }} />
+              <i aria-hidden="true" className="ti ti-building-estate" style={{ color: "#1D9E75" }} />
             </div>
           </div>
           <div className="metric-value num">{formatCents(immobilierNet)}</div>
@@ -860,7 +860,7 @@ export function PatrimoineClient() {
           <div className="metric-top">
             <span className="metric-label">Valeur estimée</span>
             <div className="metric-ic" style={{ background: "#378ADD20" }}>
-              <i className="ti ti-home" style={{ color: "#378ADD" }} />
+              <i aria-hidden="true" className="ti ti-home" style={{ color: "#378ADD" }} />
             </div>
           </div>
           <div className="metric-value num">{formatCents(valeurEstimee)}</div>
@@ -871,7 +871,7 @@ export function PatrimoineClient() {
           <div className="metric-top">
             <span className="metric-label">Capital restant dû</span>
             <div className="metric-ic" style={{ background: "#D85A3020" }}>
-              <i className="ti ti-credit-card" style={{ color: "#D85A30" }} />
+              <i aria-hidden="true" className="ti ti-credit-card" style={{ color: "#D85A30" }} />
             </div>
           </div>
           <div className="metric-value num">{formatCents(kpis.passif)}</div>
@@ -882,14 +882,14 @@ export function PatrimoineClient() {
           <div className="metric-top">
             <span className="metric-label">Plus-value latente</span>
             <div className="metric-ic" style={{ background: plusValuePositive ? "#1D9E7520" : "#D85A3020" }}>
-              <i className="ti ti-chart-line" style={{ color: plusValuePositive ? "#1D9E75" : "#D85A30" }} />
+              <i aria-hidden="true" className="ti ti-chart-line" style={{ color: plusValuePositive ? "#1D9E75" : "#D85A30" }} />
             </div>
           </div>
           <div className="metric-value num" style={{ color: plusValuePositive ? "var(--primary)" : "var(--danger)" }}>
             {plusValuePositive ? "+" : ""}{formatCents(kpis.plusValue)}
           </div>
           <div className={`metric-sub ${plusValuePositive ? "up" : "down"}`}>
-            <i className={`ti ${plusValuePositive ? "ti-trending-up" : "ti-trending-down"}`} />
+            <i aria-hidden="true" className={`ti ${plusValuePositive ? "ti-trending-up" : "ti-trending-down"}`} />
             vs prix d&apos;achat
           </div>
         </div>
@@ -907,7 +907,7 @@ export function PatrimoineClient() {
         </div>
       </div>
       {immoList.length === 0 && otherList.length === 0 && (
-        <div className="empty"><i className="ti ti-building" />Aucun bien enregistré</div>
+        <div className="empty"><i aria-hidden="true" className="ti ti-building" />Aucun bien enregistré</div>
       )}
       {immoList.length > 0 && (
         <div className="prop-grid">
@@ -926,7 +926,7 @@ export function PatrimoineClient() {
             return (
               <div className="prop-card" key={p.id} style={{ cursor: "pointer" }} onClick={() => setPropertyModal({ open: true, item: p })}>
                 <div className="prop-head">
-                  <span className="prop-ic"><i className={`ti ${usage === "locatif" ? "ti-home-dollar" : usage === "secondaire" ? "ti-home-2" : "ti-building-community"}`} /></span>
+                  <span className="prop-ic"><i aria-hidden="true" className={`ti ${usage === "locatif" ? "ti-home-dollar" : usage === "secondaire" ? "ti-home-2" : "ti-building-community"}`} /></span>
                   <div className="prop-title">
                     <div className="prop-name">{p.name}</div>
                     <div className="prop-city">{[p.address, p.surfaceSqm ? `${p.surfaceSqm} m²` : ""].filter(Boolean).join(" · ") || "—"}</div>
@@ -943,7 +943,7 @@ export function PatrimoineClient() {
                     <div className="num private">{pv >= 0 ? "+" : "−"}{formatCents(Math.abs(pv))}</div>
                     <div className="estim-delta-sub">vs achat {bought} (<span className="num private">{formatCents(p.purchasePriceCents)}</span>)</div>
                   </div>
-                  <button type="button" className="estim-btn" onClick={(e) => { e.stopPropagation(); setEstimModal(p) }}><i className="ti ti-refresh" /> Réestimer</button>
+                  <button type="button" className="estim-btn" onClick={(e) => { e.stopPropagation(); setEstimModal(p) }}><i aria-hidden="true" className="ti ti-refresh" /> Réestimer</button>
                 </div>
                 <div className="prop-vals">
                   <div><div className="pv-lbl">Valeur nette</div><div className="pv-num num private">{formatCents(p.valueCents - left)}</div></div>
@@ -960,7 +960,7 @@ export function PatrimoineClient() {
                     <div className="prop-loan-foot"><span>{repaid} % remboursé · LTV {ltv} %</span><Link className="card-link" href="/credits" onClick={(e) => e.stopPropagation()}>Détail</Link></div>
                   </div>
                 ) : (
-                  <div className="prop-loan paid"><i className="ti ti-circle-check" /> Bien détenu sans crédit</div>
+                  <div className="prop-loan paid"><i aria-hidden="true" className="ti ti-circle-check" /> Bien détenu sans crédit</div>
                 )}
                 {p.rentMonthlyCents > 0 && (
                   <div className="prop-rent">
@@ -1008,12 +1008,12 @@ export function PatrimoineClient() {
         <div className="card-header">
           <span className="card-title">Crédits</span>
           <button className="btn btn-primary btn-sm" onClick={() => setLoanModal({ open: true, item: null })}>
-            <i className="ti ti-plus" /> Ajouter
+            <i aria-hidden="true" className="ti ti-plus" /> Ajouter
           </button>
         </div>
         <div>
           {loans.length === 0 ? (
-            <div className="empty"><i className="ti ti-credit-card" />Aucun crédit enregistré</div>
+            <div className="empty"><i aria-hidden="true" className="ti ti-credit-card" />Aucun crédit enregistré</div>
           ) : (
             <div className="loan-list">
               {loans.map((l) => {

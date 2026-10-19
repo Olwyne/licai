@@ -125,7 +125,7 @@ export function CommandPalette({ open, onClose }: Props) {
     <div className="cmd-overlay" onClick={onClose}>
       <div className="cmd-box" onClick={e => e.stopPropagation()}>
         <div className="cmd-input-wrap">
-          <i className="ti ti-search cmd-icon" />
+          <i aria-hidden="true" className="ti ti-search cmd-icon" />
           <input
             ref={inputRef}
             className="cmd-input"
@@ -135,7 +135,7 @@ export function CommandPalette({ open, onClose }: Props) {
             autoComplete="off"
             spellCheck={false}
           />
-          {loading && <i className="ti ti-loader-2 spin cmd-icon" />}
+          {loading && <i aria-hidden="true" className="ti ti-loader-2 spin cmd-icon" />}
           <kbd className="cmd-hint">Esc</kbd>
         </div>
         <div className="cmd-results">
@@ -159,7 +159,7 @@ export function CommandPalette({ open, onClose }: Props) {
                     onMouseEnter={() => setSelected(idx)}
                   >
                     <div className="cmd-item-icon">
-                      <i className={`ti ${KIND_ICONS[item.kind]}`} />
+                      <i aria-hidden="true" className={`ti ${KIND_ICONS[item.kind]}`} />
                     </div>
                     <div className="cmd-item-content">
                       <div className="cmd-item-label">{item.label}</div>

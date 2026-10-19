@@ -1,4 +1,5 @@
 "use client"
+import { PeriodPill } from "@/components/layout/PeriodPill"
 import { usePeriod } from "@/contexts/PeriodContext"
 import { useEffect, useState } from "react"
 import { BudgetCard } from "./BudgetCard"
@@ -14,18 +15,7 @@ interface Props {
   categories: Category[]
 }
 
-function monthLabel(month: string): string {
-  const [year, m] = month.split("-")
-  const date = new Date(Number(year), Number(m) - 1, 1)
-  const label = date.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })
-  return label.charAt(0).toUpperCase() + label.slice(1)
-}
 
-function offsetMonth(month: string, delta: number): string {
-  const [y, m] = month.split("-").map(Number)
-  const d = new Date(y, m - 1 + delta, 1)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
-}
 
 export function BudgetClient({ month, budgets: initial, categories }: Props) {
   const [budgetList, setBudgetList] = useState<EnrichedBudget[]>(initial)
@@ -80,32 +70,9 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
           <div className="page-sub">Plafonds mensuels par catégorie</div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <button
-              className="btn btn-ghost btn-sm"
-              type="button"
-              onClick={() => setPMonth(offsetMonth(currentMonth, -1))}
-              disabled={loading}
-              title="Mois précédent"
-            >
-              <i className="ti ti-chevron-left" />
-            </button>
-            <button className="budget-month-select" type="button" disabled>
-              <i className="ti ti-calendar" />
-              {monthLabel(currentMonth)}
-            </button>
-            <button
-              className="btn btn-ghost btn-sm"
-              type="button"
-              onClick={() => setPMonth(offsetMonth(currentMonth, 1))}
-              disabled={loading}
-              title="Mois suivant"
-            >
-              <i className="ti ti-chevron-right" />
-            </button>
-          </div>
+          <PeriodPill />
           <button className="btn btn-primary btn-sm" type="button" onClick={() => setShowAdd(true)}>
-            <i className="ti ti-plus" /> Ajouter une catégorie
+            <i aria-hidden="true" className="ti ti-plus" /> Ajouter une catégorie
           </button>
         </div>
       </div>
@@ -114,7 +81,7 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
         <div className="metric">
           <div className="metric-top">
             <span className="metric-label">Budget total</span>
-            <span className="metric-ic" style={{ background: "#1D9E7520" }}><i className="ti ti-wallet" style={{ color: "#1D9E75" }} /></span>
+            <span className="metric-ic" style={{ background: "#1D9E7520" }}><i aria-hidden="true" className="ti ti-wallet" style={{ color: "#1D9E75" }} /></span>
           </div>
           <div className={`metric-value${priv ? " private" : ""}`}>{formatCents(totalLimit)}</div>
           <div className="metric-sub neutral">{budgetList.length} catégorie{budgetList.length !== 1 ? "s" : ""} active{budgetList.length !== 1 ? "s" : ""}</div>
@@ -122,7 +89,7 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
         <div className="metric">
           <div className="metric-top">
             <span className="metric-label">Dépensé</span>
-            <span className="metric-ic" style={{ background: "#D85A3020" }}><i className="ti ti-receipt" style={{ color: "#D85A30" }} /></span>
+            <span className="metric-ic" style={{ background: "#D85A3020" }}><i aria-hidden="true" className="ti ti-receipt" style={{ color: "#D85A30" }} /></span>
           </div>
           <div className={`metric-value${priv ? " private" : ""}`}>{formatCents(totalSpent)}</div>
           <div className="metric-sub neutral">{overallPct} % du budget</div>
@@ -130,7 +97,7 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
         <div className="metric">
           <div className="metric-top">
             <span className="metric-label">Restant</span>
-            <span className="metric-ic" style={{ background: "#EF9F2720" }}><i className="ti ti-coin-euro" style={{ color: "#EF9F27" }} /></span>
+            <span className="metric-ic" style={{ background: "#EF9F2720" }}><i aria-hidden="true" className="ti ti-coin-euro" style={{ color: "#EF9F27" }} /></span>
           </div>
           <div className={`metric-value${priv ? " private" : ""}`} style={{ color: totalLimit - totalSpent >= 0 ? "var(--primary)" : "var(--danger)" }}>
             {formatCents(Math.abs(totalLimit - totalSpent))}
