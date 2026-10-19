@@ -28,6 +28,7 @@ test.describe("Mobile", () => {
   test("la modale d'ajout tient dans l'écran", async ({ page }) => {
     await page.goto("/transactions")
     await page.getByRole("button", { name: /ajouter une transaction/i }).click()
+    await page.waitForTimeout(500) // fin de l'animation d'ouverture (scale)
     const box = await page.locator(".modal").boundingBox()
     expect(box!.x).toBeGreaterThanOrEqual(0)
     expect(box!.x + box!.width).toBeLessThanOrEqual(376)
