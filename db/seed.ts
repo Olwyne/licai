@@ -58,6 +58,7 @@ export function seedDemoData(householdId: string): void {
     { key: "shopping",  label: "Shopping",      icon: "ti-shirt",         colorHex: "#D4537E" },
     { key: "health",    label: "Santé",         icon: "ti-pill",          colorHex: "#D85A30" },
     { key: "income",    label: "Revenu",        icon: "ti-building-bank", colorHex: "#1D9E75" },
+    { key: "credits",   label: "Crédits",       icon: "ti-percentage",    colorHex: "#888780" },
   ]
   for (const c of catDefs) {
     cats[c.key] = randomUUID()
@@ -68,14 +69,15 @@ export function seedDemoData(householdId: string): void {
   const cm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
   const pmDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
   const pm = `${pmDate.getFullYear()}-${String(pmDate.getMonth() + 1).padStart(2, "0")}`
+  const pm2Date = new Date(now.getFullYear(), now.getMonth() - 2, 1)
+  const pm2 = `${pm2Date.getFullYear()}-${String(pm2Date.getMonth() + 1).padStart(2, "0")}`
   const d = (ym: string, day: number) => `${ym}-${String(day).padStart(2, "0")}`
+  const today = d(cm, now.getDate())
 
   // Transactions — 18 entries from prototype data.js (amounts converted to cents)
   const txData = [
     { name: "Carrefour",             cat: "food",      amountCents: -6400,   date: d(cm, 1),  note: "Courses de la semaine" },
-    { name: `Salaire ${now.toLocaleString("fr-FR", { month: "long" })}`, cat: "income", amountCents: 210000, date: d(cm, 1), note: "Virement employeur" },
-    { name: "Loyer",                 cat: "home",      amountCents: -78000,  date: d(cm, 1),  note: "Appartement Lyon 3e" },
-    { name: "Spotify",               cat: "leisure",   amountCents: -1099,   date: d(cm, 2),  note: "Abonnement Premium" },
+    { name: "Charges de copropriété", cat: "home",     amountCents: -10000,  date: d(cm, 1),  note: "Appartement Lyon 3e" },
     { name: "SNCF — Paris-Lyon",     cat: "transport", amountCents: -4200,   date: d(cm, 5),  note: "Aller-retour week-end" },
     { name: "Mission freelance",     cat: "income",    amountCents: 30000,   date: d(cm, 7),  note: "Design landing page" },
     { name: "Pharmacie",             cat: "health",    amountCents: -1800,   date: d(cm, 8),  note: "" },
@@ -84,19 +86,49 @@ export function seedDemoData(householdId: string): void {
     { name: "Cinéma Pathé",          cat: "leisure",   amountCents: -2400,   date: d(cm, 13), note: "2 places" },
     { name: "Uber",                  cat: "transport", amountCents: -1650,   date: d(cm, 14), note: "" },
     { name: "Monoprix",              cat: "food",      amountCents: -3820,   date: d(pm, 25), note: "" },
-    { name: "EDF",                   cat: "home",      amountCents: -6200,   date: d(pm, 24), note: `Électricité ${pmDate.toLocaleString("fr-FR", { month: "long" })}` },
     { name: "Décathlon",             cat: "shopping",  amountCents: -5400,   date: d(pm, 23), note: "Chaussures running" },
     { name: "Restaurant Le Bouchon", cat: "food",      amountCents: -4700,   date: d(pm, 22), note: "Dîner entre amis" },
     { name: "Essence Total",         cat: "transport", amountCents: -5800,   date: d(pm, 21), note: "" },
-    { name: "Netflix",               cat: "leisure",   amountCents: -1349,   date: d(pm, 20), note: "Abonnement" },
-    { name: "Mutuelle santé",        cat: "health",    amountCents: -3400,   date: d(pm, 19), note: "Cotisation mensuelle" },
   ]
-  for (const t of txData) {
+  // Le mois d'avant-hier reprend les dépenses courantes du mois précédent (±5 %) : de quoi suggérer des budgets et repérer les écarts
+  const older = txData.filter((t) => t.date.startsWith(pm)).map((t) => ({ ...t, amountCents: Math.round(t.amountCents * 1.05), date: t.date.replace(pm, pm2) }))
+  for (const t of [...txData, ...older]) {
     db.insert(transactions).values({
       id: randomUUID(), householdId, accountId: acctJointId,
       categoryId: cats[t.cat], name: t.name, amountCents: t.amountCents,
       date: t.date, note: t.note, isCommon: true, createdAt: now,
     }).run()
+  }
+
+  // Flux mensuels cohérents avec les revenus et les crédits déclarés (revenus des membres, loyer du studio, mensualités des prêts)
+  const monthly = [
+    { name: "Salaire Sophie",                      cat: "income",  amountCents: 240000, day: 1, account: acctSophieId, member: sophieId, note: "Virement employeur" },
+    { name: "Salaire Thomas",                      cat: "income",  amountCents: 205000, day: 3, account: acctThomasId, member: thomasId, note: "Virement employeur" },
+    { name: "Loyer studio Villeurbanne",           cat: "income",  amountCents: 64000,  day: 5, account: acctSophieId, member: sophieId, note: "Locataire du studio" },
+    { name: "Prêt résidence principale — BNP",     cat: "credits", amountCents: -89000, day: 5, account: acctJointId,  member: null,     note: "Crédit immobilier" },
+    { name: "Prêt locatif studio — Crédit Agricole", cat: "credits", amountCents: -43000, day: 5, account: acctJointId, member: null,     note: "Crédit studio" },
+    { name: "Prêt auto — Crédit Agricole",         cat: "credits", amountCents: -32000, day: 8, account: acctJointId,  member: null,     note: "Crédit auto" },
+    // charges récurrentes déclarées (mêmes noms et montants que la page « Récurrent »)
+    { name: "EDF — mensualisation",                cat: "home",    amountCents: -7450,  day: 4,  account: acctJointId, member: null, note: "Prélèvement" },
+    { name: "Mutuelle santé",                      cat: "health",  amountCents: -6800,  day: 5,  account: acctJointId, member: null, note: "Cotisation mensuelle" },
+    { name: "Internet + mobile",                   cat: "home",    amountCents: -4999,  day: 15, account: acctJointId, member: null, note: "Prélèvement" },
+    { name: "Netflix",                             cat: "leisure", amountCents: -1349,  day: 20, account: acctRevId,   member: sophieId, note: "Abonnement" },
+    { name: "Spotify Famille",                     cat: "leisure", amountCents: -1799,  day: 28, account: acctJointId, member: null, note: "Abonnement" },
+    // courses de la semaine (foyer de 3 personnes, budget alimentation 400 €)
+    { name: "Courses Carrefour",                   cat: "food",    amountCents: -9200,  day: 6,  account: acctJointId, member: null, note: "Courses de la semaine" },
+    { name: "Courses Carrefour",                   cat: "food",    amountCents: -8800,  day: 13, account: acctJointId, member: null, note: "Courses de la semaine" },
+    { name: "Courses Carrefour",                   cat: "food",    amountCents: -9700,  day: 20, account: acctJointId, member: null, note: "Courses de la semaine" },
+    { name: "Courses Carrefour",                   cat: "food",    amountCents: -8500,  day: 27, account: acctJointId, member: null, note: "Courses de la semaine" },
+  ]
+  for (const ym of [pm2, pm, cm]) {
+    for (const t of monthly) {
+      const date = d(ym, t.day)
+      if (date > today) continue
+      db.insert(transactions).values({
+        id: randomUUID(), householdId, accountId: t.account, categoryId: cats[t.cat], name: t.name, amountCents: t.amountCents,
+        date, note: t.note, isCommon: t.member === null, memberId: t.member, createdAt: now,
+      }).run()
+    }
   }
 
   // Budgets for current month (dynamic)
