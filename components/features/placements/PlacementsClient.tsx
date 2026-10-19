@@ -12,7 +12,7 @@ import {
 import { computeTax, situationFor, taxInputs } from "@/lib/finance/tax"
 import { eur, eurS, num2, pc, pcS } from "@/lib/finance/format"
 import {
-  loadProfile, loadQuotes, overrides, quoteTickers, refreshLive, saveProfile, saveQuotes, srcLabel, type QuoteMode, type QuoteState,
+  loadProfile, loadQuotes, overrides, quoteTickers, refreshAuto, refreshLive, saveProfile, saveQuotes, srcLabel, type QuoteMode, type QuoteState,
 } from "@/components/features/finance/quotes"
 import { useThemeTick } from "@/components/features/finance/useThemeTick"
 import { useFinanceContext } from "@/components/features/finance/useFinanceContext"
@@ -53,12 +53,13 @@ function QuoteModal({ ctx, state, onClose, onApply }: {
   const [inputs, setInputs] = useState<Record<string, string>>(() =>
     Object.fromEntries(tickers.map((tk) => [tk, String(state.manual[tk] ?? ctx.holdings.find((h) => h.tk === tk)?.price ?? "")])))
 
-  const priceOf = (tk: string) => (q.mode === "manual" && q.manual[tk] != null ? q.manual[tk] : q.mode === "api" && q.live?.[tk] ? q.live[tk].price : ctx.holdings.find((h) => h.tk === tk)?.price ?? 0)
-  const srcOf = (tk: string) => (q.mode === "manual" && q.manual[tk] != null ? "manuel" : q.mode === "api" && q.live?.[tk] ? "api" : "enregistré")
+  const live = q.mode === "api" || q.mode === "auto"
+  const priceOf = (tk: string) => (q.mode === "manual" && q.manual[tk] != null ? q.manual[tk] : live && q.live?.[tk] ? q.live[tk].price : ctx.holdings.find((h) => h.tk === tk)?.price ?? 0)
+  const srcOf = (tk: string) => (q.mode === "manual" && q.manual[tk] != null ? "manuel" : live && q.live?.[tk] ? "api" : "enregistré")
 
   async function refresh() {
     setQ((p) => ({ ...p, status: "Requête en cours…" }))
-    const next = await refreshLive({ ...q }, tickers)
+    const next = q.mode === "auto" ? await refreshAuto({ ...q }, ctx.holdings) : await refreshLive({ ...q }, tickers)
     setQ(next)
   }
 
@@ -84,11 +85,12 @@ function QuoteModal({ ctx, state, onClose, onApply }: {
           <div className="field">
             <label>Source des cours</label>
             <div className="type-toggle">
-              {([["demo", "ti-flask", "Enregistrés"], ["manual", "ti-pencil", "Saisie manuelle"], ["api", "ti-cloud-data-connection", "Fournisseur"]] as [QuoteMode, string, string][]).map(([m, ic, label]) => (
+              {([["demo", "ti-flask", "Enregistrés"], ["manual", "ti-pencil", "Saisie manuelle"], ["auto", "ti-currency-bitcoin", "Crypto en direct"], ["api", "ti-cloud-data-connection", "Fournisseur"]] as [QuoteMode, string, string][]).map(([m, ic, label]) => (
                 <button key={m} className={`type-opt ${q.mode === m ? "active" : ""}`} onClick={() => setQ((p) => ({ ...p, mode: m }))}><i className={`ti ${ic}`} /> {label}</button>
               ))}
             </div>
             <div className="field-hint">
+              {q.mode === "auto" && <>Mode « Crypto en direct » : les cours des cryptomonnaies sont récupérés automatiquement (CoinGecko) ; les autres supports gardent leur cours enregistré. </>}
               En mode fournisseur, l&apos;app appelle <code>GET {"{endpoint}"}?symbols=A,B</code> depuis votre navigateur et attend <code>{`{ "A": { "price": 1.23, "prev": 1.20 } }`}</code>.
             </div>
           </div>
@@ -120,7 +122,7 @@ function QuoteModal({ ctx, state, onClose, onApply }: {
         </div>
         <div className="modal-foot">
           <button className="btn btn-ghost" style={{ marginRight: "auto" }} onClick={() => onApply({ ...q, mode: "demo", manual: {}, live: null, ts: "", status: "" })}>Revenir aux cours enregistrés</button>
-          <button className="btn btn-ghost" onClick={refresh}><i className="ti ti-refresh" /> Rafraîchir via le fournisseur</button>
+          <button className="btn btn-ghost" onClick={refresh}><i className="ti ti-refresh" /> {q.mode === "auto" ? "Mettre à jour les cryptos" : "Rafraîchir via le fournisseur"}</button>
           <button className="btn btn-ghost" onClick={onClose}>Annuler</button>
           <button className="btn btn-primary" onClick={apply}><i className="ti ti-check" /> Appliquer</button>
         </div>
@@ -369,6 +371,14 @@ export function PlacementsClient() {
 
   useEffect(() => { setProfile(loadProfile()); setQuotes(loadQuotes()) }, [])
 
+  // Mode « Crypto en direct » : cours du jour récupérés une fois au chargement des lignes.
+  const autoDone = useRef(false)
+  useEffect(() => {
+    if (autoDone.current || !ctx || !quotes || quotes.mode !== "auto") return
+    autoDone.current = true
+    void refreshAuto(quotes, ctx.holdings).then((next) => { setQuotes(next); saveQuotes(next) })
+  }, [ctx, quotes])
+
   const changeProfile = (p: ProfileKey) => { setProfile(p); saveProfile(p) }
   const applyQuotes = (q: QuoteState) => { setQuotes(q); saveQuotes(q); setQuoteOpen(false) }
   const done = useCallback(() => { setLineModal({ open: false, item: null }); setEnvModal({ open: false, item: null }); void reload() }, [reload])
@@ -428,7 +438,7 @@ export function PlacementsClient() {
         </div>
         <div style={{ flex: 1 }} />
         <button className="pill" onClick={() => setQuoteOpen(true)}>
-          <i className={`ti ti-${quotes.mode === "api" ? "cloud-data-connection" : quotes.mode === "manual" ? "pencil" : "flask"}`} /> {srcLabel(quotes.mode)}{quotes.ts ? ` · ${quotes.ts}` : ""}
+          <i className={`ti ti-${quotes.mode === "api" ? "cloud-data-connection" : quotes.mode === "auto" ? "currency-bitcoin" : quotes.mode === "manual" ? "pencil" : "flask"}`} /> {srcLabel(quotes.mode)}{quotes.ts ? ` · ${quotes.ts}` : ""}
         </button>
         <button className="btn btn-ghost" onClick={() => setQuoteOpen(true)}><i className="ti ti-refresh" /> Cours</button>
       </div>
@@ -607,7 +617,7 @@ export function PlacementsClient() {
         <div className="card"><div className="card-header"><span className="card-title">Secteurs</span></div><Bars rows={group(S.pos, "sector")} color={hash} /></div>
       </div>
       <div className="grid-2 mb-16">
-        <div className="card"><div className="card-header"><span className="card-title">Devises</span></div><Bars rows={group(S.pos, "cur")} color={(k) => (k === "EUR" ? "#1D9E75" : "#EF9F27")} /></div>
+        <div className="card"><div className="card-header"><span className="card-title">Devises</span></div><Bars rows={group(S.pos, "cur")} color={(k) => (k === getBaseCurrency() ? "#1D9E75" : "#EF9F27")} /></div>
         <div className="card"><div className="card-header"><span className="card-title">Capitalisation</span></div><Bars rows={group(S.pos, "cap")} color={hash} /></div>
       </div>
       <div className="grid-2 mb-16">
