@@ -3,7 +3,7 @@ import { PeriodPill } from "@/components/layout/PeriodPill"
 import { usePeriod } from "@/contexts/PeriodContext"
 import { useCallback, useEffect, useState } from "react"
 import { BudgetCard } from "./BudgetCard"
-import { CategoryModal } from "./CategoryModal"
+import { CategoryModal, SUGGESTIONS } from "./CategoryModal"
 import { SuggestBudgetsModal } from "./SuggestBudgetsModal"
 import { formatCents } from "@/lib/money"
 import { usePrivacy } from "@/contexts/PrivacyContext"
@@ -27,6 +27,7 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
     setLoaded((l) => ({ ...l, list: typeof u === "function" ? u(l.list) : u }))
   const [editTarget, setEditTarget] = useState<EnrichedBudget | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [preset, setPreset] = useState<{ label: string; icon: string; colorHex: string } | null>(null)
   const [showSuggest, setShowSuggest] = useState(false)
   const [catList, setCatList] = useState<Category[]>(categories)
   const { private: priv } = usePrivacy()
@@ -121,7 +122,16 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
       </div>
 
       {budgetList.length === 0 ? (
-        <p className="text-secondary">Aucun budget défini pour ce mois.</p>
+        <div className="card" data-testid="budget-empty">
+          <p className="text-secondary" style={{ marginTop: 0 }}>Aucun budget défini pour ce mois. Choisissez une catégorie courante pour commencer, ou créez la vôtre :</p>
+          <div className="chips">
+            {SUGGESTIONS.slice(0, 8).map((d) => (
+              <button key={d.label} type="button" className="chip" onClick={() => { setPreset(d); setShowAdd(true) }}><i aria-hidden="true" className={`ti ${d.icon}`} /> {d.label}</button>
+            ))}
+            <button type="button" className="chip" onClick={() => { setPreset(null); setShowAdd(true) }}><i aria-hidden="true" className="ti ti-plus" /> Autre…</button>
+          </div>
+          <div className="field-hint" style={{ marginTop: 10 }}>Le bouton « Suggérer des plafonds » propose des montants d&apos;après vos dépenses réelles dès que vous avez deux mois d&apos;historique.</div>
+        </div>
       ) : (
         <div className="budget-grid">
           {budgetList.map((b) => (
@@ -139,7 +149,8 @@ export function BudgetClient({ month, budgets: initial, categories }: Props) {
           month={currentMonth}
           categories={catList}
           budget={editTarget}
-          onClose={() => { setEditTarget(null); setShowAdd(false) }}
+          preset={preset}
+          onClose={() => { setEditTarget(null); setShowAdd(false); setPreset(null) }}
           onSaved={(cat, b) => { if (editTarget) handleUpdated(b); else handleAdded(cat, b); setCatList((prev) => prev.map((c) => (c.id === cat.id ? cat : c))); setEditTarget(null); setShowAdd(false) }}
           onRemoved={(id) => { setBudgetList((prev) => prev.filter((b) => b.id !== id)); setEditTarget(null); setShowAdd(false) }}
         />

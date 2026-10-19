@@ -4,6 +4,7 @@ import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { passwordIssue, passwordStrength } from "@/lib/password"
 import { CURRENCIES, FIAT_CODES } from "@/lib/finance/fx"
+import { useFetch } from "@/lib/use-fetch"
 import { AuthShell } from "@/components/features/auth/AuthShell"
 
 export default function SetupPage() {
@@ -16,6 +17,8 @@ export default function SetupPage() {
   const [cgu, setCgu] = useState(false)
   const [risk, setRisk] = useState(false)
   const strength = passwordStrength(form.password)
+  const { data: setupInfo } = useFetch<{ exists: boolean; signupOpen: boolean }>("/api/setup")
+  const closed = setupInfo?.signupOpen === false
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm(f => ({ ...f, [k]: e.target instanceof HTMLInputElement && e.target.type === "checkbox" ? e.target.checked : e.target.value }))
@@ -49,6 +52,14 @@ export default function SetupPage() {
         { icon: "ti-sparkles", label: "Assistant qui lit vos données pour répondre" },
       ]}
     >
+      {closed ? (
+        <>
+          <h1 className="auth-h">Inscriptions fermées</h1>
+          <p className="auth-p" data-testid="signup-closed">Les inscriptions sont fermées sur cette instance. Si vous avez déjà un compte, connectez-vous.</p>
+          <div className="alt"><a href="/login">Se connecter</a></div>
+        </>
+      ) : (
+      <>
       <h1 className="auth-h">Créer un compte</h1>
       <p className="auth-p">Deux minutes, aucune carte bancaire.</p>
       <form onSubmit={handleSubmit}>
@@ -102,6 +113,8 @@ export default function SetupPage() {
         </button>
       </form>
       <div className="alt">Déjà inscrit(e) ? <a href="/login">Se connecter</a></div>
+      </>
+      )}
     </AuthShell>
   )
 }

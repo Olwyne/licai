@@ -2076,3 +2076,21 @@ html[data-anon="on"] :is(.tx-name, .tx-meta, .pat-name, .pat-address, .inv-name,
 .tbl-filter input:focus { outline: none; border-color: var(--primary); }
 .tbl-count { font-size: 11.5px; color: var(--fg-muted); white-space: nowrap; }
 .dtable th:has(.th-sort), .rp-table th:has(.th-sort), .traj-table th:has(.th-sort) { user-select: none; }
+
+/* Premiers pas (tableau de bord d'un foyer vide) */
+.first-steps { margin-bottom: 18px; }
+.fs-bar { height: 6px; border-radius: 99px; background: var(--border); overflow: hidden; margin: 2px 0 14px; }
+.fs-bar span { display: block; height: 100%; background: var(--primary); border-radius: 99px; transition: width .3s; }
+.fs-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.fs-step { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-top: 1px solid var(--border-subtle); }
+.fs-step:first-child { border-top: 0; }
+.fs-check { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 99px; color: var(--fg-muted); font-size: 16px; flex-shrink: 0; }
+.fs-step.done .fs-check { background: rgba(29, 158, 117, .16); color: var(--primary); }
+.fs-step.done .fs-label { color: var(--fg-muted); text-decoration: line-through; }
+.fs-step.next { background: rgba(29, 158, 117, .06); border-radius: var(--radius-md); }
+.fs-text { flex: 1; min-width: 0; }
+.fs-label { font-size: 13.5px; font-weight: 500; }
+.fs-opt { color: var(--fg-muted); font-weight: 400; font-size: 12px; }
+.fs-desc { font-size: 12px; color: var(--fg-secondary); margin-top: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 560px) { .fs-step { flex-wrap: wrap; } .fs-step .btn { margin-left: 36px; } }

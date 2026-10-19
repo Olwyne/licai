@@ -8,14 +8,18 @@ import { seedDemoData } from "@/db/seed"
 import { FIAT_CODES } from "@/lib/finance/fx"
 import { passwordIssue } from "@/lib/password"
 
+/** Inscriptions fermées par ALLOW_SIGNUP=false (instance personnelle : on crée son foyer, puis on ferme). */
+const signupOpen = () => process.env.ALLOW_SIGNUP !== "false"
+
 
 export async function GET() {
   const h = db.select().from(households).get()
-  return NextResponse.json({ data: { exists: !!h } })
+  return NextResponse.json({ data: { exists: !!h, signupOpen: signupOpen() } })
 }
 
 // Inscription ouverte : chaque inscription crée un nouveau foyer (données isolées par householdId).
 export async function POST(req: Request) {
+  if (!signupOpen()) return NextResponse.json({ error: "Les inscriptions sont fermées sur cette instance." }, { status: 403 })
   const body = await req.json()
   const householdName = String(body.householdName ?? "").trim()
   const firstName = String(body.firstName ?? "").trim()
@@ -39,16 +43,25 @@ export async function POST(req: Request) {
   const passwordHash = await bcrypt.hash(password, 12)
   const now = new Date()
 
-  db.insert(households).values({ id: householdId, name: householdName, city, currency, createdAt: now }).run()
-  db.insert(users).values({ id: userId, householdId, email, passwordHash, role: "admin", firstName: firstName || null, lastName: lastName || null, createdAt: now }).run()
-
-  if (body.seed) {
-    seedDemoData(householdId)
-  } else if (firstName) {
-    db.insert(members).values({
-      id: randomUUID(), householdId, name: `${firstName} ${lastName}`.trim(), short: firstName,
-      role: "Administrateur", colorHex: "#1D9E75", monthlyIncomeCents: 0,
-    }).run()
+  // tout ou rien : un échec (adresse prise entre-temps, par exemple) ne laisse pas de foyer orphelin
+  try {
+    db.transaction(() => {
+      db.insert(households).values({ id: householdId, name: householdName, city, currency, createdAt: now }).run()
+      db.insert(users).values({ id: userId, householdId, email, passwordHash, role: "admin", firstName: firstName || null, lastName: lastName || null, createdAt: now }).run()
+      if (body.seed) {
+        seedDemoData(householdId)
+      } else {
+        if (firstName) {
+          db.insert(members).values({
+            id: randomUUID(), householdId, name: `${firstName} ${lastName}`.trim(), short: firstName,
+            role: "Administrateur", colorHex: "#1D9E75", monthlyIncomeCents: 0,
+          }).run()
+        }
+      }
+    })
+  } catch (e) {
+    if (/UNIQUE constraint failed: users\.email/.test((e as Error).message)) return NextResponse.json({ error: "Un compte existe déjà avec cette adresse e-mail." }, { status: 409 })
+    throw e
   }
 
   return NextResponse.json({ data: { ok: true } })

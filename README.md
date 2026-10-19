@@ -22,6 +22,7 @@ make prod-up             # docker compose -f docker-compose.prod.yaml up -d --bu
 - **Utilisateur non root**, système de fichiers en lecture seule, `no-new-privileges`, contrôle d'état `GET /api/health`.
 - **Sauvegardes** : le service `backup` copie la base (API de sauvegarde SQLite, cohérente même en cours d'écriture) toutes les 24 h dans `/app/data/backups`, en gardant les 14 dernières (`BACKUP_INTERVAL_HOURS`, `BACKUP_KEEP`). Sauvegarde immédiate : `make backup`. Restauration : `make restore FILE=/app/data/backups/licai-AAAAMMJJ-HHMMSS.db`.
 - Pensez à copier le dossier de sauvegardes **hors de la machine** (le volume `licai_data` contient la base et ses sauvegardes).
+- **Inscriptions** : ouvertes par défaut ; `ALLOW_SIGNUP=false` les ferme une fois votre foyer créé (la page « Créer un compte » l'indique, l'API refuse en 403).
 - L'application écoute sur `127.0.0.1:3000` : placez-la derrière un reverse proxy HTTPS.
 
 ## Import des relevés bancaires

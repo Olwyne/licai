@@ -1,10 +1,11 @@
 import { db } from "@/lib/db"
 import {
-  members, banks, accounts, categories, transactions,
+  members, banks, accounts, transactions,
   budgets, recurring, alerts, goals, properties, propertyOwners, loans, investments, investmentAccounts, portfolioSnapshots, investmentFlows, contracts,
 } from "@/db/schema"
 import { randomUUID } from "crypto"
 import { fxRate } from "@/lib/finance/invest"
+import { createCategories, DEFAULT_CATEGORIES } from "@/lib/server/defaults"
 
 export function seedDemoData(householdId: string): void {
   const now = new Date()
@@ -49,21 +50,7 @@ export function seedDemoData(householdId: string): void {
   ]).run()
 
   // System categories
-  const cats: Record<string, string> = {}
-  const catDefs = [
-    { key: "food",      label: "Alimentation", icon: "ti-basket",        colorHex: "#1D9E75" },
-    { key: "home",      label: "Logement",      icon: "ti-home",          colorHex: "#888780" },
-    { key: "transport", label: "Transport",     icon: "ti-train",         colorHex: "#378ADD" },
-    { key: "leisure",   label: "Loisirs",       icon: "ti-device-tv",     colorHex: "#7C6BD6" },
-    { key: "shopping",  label: "Shopping",      icon: "ti-shirt",         colorHex: "#D4537E" },
-    { key: "health",    label: "Santé",         icon: "ti-pill",          colorHex: "#D85A30" },
-    { key: "income",    label: "Revenu",        icon: "ti-building-bank", colorHex: "#1D9E75" },
-    { key: "credits",   label: "Crédits",       icon: "ti-percentage",    colorHex: "#888780" },
-  ]
-  for (const c of catDefs) {
-    cats[c.key] = randomUUID()
-    db.insert(categories).values({ id: cats[c.key], householdId, label: c.label, icon: c.icon, colorHex: c.colorHex, isSystem: true }).run()
-  }
+  const cats = createCategories(householdId, DEFAULT_CATEGORIES)
 
   // Build relative dates: current month (cm) and previous month (pm)
   const cm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`
