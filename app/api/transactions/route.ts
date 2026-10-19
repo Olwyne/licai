@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { transactions } from "@/db/schema"
 import { eq, and, like, desc } from "drizzle-orm"
+import { foreignRef } from "@/lib/server/ownership"
 import { toBaseAmount } from "@/lib/server/fx-convert"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
 import { revalidateTag } from "next/cache"
@@ -42,6 +43,8 @@ export async function POST(req: Request) {
   if (!name || typeof amountCents !== "number" || !date) {
     return err("name, amountCents, date are required")
   }
+  const foreign = foreignRef(householdId, { accountId, toAccountId, categoryId, goalId, projectId, memberId })
+  if (foreign) return err(foreign, 400)
 
   const resolvedKind: "expense" | "income" | "transfer" =
     kind === "transfer" ? "transfer" : kind === "income" ? "income" : "expense"
