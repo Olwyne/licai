@@ -372,7 +372,7 @@ const AI_PROVIDERS = [
 ] as const
 
 function AiKeyCard({ onAdvanced }: { onAdvanced: () => void }) {
-  const { available, keySource, keyHint, aiProvider, chosenModel, provider, refresh } = useAssistant()
+  const { available, keySource, keyHint, keyUnreadable, aiProvider, chosenModel, provider, refresh } = useAssistant()
   const [prov, setProv] = useState<string>(aiProvider)
   const [model, setModel] = useState(chosenModel)
   const [models, setModels] = useState<{ recommended: string; list: string[] }>({ recommended: "", list: [] })
@@ -455,6 +455,7 @@ function AiKeyCard({ onAdvanced }: { onAdvanced: () => void }) {
           {" "}La clé est vérifiée auprès du fournisseur, chiffrée sur le serveur et n&apos;est renvoyée au navigateur que si vous cliquez sur l&apos;œil. En mode « Automatique », l&apos;app choisit le modèle le plus pertinent parmi ceux de votre compte.
         </div>
       </div>
+      {keyUnreadable && <div className="disclaimer sm" role="alert"><i aria-hidden="true" className="ti ti-alert-triangle" /><span>La clé enregistrée est <b>illisible</b> : le secret du serveur (NEXTAUTH_SECRET) a changé depuis son enregistrement. Saisissez-la à nouveau.</span></div>}
       {msg && <div className="field-hint" role="status">{msg}</div>}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
         <button className="btn btn-primary btn-sm" type="button" disabled={busy || (!value.trim() && !(saved && (prov !== aiProvider || model !== chosenModel)))}

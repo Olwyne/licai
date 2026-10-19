@@ -11,7 +11,9 @@ export async function GET() {
   const householdId = await getHouseholdId()
   if (!householdId) return unauthorized()
   const hh = db.select({ k: households.aiKeyEnc }).from(households).where(eq(households.id, householdId)).get()
-  return ok({ key: hh?.k ? decryptSecret(hh.k) ?? "" : "" })
+  const key = hh?.k ? decryptSecret(hh.k) : ""
+  if (hh?.k && key === null) return err("La clé enregistrée est illisible (le secret du serveur a changé) : saisissez-la à nouveau.", 409)
+  return ok({ key: key ?? "" })
 }
 
 // PUT { provider, model?, key? } : enregistre le fournisseur, le modèle (vide = automatique) et, si fournie, la clé (vide = supprime).

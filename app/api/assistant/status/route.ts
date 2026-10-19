@@ -13,6 +13,7 @@ export async function GET(req: Request) {
   return ok({
     builtin: Boolean(ai.key),
     source: ai.source,
+    unreadable: ai.unreadable,
     hint: ai.source === "account" ? keyHint(ai.key) : "",
     provider: ai.provider,
     providerLabel: PROVIDERS[ai.provider].label,

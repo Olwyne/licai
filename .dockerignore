@@ -6,3 +6,6 @@ data/*.db
 data/*.db-shm
 data/*.db-wal
 coverage
+data/backups
+test-results
+playwright-report
