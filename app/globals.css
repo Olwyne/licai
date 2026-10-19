@@ -2045,3 +2045,34 @@ html[data-anon="on"] :is(.tx-name, .tx-meta, .pat-name, .pat-address, .inv-name,
 .acct-foot .acct-import[disabled]:hover { text-decoration: none; }
 .acct-name-btn { background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
 .acct-name-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+
+/* Import / saisie d'opérations : lignes modifiables */
+.preview-list { max-height: 46vh; }
+.pv-edit { flex-wrap: wrap; row-gap: 4px; cursor: default; }
+.pv-edit.dup { opacity: .75; }
+.pv-edit.invalid { background: rgba(216, 90, 48, .07); }
+.pv-in { background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 12.5px; color: var(--fg); min-width: 0; font-family: inherit; }
+.pv-in:focus { outline: none; border-color: var(--primary); }
+.pv-name-in { flex: 1 1 140px; }
+.pv-amt-in { width: 92px; text-align: right; font-variant-numeric: tabular-nums; }
+.pv-amt-in.neg { color: var(--danger); }
+.pv-amt-in.pos { color: var(--primary); }
+.pv-edit .pv-raw { flex: 1 1 100%; padding-left: 52px; }
+@media (max-width: 640px) { .pv-edit .pv-cat { flex: 1 1 120px; } .pv-name-in { flex-basis: 100%; order: 5; } }
+.preset-bar { flex-wrap: wrap; row-gap: 8px; }
+.import-step .field-row, .import-step > .field { margin-bottom: 14px; }
+.import-step .preset-hint.on, .import-step .preset-bar { margin-bottom: 12px; }
+
+/* Tableaux triables et filtrables */
+.th-sort { all: unset; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; border-radius: 4px; }
+.th-sort:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.th-sort i { font-size: 12px; opacity: .35; transition: opacity .12s; }
+.th-sort:hover i, .th-sort.on i { opacity: 1; }
+.th-sort.on { color: var(--fg); }
+.r .th-sort { flex-direction: row-reverse; }
+.tbl-filter { position: relative; display: inline-flex; align-items: center; gap: 8px; }
+.tbl-filter > i { position: absolute; left: 10px; color: var(--fg-muted); font-size: 14px; pointer-events: none; }
+.tbl-filter input { background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 10px 6px 30px; font-size: 12.5px; color: var(--fg); width: 190px; font-family: inherit; }
+.tbl-filter input:focus { outline: none; border-color: var(--primary); }
+.tbl-count { font-size: 11.5px; color: var(--fg-muted); white-space: nowrap; }
+.dtable th:has(.th-sort), .rp-table th:has(.th-sort), .traj-table th:has(.th-sort) { user-select: none; }

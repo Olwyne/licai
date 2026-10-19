@@ -1,4 +1,6 @@
 "use client"
+import { SortTh } from "@/components/ui/TableView"
+import { useTableView } from "@/lib/use-table-view"
 import { useEffect, useMemo } from "react"
 import Link from "next/link"
 import { computePortfolio } from "@/lib/finance/invest"
@@ -25,8 +27,12 @@ export function PatrimoineInsights({ reloadKey }: { reloadKey: number }) {
     return { split: immoSplit(ctx), people, tot, tmi, rent: rentRows(ctx, tmi), net: householdNet(ctx, S) }
   }, [ctx, profile, quotes])
 
+  const peopleView = useTableView(m?.people ?? [], {
+    personne: (p) => p.m.name, cash: (p) => p.cash, placed: (p) => p.placed, immo: (p) => p.immo, debt: (p) => p.debt, net: (p) => p.net,
+  })
+
   if (!ctx || !m || ctx.properties.length === 0) return null
-  const { split, people, tot, tmi, rent } = m
+  const { split, tot, tmi, rent } = m
   const memberOf = (id: string) => ctx.members.find((x) => x.id === id)
   const firstRented = rent.rented[0]
 
@@ -74,9 +80,9 @@ export function PatrimoineInsights({ reloadKey }: { reloadKey: number }) {
         </div>
         <div className="table-wrap">
           <table className="dtable">
-            <thead><tr><th>Personne</th><th className="r">Liquidités</th><th className="r">Placements</th><th className="r">Immobilier</th><th className="r">Dettes</th><th className="r">Patrimoine net</th><th className="r">Part</th></tr></thead>
+            <thead><tr><SortTh view={peopleView} col="personne">Personne</SortTh><SortTh view={peopleView} col="cash" className="r">Liquidités</SortTh><SortTh view={peopleView} col="placed" className="r">Placements</SortTh><SortTh view={peopleView} col="immo" className="r">Immobilier</SortTh><SortTh view={peopleView} col="debt" className="r">Dettes</SortTh><SortTh view={peopleView} col="net" className="r">Patrimoine net</SortTh><th className="r">Part</th></tr></thead>
             <tbody>
-              {people.map((p) => (
+              {peopleView.rows.map((p) => (
                 <tr key={p.m.id}>
                   <td><MiniAv m={p.m} size={24} /> <span style={{ verticalAlign: 6 }}>{p.m.name}</span>
                     <span className="stat-hint">{p.m.role}{p.m.birthYear ? ` · ${ctx.year - p.m.birthYear} ans` : ""}</span></td>

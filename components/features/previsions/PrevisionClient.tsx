@@ -1,6 +1,8 @@
 "use client"
+import { SortTh, TableFilter } from "@/components/ui/TableView"
+import { useTableView } from "@/lib/use-table-view"
 import { useFetch } from "@/lib/use-fetch"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Chip } from "@/components/ui/Chip"
 import { BarChart } from "@/components/charts/BarChart"
 import Link from "next/link"
@@ -33,7 +35,11 @@ export function PrevisionClient() {
   const [horizon, setHorizon] = useState<Horizon>(12)
   const { data, loading } = useFetch<PrevisionData>(`/api/previsions?horizon=${horizon}`)
 
-  const months = data?.months ?? []
+  const months = useMemo(() => data?.months ?? [], [data])
+  const monthView = useTableView(months, {
+    mois: (m) => m.month, entrees: (m) => m.incomeCents, fixes: (m) => m.chargesFixesCents, variable: (m) => m.variableCents,
+    exceptionnel: (m) => m.exceptionnelCents, epargne: (m) => m.epargne, net: (m) => m.netCents, solde: (m) => m.runningBalanceCents,
+  }, { searchKeys: ["mois"] })
   const kpi    = data?.kpi
 
   // Events to anticipate: all months, all quarterly/annual + exceptional
@@ -161,24 +167,25 @@ export function PrevisionClient() {
         <div className="card-header">
           <div className="card-title">Détail mois par mois</div>
           <span className="card-hint">Récurrents, crédits, saisonnalité et exceptionnels</span>
+          <TableFilter view={monthView} placeholder="Filtrer un mois…" label="Filtrer les mois" />
         </div>
         <div className="table-scroll">
           <table className="rp-table">
             <thead>
               <tr>
-                <th>Mois</th>
-                <th>Entrées</th>
-                <th>Charges fixes</th>
-                <th>Variable</th>
-                <th>Exceptionnel</th>
-                <th>Épargne</th>
-                <th>Net</th>
-                <th>Solde</th>
+                <SortTh view={monthView} col="mois">Mois</SortTh>
+                <SortTh view={monthView} col="entrees">Entrées</SortTh>
+                <SortTh view={monthView} col="fixes">Charges fixes</SortTh>
+                <SortTh view={monthView} col="variable">Variable</SortTh>
+                <SortTh view={monthView} col="exceptionnel">Exceptionnel</SortTh>
+                <SortTh view={monthView} col="epargne">Épargne</SortTh>
+                <SortTh view={monthView} col="net">Net</SortTh>
+                <SortTh view={monthView} col="solde">Solde</SortTh>
               </tr>
             </thead>
             <tbody>
               {loading && <tr><td colSpan={8} className="text-secondary">Chargement…</td></tr>}
-              {months.map((m: MonthForecast) => (
+              {monthView.rows.map((m: MonthForecast) => (
                 <tr key={m.month}>
                   <td>{longLabel(m.month)}</td>
                   <td style={{ color: "var(--primary)" }}>{formatCents(m.incomeCents)}</td>

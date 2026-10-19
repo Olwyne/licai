@@ -24,6 +24,10 @@ make prod-up             # docker compose -f docker-compose.prod.yaml up -d --bu
 - Pensez à copier le dossier de sauvegardes **hors de la machine** (le volume `licai_data` contient la base et ses sauvegardes).
 - L'application écoute sur `127.0.0.1:3000` : placez-la derrière un reverse proxy HTTPS.
 
+## Import des relevés bancaires
+
+*Transactions → Importer CSV* : chaque banque a son format d'export. Après lecture du fichier (UTF-8 ou Windows-1252, guillemets, lignes d'en-tête de la banque ignorées), l'étape « Colonnes » associe date, libellé et montant (colonne unique, avec option d'inversion du signe, ou débit/crédit séparés) et règle séparateur, format de date et décimale. Le réglage peut être **enregistré comme modèle** (stocké pour le foyer, éventuellement rattaché à une banque) : les exports suivants du même format sont reconnus automatiquement. Les lignes illisibles sont signalées avec leur numéro, et chaque ligne reste modifiable avant l'import. L'onglet **Saisie manuelle** permet de coller des lignes depuis un tableur ou de les saisir à la main.
+
 ## Application installable (PWA)
 
 Le service worker (`public/sw.js`, écrit à la main) met en cache uniquement les fichiers statiques et une page hors ligne (`/offline.html`). Les pages et les réponses de l'API ne sont **jamais** stockées par le navigateur : aucune donnée financière sur l'appareil. Il n'est enregistré qu'en production.

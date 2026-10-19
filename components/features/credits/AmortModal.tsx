@@ -1,4 +1,6 @@
 "use client"
+import { SortTh, TableFilter } from "@/components/ui/TableView"
+import { useTableView } from "@/lib/use-table-view"
 import { useMemo, useState } from "react"
 import { Bar } from "react-chartjs-2"
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend } from "chart.js"
@@ -18,6 +20,7 @@ export function AmortModal({ loan, onClose }: { loan: Loan; onClose: () => void 
   const start = new Date().toISOString().slice(0, 7)
   const rows = useMemo(() => schedule(c.left, c.rate, c.monthly), [c.left, c.rate, c.monthly])
   const years = useMemo(() => byYear(rows, start), [rows, start])
+  const yearView = useTableView(years, { annee: (y) => y.year, n: (y) => y.n, cap: (y) => y.cap, int: (y) => y.int, left: (y) => y.left }, { searchKeys: ["annee"] })
   const interest = rows.reduce((s, r) => s + r.int, 0)
   const [amount, setAmount] = useState(String(Math.round(Math.min(10000, c.left * 0.5))))
   const [mode, setMode] = useState<EarlyMode>("duree")
@@ -94,11 +97,12 @@ export function AmortModal({ loan, onClose }: { loan: Loan; onClose: () => void 
                 </div>
               </div>
 
-              <div className="table-wrap" style={{ marginTop: 16 }}>
+              <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}><TableFilter view={yearView} placeholder="Filtrer une année…" label="Filtrer les années" /></div>
+              <div className="table-wrap" style={{ marginTop: 8 }}>
                 <table className="dtable">
-                  <thead><tr><th>Année</th><th className="r">Échéances</th><th className="r">Capital</th><th className="r">Intérêts</th><th className="r">Restant dû</th></tr></thead>
+                  <thead><tr><SortTh view={yearView} col="annee">Année</SortTh><SortTh view={yearView} col="n" className="r">Échéances</SortTh><SortTh view={yearView} col="cap" className="r">Capital</SortTh><SortTh view={yearView} col="int" className="r">Intérêts</SortTh><SortTh view={yearView} col="left" className="r">Restant dû</SortTh></tr></thead>
                   <tbody>
-                    {years.map((y) => (
+                    {yearView.rows.map((y) => (
                       <tr key={y.year}><td>{y.year}</td><td className="r">{y.n}</td><td className="r num private">{eur(y.cap)}</td><td className="r num private neg">{eur(y.int)}</td><td className="r num private">{eur(y.left)}</td></tr>
                     ))}
                   </tbody>
