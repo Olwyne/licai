@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import { transactions } from "@/db/schema"
 import { and, eq } from "drizzle-orm"
 import { suggestFromHistory } from "@/lib/finance/categorize"
+import { foreignRef } from "@/lib/server/ownership"
 import { toBaseAmount } from "@/lib/server/fx-convert"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
 import { randomUUID } from "crypto"
@@ -26,6 +27,9 @@ export async function POST(req: Request) {
   if (!accountId || !Array.isArray(rows)) {
     return err("accountId and rows are required")
   }
+
+  const foreign = foreignRef(householdId, { accountId }) ?? [...new Set((rows as ImportRow[]).map((r) => r.categoryId))].map((c) => foreignRef(householdId, { categoryId: c })).find(Boolean) ?? ownerIds.map((m) => foreignRef(householdId, { memberId: m })).find(Boolean)
+  if (foreign) return err(foreign, 400)
 
   if (rows.length === 0) {
     return ok({ imported: 0 })

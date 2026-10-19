@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { transactions } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
+import { foreignRef } from "@/lib/server/ownership"
 import { toBaseAmount } from "@/lib/server/fx-convert"
 import { getHouseholdId, ok, err, unauthorized } from "@/lib/api"
 import { revalidateTag } from "next/cache"
@@ -20,6 +21,9 @@ export async function PATCH(
   for (const k of allowed) {
     if (k in body) updates[k] = body[k]
   }
+
+  const foreign = foreignRef(householdId, { accountId: updates.accountId, toAccountId: updates.toAccountId, categoryId: updates.categoryId, goalId: updates.goalId, projectId: updates.projectId, memberId: updates.memberId })
+  if (foreign) return err(foreign, 400)
 
   if ("amountCents" in updates || "accountId" in updates || "date" in updates) {
     const cur = db.select().from(transactions).where(and(eq(transactions.id, id), eq(transactions.householdId, householdId))).get()

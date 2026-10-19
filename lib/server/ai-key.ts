@@ -2,10 +2,14 @@ import { db } from "@/lib/db"
 import { households } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { decryptSecret } from "./secret"
+import { DEMO_DOMAIN } from "@/lib/demo"
 import { PROVIDERS, PROVIDER_IDS, isProvider, type AiProvider } from "./ai-providers"
 
 export type AiKeySource = "account" | "server" | "none"
 export interface ResolvedAi { key: string | null; source: AiKeySource; /** Une clé est enregistrée mais illisible (le secret du serveur a changé). */ unreadable: boolean; provider: AiProvider; /** Modèle choisi dans les paramètres ; vide = automatique. */ model: string }
+
+const isDemoHousehold = (householdId: string): boolean =>
+  !!db.$client.prepare("SELECT 1 FROM users WHERE household_id = ? AND email LIKE ?").get(householdId, `%@${DEMO_DOMAIN}`)
 
 /**
  * Configuration IA du foyer : clé + fournisseur + modèle saisis dans les paramètres du compte ;
@@ -17,6 +21,8 @@ export function resolveAi(householdId: string): ResolvedAi {
   const own = hh?.k ? decryptSecret(hh.k) : null
   const unreadable = Boolean(hh?.k) && !own
   if (own) return { key: own, source: "account", unreadable: false, provider, model: hh?.m ?? "" }
+  // les foyers de démonstration (publics, sans inscription) n'utilisent jamais la clé du serveur : ils saisissent la leur
+  if (isDemoHousehold(householdId)) return { key: null, source: "none", unreadable, provider, model: hh?.m ?? "" }
   for (const id of PROVIDER_IDS) {
     const env = process.env[PROVIDERS[id].env]?.trim()
     if (env) return { key: env, source: "server", unreadable, provider: id, model: "" }
