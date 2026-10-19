@@ -157,6 +157,7 @@ export function TransactionModal({ editingTx, accounts, categories, goals, proje
                     <option value="">— Aucune —</option>
                     {categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
                   </select>
+                  {categories.length === 0 && <div className="field-hint">Aucune catégorie pour l&apos;instant : <a href="/budget">créez-les depuis le Budget</a> (des modèles courants sont proposés).</div>}
                 </div>
               )}
               <div className="field">

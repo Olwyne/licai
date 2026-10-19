@@ -3,7 +3,7 @@ import { useState } from "react"
 import type { Category } from "@/db/schema"
 import type { EnrichedBudget } from "@/app/(app)/budget/page"
 
-const SUGGESTIONS = [
+export const SUGGESTIONS = [
   // Vie quotidienne
   { label: "Alimentation",  icon: "ti-basket",           colorHex: "#1D9E75" },
   { label: "Restaurants",   icon: "ti-tools-kitchen-2",  colorHex: "#EF9F27" },
@@ -52,6 +52,8 @@ const ICONS = ["ti-basket", "ti-home", "ti-train", "ti-device-tv", "ti-shirt", "
 
 interface Props {
   month: string
+  /** Préchoix de départ (depuis l'état vide du budget). */
+  preset?: { label: string; icon: string; colorHex: string } | null
   categories: Category[]
   budget: EnrichedBudget | null
   onClose: () => void
@@ -59,12 +61,13 @@ interface Props {
   onRemoved: (budgetId: string) => void
 }
 
-export function CategoryModal({ month, categories, budget, onClose, onSaved, onRemoved }: Props) {
+export function CategoryModal({ month, categories, budget, preset, onClose, onSaved, onRemoved }: Props) {
   const isEdit = budget !== null
   const current = isEdit ? categories.find((c) => c.id === budget.categoryId) ?? budget.category : null
-  const [label, setLabel] = useState(current?.label ?? "")
-  const [color, setColor] = useState(current?.colorHex ?? PALETTE[0])
-  const [icon, setIcon] = useState(current?.icon ?? ICONS[0])
+  const start = current ?? preset ?? null
+  const [label, setLabel] = useState(start?.label ?? "")
+  const [color, setColor] = useState(start?.colorHex ?? PALETTE[0])
+  const [icon, setIcon] = useState(start?.icon ?? ICONS[0])
   const [cap, setCap] = useState(budget ? String(budget.limitCents / 100) : "")
   const [existingId, setExistingId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -73,7 +76,7 @@ export function CategoryModal({ month, categories, budget, onClose, onSaved, onR
   const budgeted = new Set<string>()
   const icons = ICONS.includes(icon) ? ICONS : [icon, ...ICONS]
   const palette = PALETTE.includes(color) ? PALETTE : [...PALETTE, color]
-  const suggestions = isEdit ? [] : SUGGESTIONS.filter((d) => !categories.some((c) => c.label === d.label)).slice(0, 10)
+  const suggestions = isEdit ? [] : SUGGESTIONS.filter((d) => !categories.some((c) => c.label === d.label))
   const existing = isEdit ? [] : categories.filter((c) => !budgeted.has(c.id)).slice(0, 10)
 
   function pick(c: { label: string; icon: string; colorHex: string }, id: string | null) {
@@ -136,7 +139,7 @@ export function CategoryModal({ month, categories, budget, onClose, onSaved, onR
             {!isEdit && (existing.length > 0 || suggestions.length > 0) && (
               <div className="field">
                 <label>Suggestions</label>
-                <div className="chips">
+                <div className="chips" style={{ maxHeight: 132, overflowY: "auto" }}>
                   {existing.map((c) => <button key={c.id} type="button" className={`chip${existingId === c.id ? " active" : ""}`} onClick={() => pick(c, c.id)}><i aria-hidden="true" className={`ti ${c.icon}`} /> {c.label}</button>)}
                   {suggestions.map((d) => <button key={d.label} type="button" className="chip" onClick={() => pick(d, null)}><i aria-hidden="true" className={`ti ${d.icon}`} /> {d.label}</button>)}
                 </div>

@@ -1,4 +1,5 @@
 "use client"
+import { FirstSteps } from "./FirstSteps"
 import { SortTh } from "@/components/ui/TableView"
 import { useTableView } from "@/lib/use-table-view"
 import { useCallback, useMemo, useState } from "react"
@@ -129,6 +130,8 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
   return (
     <div className="page-overview">
       <PageHeader title={`Bonjour${d.firstName ? `, ${d.firstName}` : ""} 👋`} sub={`Tableau de bord & rapports du foyer — ${d.monthLabel}`} />
+
+      <FirstSteps />
 
       <div className="toolbar">
         <div className="chips" style={{ margin: 0 }}>
