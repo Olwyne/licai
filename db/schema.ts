@@ -76,6 +76,15 @@ export const accounts = sqliteTable("accounts", {
   openedRate: real("opened_rate"), // taux de change (vers la devise de référence) à l'ouverture du compte étranger, pour l'écart de change
 })
 
+export const csvTemplates = sqliteTable("csv_templates", {
+  id: text("id").primaryKey(),
+  householdId: text("household_id").notNull().references(() => households.id),
+  name: text("name").notNull(),
+  bankId: text("bank_id"), // banque dont l'export suit ce modèle (facultatif)
+  config: text("config").notNull(), // JSON : séparateur, formats, colonnes… (cf. CsvTemplate)
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+})
+
 export const fxHistory = sqliteTable("fx_history", {
   householdId: text("household_id").notNull().references(() => households.id),
   date: text("date").notNull(), // YYYY-MM-DD

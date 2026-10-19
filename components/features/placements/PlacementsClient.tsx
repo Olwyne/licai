@@ -15,6 +15,8 @@ import {
   overrides, quoteTickers, refreshAuto, refreshLive, saveProfile, saveQuotes, srcLabel, useQuoteState, useStoredProfile, type QuoteMode, type QuoteState,
 } from "@/components/features/finance/quotes"
 import { useThemeTick } from "@/components/features/finance/useThemeTick"
+import { SortTh, TableFilter } from "@/components/ui/TableView"
+import { useTableView } from "@/lib/use-table-view"
 import { useFinanceContext } from "@/components/features/finance/useFinanceContext"
 import { AdviceRow, Disclaimer, Kpi, LoadingOrError, MiniAv, PageHeader, StatRow } from "@/components/features/finance/ui"
 
@@ -388,6 +390,16 @@ export function PlacementsClient() {
     return { S, T }
   }, [ctx, profile, quotes])
 
+  // tri et filtre des tableaux (hooks avant tout retour anticipé)
+  const kindLabel = (id: string | null) => INV_KINDS[ctx?.invAccounts.find((a) => a.id === id)?.kind ?? "cto"].short
+  const posView = useTableView(m?.S.pos ?? [], {
+    ligne: (p) => `${p.name} ${p.tk}`, enveloppe: (p) => kindLabel(p.acct), classe: (p) => ASSETS[p.cls]?.label ?? p.cls, zone: (p) => p.zone,
+    qte: (p) => p.qty, pru: (p) => p.pru, cours: (p) => p.price, jour: (p) => p.day, valeur: (p) => p.value, poids: (p) => p.w, pv: (p) => p.pv, ter: (p) => p.ter,
+  })
+  const flowView = useTableView(ctx?.flows ?? [], {
+    mois: (f) => f.ym, versements: (f) => f.amount, abondement: (f) => f.match, total: (f) => f.amount + f.match, note: (f) => f.note,
+  }, { initial: null })
+
   if (!ctx || !m) return <LoadingOrError title="Placements" sub="Enveloppes, lignes, diversification et fiscalité" error={error} />
 
   const { S, T } = m
@@ -570,14 +582,20 @@ export function PlacementsClient() {
       <div className="card mb-16">
         <div className="card-header">
           <span className="card-title">Lignes du portefeuille</span>
+          <TableFilter view={posView} placeholder="Filtrer (nom, enveloppe, zone…)" label="Filtrer les lignes du portefeuille" />
           <span className="card-link" role="button" onClick={() => setLineModal({ open: true, item: null })}>Ajouter une ligne</span>
         </div>
         <div className="table-wrap">
           <table className="dtable">
-            <thead><tr><th>Ligne</th><th>Enveloppe</th><th>Classe</th><th>Zone</th><th className="r">Qté</th><th className="r">PRU</th><th className="r">Cours</th><th className="r">Jour</th><th className="r">Valeur</th><th className="r">Poids</th><th className="r">± value</th><th className="r">TER</th></tr></thead>
+            <thead><tr>
+              <SortTh view={posView} col="ligne">Ligne</SortTh><SortTh view={posView} col="enveloppe">Enveloppe</SortTh><SortTh view={posView} col="classe">Classe</SortTh><SortTh view={posView} col="zone">Zone</SortTh>
+              <SortTh view={posView} col="qte" className="r">Qté</SortTh><SortTh view={posView} col="pru" className="r">PRU</SortTh><SortTh view={posView} col="cours" className="r">Cours</SortTh><SortTh view={posView} col="jour" className="r">Jour</SortTh>
+              <SortTh view={posView} col="valeur" className="r">Valeur</SortTh><SortTh view={posView} col="poids" className="r">Poids</SortTh><SortTh view={posView} col="pv" className="r">± value</SortTh><SortTh view={posView} col="ter" className="r">TER</SortTh>
+            </tr></thead>
             <tbody>
               {S.pos.length === 0 && <tr><td colSpan={12}>Aucune ligne. Ajoutez votre première position.</td></tr>}
-              {S.pos.map((p) => {
+              {S.pos.length > 0 && posView.rows.length === 0 && <tr><td colSpan={12}>Aucune ligne ne correspond à « {posView.query} ».</td></tr>}
+              {posView.rows.map((p) => {
                 const k = kindOf(p.acct), a = ASSETS[p.cls] ?? ASSETS.actions
                 const flat = p.cls === "euro" || p.cls === "monetaire"
                 const sym = p.cur === "USD" ? "$" : "€"
@@ -601,7 +619,7 @@ export function PlacementsClient() {
               })}
               {S.pos.length > 0 && (
                 <tr className="tot">
-                  <td>{S.pos.length} lignes</td><td colSpan={7} />
+                  <td>{posView.filtered ? `${posView.rows.length} / ${S.pos.length} lignes` : `${S.pos.length} lignes`}</td><td colSpan={7} />
                   <td className="r num private">{eur(S.total)}</td><td className="r num">100 %</td>
                   <td className={`r num private ${S.pv >= 0 ? "pos" : "neg"}`}>{eurS(S.pv)}</td>
                   <td className="r num">{pc(S.ter, 2)}</td>
@@ -641,9 +659,9 @@ export function PlacementsClient() {
           </div>
           <div className="table-wrap">
             <table className="dtable">
-              <thead><tr><th>Mois</th><th className="r">Versements</th><th className="r">Abondement</th><th className="r">Total</th><th>Note</th><th /></tr></thead>
+              <thead><tr><SortTh view={flowView} col="mois">Mois</SortTh><SortTh view={flowView} col="versements" className="r">Versements</SortTh><SortTh view={flowView} col="abondement" className="r">Abondement</SortTh><SortTh view={flowView} col="total" className="r">Total</SortTh><SortTh view={flowView} col="note">Note</SortTh><th /></tr></thead>
               <tbody>
-                {ctx.flows.map((f) => {
+                {flowView.rows.map((f) => {
                   const [y, mo] = f.ym.split("-").map(Number)
                   return (
                     <tr key={f.id}>

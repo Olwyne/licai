@@ -51,6 +51,14 @@ const COLUMNS: ColumnStep[] = [
 ]
 
 const TABLES = [
+  `CREATE TABLE IF NOT EXISTS csv_templates (
+    id TEXT PRIMARY KEY NOT NULL,
+    household_id TEXT NOT NULL REFERENCES households(id),
+    name TEXT NOT NULL,
+    bank_id TEXT,
+    config TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+  )`,
   `CREATE TABLE IF NOT EXISTS fx_history (
     household_id TEXT NOT NULL REFERENCES households(id),
     date TEXT NOT NULL,
@@ -100,6 +108,7 @@ const TABLES = [
     expires_at INTEGER NOT NULL,
     used_at INTEGER
   )`,
+  "CREATE UNIQUE INDEX IF NOT EXISTS csv_templates_hh_name ON csv_templates (household_id, name)",
   "CREATE UNIQUE INDEX IF NOT EXISTS alert_states_hh_id ON alert_states (household_id, alert_id)",
   "CREATE UNIQUE INDEX IF NOT EXISTS portfolio_snapshots_hh_ym ON portfolio_snapshots (household_id, ym)",
 ]

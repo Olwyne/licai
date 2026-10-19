@@ -1,4 +1,6 @@
 "use client"
+import { SortTh } from "@/components/ui/TableView"
+import { useTableView } from "@/lib/use-table-view"
 import { useCallback, useMemo, useState } from "react"
 import Link from "next/link"
 import type { DashboardData } from "@/lib/server/dashboard-data"
@@ -80,6 +82,11 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
 
   const choose = (p: string) => { setPeriod(p); void loadSeries(p) }
   const applyRange = (r: { from: string; to: string }) => { setCustom(r); setPeriod("c"); setRangeOpen(false); void loadSeries("c", r) }
+
+  // tri du détail mensuel (l'ordre d'origine est chronologique)
+  const monthView = useTableView(d.monthly, {
+    mois: (r) => d.monthly.indexOf(r), rev: (r) => r.rev, courant: (r) => r.courant, credits: (r) => r.credits, saving: (r) => r.saving, rate: (r) => r.rate, solde: (r) => r.solde, var: (r) => r.varPct,
+  })
 
   const m = useMemo(() => {
     const ctx = d.ctx
@@ -258,11 +265,14 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
         <div className="card-header"><span className="card-title">Détail mensuel</span><span className="card-sub">Revenus, dépenses, épargne et trésorerie</span></div>
         <div className="table-wrap">
           <table className="dtable">
-            <thead><tr><th>Mois</th><th className="r">Revenus</th><th className="r">Courant</th><th className="r">Crédits</th><th className="r">Épargne</th><th className="r">Taux</th><th className="r">Trésorerie</th><th className="r">Var.</th></tr></thead>
+            <thead><tr>
+              <SortTh view={monthView} col="mois">Mois</SortTh><SortTh view={monthView} col="rev" className="r">Revenus</SortTh><SortTh view={monthView} col="courant" className="r">Courant</SortTh><SortTh view={monthView} col="credits" className="r">Crédits</SortTh>
+              <SortTh view={monthView} col="saving" className="r">Épargne</SortTh><SortTh view={monthView} col="rate" className="r">Taux</SortTh><SortTh view={monthView} col="solde" className="r">Trésorerie</SortTh><SortTh view={monthView} col="var" className="r">Var.</SortTh>
+            </tr></thead>
             <tbody>
-              {d.monthly.map((r, i) => (
-                <tr key={r.month + i} className={i === d.monthly.length - 1 ? "cur" : undefined}>
-                  <td>{r.month}{i === d.monthly.length - 1 ? <> <span className="tag-now">en cours</span></> : null}</td>
+              {monthView.rows.map((r, i) => (
+                <tr key={r.month + i} className={r === d.monthly[d.monthly.length - 1] ? "cur" : undefined}>
+                  <td>{r.month}{r === d.monthly[d.monthly.length - 1] ? <> <span className="tag-now">en cours</span></> : null}</td>
                   <td className="r num private">{eur(r.rev)}</td>
                   <td className="r num private">{eur(r.courant)}</td>
                   <td className="r num private">{eur(r.credits)}</td>

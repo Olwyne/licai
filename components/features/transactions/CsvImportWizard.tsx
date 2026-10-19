@@ -1,10 +1,13 @@
 "use client"
-import React, { useCallback, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { MiniAv } from "@/components/features/finance/ui"
 import { formatCents } from "@/lib/money"
-import { mapColumns } from "@/lib/finance/csv"
+import { useFetch } from "@/lib/use-fetch"
+import {
+  applyTemplate, decodeCsv, DATE_FORMATS, DEFAULT_TEMPLATE, detectSeparator, detectSkipLines, guessDateFormat, guessMapping, matchTemplate,
+  parseAmount, parseDate, parsePasted, tokenizeCsv, type CsvTemplate, type ImportIssue,
+} from "@/lib/finance/csv-import"
 import type { Account, Bank, Category, Member, Transaction } from "@/db/schema"
-import type { ParsedRow } from "@/lib/finance/csv"
 
 interface Props {
   accounts: Account[]
@@ -16,377 +19,193 @@ interface Props {
   onClose: () => void
 }
 
-interface PreviewRow {
-  date: string
+type SavedTemplate = CsvTemplate & { id: string }
+type Source = "csv" | "manual"
+
+interface Row {
+  key: number
+  date: string // AAAA-MM-JJ
   name: string
-  amountCents: number
+  amountText: string
   categoryId: string
   checked: boolean
-  isDup: boolean
 }
 
-interface CsvPreset {
-  name: string
-  separator: string
-  decimal: string
-  dateFormat: string
-  amountMode: "single" | "split"
-  dateCol: string
-  labelCol: string
-  amountCol: string
-  debitCol: string
-  creditCol: string
+const DATE_LABELS: Record<string, string> = {
+  "DD/MM/YYYY": "JJ/MM/AAAA", "DD/MM/YY": "JJ/MM/AA", "MM/DD/YYYY": "MM/JJ/AAAA", "YYYY-MM-DD": "AAAA-MM-JJ", "YYYY/MM/DD": "AAAA/MM/JJ", "DD-MM-YYYY": "JJ-MM-AAAA", "DD.MM.YYYY": "JJ.MM.AAAA",
 }
-
-interface ImportApiResponse {
-  data: { imported: number }
-}
-
-interface CreatedTxApiResponse {
-  data: Transaction[]
-}
-
-function detectSep(raw: string): string {
-  const line = raw.split("\n")[0] ?? ""
-  if (line.includes(";")) return ";"
-  if (line.includes("\t")) return "\t"
-  return ","
-}
-
-function parseCsvLines(raw: string, sep: string): string[][] {
-  return raw
-    .trim()
-    .split(/\r?\n/)
-    .map((l) => l.split(sep).map((c) => c.trim().replace(/^"|"$/g, "")))
-}
-
-function loadPresets(): CsvPreset[] {
-  try {
-    return JSON.parse(localStorage.getItem("licai-csv-presets") ?? "[]") as CsvPreset[]
-  } catch {
-    return []
-  }
-}
-
-function savePreset(p: CsvPreset) {
-  try {
-    const existing = loadPresets().filter((x) => x.name !== p.name)
-    localStorage.setItem("licai-csv-presets", JSON.stringify([p, ...existing]))
-  } catch {
-    // ignore
-  }
-}
+const SEP_LABELS: Record<string, string> = { ";": "Point-virgule ;", ",": "Virgule ,", "\t": "Tabulation", "|": "Barre verticale |" }
 
 const SAMPLE_CSV = `Date;Libellé;Débit;Crédit
-01/08/2026;Courses Monoprix;87.40;
-02/08/2026;Netflix;13.99;
-15/08/2026;Salaire;;2800.00
-20/08/2026;EDF;120.00;`
+01/08/2026;Courses Monoprix;87,40;
+02/08/2026;Netflix;13,99;
+15/08/2026;Salaire;;2800,00
+20/08/2026;EDF;120,00;`
 
-export function CsvImportWizard({
-  accounts,
-  banks,
-  categories,
-  txList,
-  members,
-  onImported,
-  onClose,
-}: Props) {
+const centsText = (c: number) => (c / 100).toFixed(2).replace(".", ",")
+const today = () => new Date().toISOString().slice(0, 10)
+
+export function CsvImportWizard({ accounts, banks, categories, txList, members, onImported, onClose }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
+  const keyRef = useRef(0)
+  const nextKey = () => ++keyRef.current
 
-  // Step 1
+  const { data: saved, reload: reloadTemplates } = useFetch<SavedTemplate[]>("/api/csv-templates")
+  const templates = saved ?? []
+
+  const [source, setSource] = useState<Source>("csv")
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [rawCsv, setRawCsv] = useState("")
   const [fileName, setFileName] = useState("")
   const [bankId, setBankId] = useState(banks[0]?.id ?? "")
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "")
-  const [isDragOver, setIsDragOver] = useState(false)
   const [owners, setOwners] = useState<string[]>([])
-  const [presets, setPresets] = useState<CsvPreset[]>(() => (typeof window === "undefined" ? [] : loadPresets()))
-  const [presetSel, setPresetSel] = useState("")
-  const [presetMsg, setPresetMsg] = useState<{ text: string; ok: boolean } | null>(null)
+  const [isDragOver, setIsDragOver] = useState(false)
+  const [pasted, setPasted] = useState("")
 
-  // Step 2
-  const [separator, setSeparator] = useState(";")
-  const [decimal, setDecimal] = useState(",")
-  const [dateFormat, setDateFormat] = useState("DD/MM/YYYY")
-  const [amountMode, setAmountMode] = useState<"single" | "split">("split")
-  const [headers, setHeaders] = useState<string[]>([])
-  const [dateCol, setDateCol] = useState("")
-  const [labelCol, setLabelCol] = useState("")
-  const [amountCol, setAmountCol] = useState("")
-  const [debitCol, setDebitCol] = useState("")
-  const [creditCol, setCreditCol] = useState("")
-  const [previewLines, setPreviewLines] = useState<string[][]>([])
-  const [presetHint, setPresetHint] = useState<CsvPreset | null>(null)
-  const [presetName, setPresetName] = useState("")
+  const [t, setT] = useState<CsvTemplate>(DEFAULT_TEMPLATE)
+  const [matchedName, setMatchedName] = useState("")
+  const [templateSel, setTemplateSel] = useState("")
+  const [templateName, setTemplateName] = useState("")
+  const [templateMsg, setTemplateMsg] = useState<{ text: string; ok: boolean } | null>(null)
 
-  // Step 3
-  const [previewRows, setPreviewRows] = useState<PreviewRow[]>([])
+  const [rows, setRows] = useState<Row[]>([])
+  const [issues, setIssues] = useState<ImportIssue[]>([])
   const [importing, setImporting] = useState(false)
   const [importError, setImportError] = useState("")
 
-  // ── Step 1 helpers ──
+  // Anciens formats enregistrés dans le navigateur : repris une fois dans les modèles du foyer, puis oubliés localement.
+  useEffect(() => {
+    let legacy: Partial<CsvTemplate & { amountMode: string }>[] = []
+    try { legacy = JSON.parse(localStorage.getItem("licai-csv-presets") ?? "[]") } catch { /* rien à reprendre */ }
+    if (!Array.isArray(legacy) || legacy.length === 0) return
+    Promise.all(legacy.map((p) => fetch("/api/csv-templates", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ template: p }) })))
+      .then(() => { try { localStorage.removeItem("licai-csv-presets") } catch { /* ignoré */ } reloadTemplates() })
+      .catch(() => {})
+  }, [reloadTemplates])
+
+  const tokens = useMemo(() => (rawCsv ? tokenizeCsv(rawCsv, t.separator) : []), [rawCsv, t.separator])
+  const headers = tokens[t.skipLines] ?? []
+  const parsed = useMemo(() => (tokens.length ? applyTemplate(tokens, t) : { headers: [], rows: [], issues: [] }), [tokens, t])
+  const patch = (p: Partial<CsvTemplate>) => setT((x) => ({ ...x, ...p }))
+
+  // ── Étape 1 ──
 
   function readFile(file: File) {
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      const text = (ev.target?.result as string) ?? ""
-      setRawCsv(text)
-      setFileName(file.name)
-    }
-    reader.readAsText(file, "utf-8")
-  }
-
-  function handleFileDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setIsDragOver(false)
-    const file = e.dataTransfer.files[0]
-    if (file) readFile(file)
-  }
-
-  function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) readFile(file)
-  }
-
-  function loadSample() {
-    setRawCsv(SAMPLE_CSV)
-    setFileName("example.csv")
+    file.arrayBuffer().then((buf) => { setRawCsv(decodeCsv(buf)); setFileName(file.name) }).catch(() => {})
   }
 
   function goToStep2() {
-    if (!rawCsv) return
-    const sep = detectSep(rawCsv)
-    setSeparator(sep)
-    const lines = parseCsvLines(rawCsv, sep)
-    const hdrs = lines[0] ?? []
-    setHeaders(hdrs)
-    setPreviewLines(lines.slice(1, 5))
-
-    // Auto-guess columns
-    setDateCol(hdrs.find((h) => h.toLowerCase().includes("date")) ?? hdrs[0] ?? "")
-    setLabelCol(
-      hdrs.find((h) =>
-        ["libellé", "label", "description", "name", "libelle"].some((k) =>
-          h.toLowerCase().includes(k)
-        )
-      ) ?? hdrs[1] ?? ""
-    )
-    setDebitCol(hdrs.find((h) => h.toLowerCase().includes("débit") || h.toLowerCase() === "debit") ?? "")
-    setCreditCol(hdrs.find((h) => h.toLowerCase().includes("crédit") || h.toLowerCase() === "credit") ?? "")
-    setAmountCol(hdrs.find((h) => h.toLowerCase().includes("amount") || h.toLowerCase().includes("montant")) ?? "")
-
-    // Check for saved preset
-    const presets = loadPresets()
-    const matched = presets.find(
-      (p) => p.separator === sep && hdrs.includes(p.dateCol) && hdrs.includes(p.labelCol)
-    )
-    if (matched) {
-      setPresetHint(matched)
-      setDecimal(matched.decimal)
-      setDateFormat(matched.dateFormat)
-      setAmountMode(matched.amountMode)
-      setDateCol(matched.dateCol)
-      setLabelCol(matched.labelCol)
-      setAmountCol(matched.amountCol)
-      setDebitCol(matched.debitCol)
-      setCreditCol(matched.creditCol)
-    } else {
-      setPresetHint(null)
-    }
-
+    const sep = detectSeparator(rawCsv)
+    const toks = tokenizeCsv(rawCsv, sep)
+    const skip = detectSkipLines(toks)
+    const hdrs = toks[skip] ?? []
+    const g = guessMapping(hdrs)
+    const col = (name: string) => hdrs.findIndex((h) => h === name)
+    const dateSamples = toks.slice(skip + 1, skip + 31).map((r) => r[col(g.dateCol)] ?? "")
+    const amountSamples = toks.slice(skip + 1, skip + 31).flatMap((r) => [r[col(g.amountCol)], r[col(g.debitCol)], r[col(g.creditCol)]]).filter(Boolean) as string[]
+    const dotDecimal = amountSamples.some((a) => /\d\.\d{1,2}$/.test(a.trim())) && !amountSamples.some((a) => /\d,\d{1,2}$/.test(a.trim()))
+    let next: CsvTemplate = { ...DEFAULT_TEMPLATE, separator: sep, skipLines: skip, dateFormat: guessDateFormat(dateSamples), decimal: dotDecimal ? "." : ",", ...g }
+    const match = matchTemplate(templates, hdrs, bankId || null)
+    if (match) { next = { ...match, separator: sep, skipLines: skip }; setMatchedName(match.name); setTemplateSel(match.name) } else { setMatchedName(""); setTemplateSel("") }
+    setT(next)
+    setTemplateMsg(null)
     setStep(2)
   }
 
-  // ── Step 2 helpers ──
-
-  const reparse = useCallback(
-    (
-      sep: string,
-      dec: string,
-      dfmt: string,
-      dCol: string,
-      lCol: string,
-      aCol: string,
-      dbCol: string,
-      crCol: string,
-      mode: "single" | "split"
-    ) => {
-      const lines = parseCsvLines(rawCsv, sep)
-      const hdrs = lines[0] ?? []
-      setHeaders(hdrs)
-      setPreviewLines(lines.slice(1, 5))
-
-      const dataLines = lines.slice(1).filter((l) => l.some((c) => c !== ""))
-      const parsed: ParsedRow[] = dataLines.map((cols) => {
-        const row: Record<string, string> = {}
-        hdrs.forEach((h, i) => { row[h] = cols[i] ?? "" })
-        return mapColumns(
-          row,
-          {
-            dateCol: dCol,
-            labelCol: lCol,
-            amountCol: mode === "single" ? aCol : undefined,
-            debitCol: mode === "split" ? dbCol : undefined,
-            creditCol: mode === "split" ? crCol : undefined,
-          },
-          dec,
-          dfmt
-        )
-      })
-
-      const rows: PreviewRow[] = parsed.map((r) => {
-        const isDup = txList.some(
-          (t) => t.date === r.date && Math.abs(t.amountCents - Math.abs(r.amountCents)) < 1
-        )
-        return { ...r, categoryId: "", checked: !isDup, isDup }
-      })
-
-      return rows
-    },
-    [rawCsv, txList]
-  )
-
-  function applyPreset(p: CsvPreset) {
-    setSeparator(p.separator)
-    setDecimal(p.decimal)
-    setDateFormat(p.dateFormat)
-    setAmountMode(p.amountMode)
-    setDateCol(p.dateCol)
-    setLabelCol(p.labelCol)
-    setAmountCol(p.amountCol)
-    setDebitCol(p.debitCol)
-    setCreditCol(p.creditCol)
-    setPresetHint(null)
-  }
-
-  function handleSavePreset() {
-    const n = presetName.trim() || "Mon format"
-    const p: CsvPreset = {
-      name: n,
-      separator,
-      decimal,
-      dateFormat,
-      amountMode,
-      dateCol,
-      labelCol,
-      amountCol,
-      debitCol,
-      creditCol,
-    }
-    savePreset(p)
-    setPresets(loadPresets())
-    setPresetSel(n)
-    setPresetMsg({ text: `Format « ${n} » enregistré.`, ok: true })
-    setPresetName("")
-  }
-
-  function deletePreset() {
-    if (!presetSel) return
-    try { localStorage.setItem("licai-csv-presets", JSON.stringify(loadPresets().filter((x) => x.name !== presetSel))) } catch { /* indisponible */ }
-    setPresets(loadPresets())
-    setPresetMsg({ text: `Format « ${presetSel} » oublié.`, ok: false })
-    setPresetSel("")
-  }
-
-  function goToStep3() {
-    const rows = reparse(separator, decimal, dateFormat, dateCol, labelCol, amountCol, debitCol, creditCol, amountMode)
-    setPreviewRows(rows)
+  function goToManual() {
+    const base: Row[] = pasted.trim() ? parsePasted(pasted).rows.map((r) => ({ key: nextKey(), date: r.date, name: r.name, amountText: centsText(r.amountCents), categoryId: categories.find((c) => c.label.toLowerCase() === r.category.toLowerCase())?.id ?? "", checked: true })) : []
+    setIssues(pasted.trim() ? parsePasted(pasted).issues : [])
+    setRows(base.length ? base : [blankRow()])
     setStep(3)
   }
 
-  // ── Step 3 helpers ──
+  const blankRow = (): Row => ({ key: nextKey(), date: today(), name: "", amountText: "", categoryId: "", checked: true })
 
-  function toggleRow(i: number) {
-    setPreviewRows((prev) =>
-      prev.map((r, idx) => (idx === i ? { ...r, checked: !r.checked } : r))
-    )
+  // ── Étape 2 : modèles ──
+
+  async function saveTemplate(name: string) {
+    const n = name.trim() || t.name || "Mon format"
+    const res = await fetch("/api/csv-templates", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ template: { ...t, name: n, bankId: bankId || null } }) })
+    if (!res.ok) { setTemplateMsg({ text: ((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? "Impossible d'enregistrer ce format.", ok: false }); return }
+    setTemplateMsg({ text: `Format « ${n} » enregistré pour ${bankId ? banks.find((b) => b.id === bankId)?.name ?? "cette banque" : "toutes les banques"}.`, ok: true })
+    setTemplateName(""); setTemplateSel(n); setMatchedName(n)
+    reloadTemplates()
   }
 
-  function setRowCat(i: number, catId: string) {
-    setPreviewRows((prev) =>
-      prev.map((r, idx) => (idx === i ? { ...r, categoryId: catId } : r))
-    )
+  function applySaved(tpl: SavedTemplate) {
+    setT({ ...tpl, separator: tpl.separator })
+    setTemplateMsg({ text: `Format « ${tpl.name} » appliqué.`, ok: true })
   }
+
+  async function deleteSaved() {
+    const tpl = templates.find((x) => x.name === templateSel)
+    if (!tpl) return
+    await fetch(`/api/csv-templates/${tpl.id}`, { method: "DELETE" })
+    setTemplateMsg({ text: `Format « ${tpl.name} » supprimé.`, ok: false }); setTemplateSel(""); setMatchedName("")
+    reloadTemplates()
+  }
+
+  function goToStep3() {
+    setRows(parsed.rows.map((r) => ({ key: nextKey(), date: r.date, name: r.name, amountText: centsText(r.amountCents), categoryId: "", checked: !isDup(r.date, r.amountCents) })))
+    setIssues(parsed.issues)
+    setStep(3)
+  }
+
+  // ── Étape 3 ──
+
+  const isDup = (date: string, cents: number) => txList.some((x) => x.date === date && Math.abs(x.amountCents - Math.abs(cents)) < 1)
+  const view = rows.map((r) => {
+    const cents = parseAmount(r.amountText, ",")
+    const dateOk = parseDate(r.date.split("-").reverse().join("/"), "DD/MM/YYYY") !== null
+    const errors = [!dateOk && "date", !r.name.trim() && "libellé", cents === null && "montant"].filter(Boolean) as string[]
+    return { ...r, cents, errors, dup: cents !== null && dateOk && isDup(r.date, cents) }
+  })
+  const importable = view.filter((r) => r.checked && r.errors.length === 0)
+  const netCents = importable.reduce((s, r) => s + (r.cents ?? 0), 0)
+  const dups = view.filter((r) => r.dup).length
+  const setRow = (key: number, p: Partial<Row>) => setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...p } : r)))
 
   async function handleImport() {
-    const toImport = previewRows.filter((r) => r.checked)
-    if (toImport.length === 0) return
+    if (importable.length === 0) return
     if (!accountId) { setImportError("Veuillez sélectionner un compte."); return }
-
-    setImporting(true)
-    setImportError("")
-
+    setImporting(true); setImportError("")
     try {
-      const rows = toImport.map((r) => ({
-        name: r.name,
-        amountCents: r.amountCents,
-        date: r.date,
-        categoryId: r.categoryId || undefined,
-      }))
-
       const res = await fetch("/api/transactions/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accountId, rows, ownerIds: owners }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountId, rows: importable.map((r) => ({ name: r.name.trim(), amountCents: r.cents, date: r.date, categoryId: r.categoryId || undefined })), ownerIds: owners }),
       })
-
-      if (!res.ok) {
-        setImportError("Erreur lors de l'import.")
-        return
-      }
-
-      const json = (await res.json()) as ImportApiResponse
-      const imported = json.data.imported
-
-      // Fetch newly created transactions to update state optimistically
-      // We approximate by building local Transaction-like objects for each imported row
-      // (The API doesn't return the created rows, so we re-fetch them)
+      if (!res.ok) { setImportError("Erreur lors de l'import."); return }
+      const imported = ((await res.json()) as { data: { imported: number } }).data.imported
       const listRes = await fetch(`/api/transactions?accountId=${accountId}`)
-      if (listRes.ok) {
-        const listJson = (await listRes.json()) as CreatedTxApiResponse
-        // Take the most recently imported ones (by count)
-        const newTxs = listJson.data.slice(0, imported)
-        onImported(newTxs)
-      } else {
-        onImported([])
-      }
-    } catch {
-      setImportError("Erreur réseau.")
-    } finally {
-      setImporting(false)
-    }
+      onImported(listRes.ok ? ((await listRes.json()) as { data: Transaction[] }).data.slice(0, imported) : [])
+    } catch { setImportError("Erreur réseau.") } finally { setImporting(false) }
   }
 
-  const checkedCount = previewRows.filter((r) => r.checked).length
-  const netCents = previewRows.filter((r) => r.checked).reduce((s, r) => s + r.amountCents, 0)
-
-  const filteredAccounts = bankId
-    ? accounts.filter((a) => a.bankId === bankId)
-    : accounts
-
+  const filteredAccounts = bankId ? accounts.filter((a) => a.bankId === bankId) : accounts
   const acct = accounts.find((a) => a.id === accountId)
   const bank = banks.find((b) => b.id === acct?.bankId)
-  const dups = previewRows.filter((r) => r.isDup).length
   const ownerNames = members.filter((m) => owners.includes(m.id)).map((m) => m.short || m.name)
   const toMini = (m: Member) => ({ id: m.id, name: m.name, short: m.short, role: m.role, color: m.colorHex, incomeMonthly: 0, birthYear: null, isChild: false })
-  const nextLabel = step === 3 ? (importing ? "Import…" : `Importer ${checkedCount} opération${checkedCount > 1 ? "s" : ""}`) : "Continuer"
-  const nextDisabled = step === 1 ? !rawCsv || !accountId : step === 3 ? importing || checkedCount === 0 : false
-  const fmtDate = (d: string) => d.split("-").reverse().join("/")
+  const step2Ready = (t.amountMode === "single" ? Boolean(t.amountCol) : Boolean(t.debitCol || t.creditCol)) && Boolean(t.dateCol && t.labelCol)
+  const nextLabel = step === 3 ? (importing ? "Import…" : `Importer ${importable.length} opération${importable.length > 1 ? "s" : ""}`) : "Continuer"
+  const nextDisabled = step === 1 ? !accountId || (source === "csv" && !rawCsv) : step === 2 ? !step2Ready || parsed.rows.length === 0 : importing || importable.length === 0
+  const colOptions = (blank = false) => <>{blank && <option value="">—</option>}{headers.map((h) => <option key={h} value={h}>{h}</option>)}</>
+  const next = () => (step === 1 ? (source === "manual" ? goToManual() : goToStep2()) : step === 2 ? goToStep3() : void handleImport())
+  const back = () => setStep(step === 3 && source === "csv" ? 2 : 1)
 
   return (
     <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className="modal modal-lg">
         <div className="modal-head">
-          <h3>Importer un relevé CSV</h3>
+          <h3>{source === "manual" ? "Saisir des opérations" : "Importer un relevé CSV"}</h3>
           <button className="icon-btn" type="button" style={{ width: 30, height: 30 }} onClick={onClose} aria-label="Fermer"><i aria-hidden="true" className="ti ti-x" /></button>
         </div>
 
         <div className="steps">
-          {([[1, "Fichier & compte"], [2, "Colonnes"], [3, "Vérification"]] as const).map(([n, label]) => (
+          {([[1, source === "manual" ? "Compte & saisie" : "Fichier & compte"], [2, "Colonnes"], [3, "Vérification"]] as const).filter(([n]) => source === "csv" || n !== 2).map(([n, label]) => (
             <div key={n} className={`step${step === n ? " active" : step > n ? " done" : ""}`}>
-              <span className="step-n">{step > n ? "✓" : n}</span> {label}
+              <span className="step-n">{step > n ? "✓" : source === "manual" && n === 3 ? 2 : n}</span> {label}
             </div>
           ))}
         </div>
@@ -394,19 +213,33 @@ export function CsvImportWizard({
         <div className="modal-body">
           {/* Étape 1 */}
           <div className={`import-step${step === 1 ? " active" : ""}`}>
-            <label
-              className={`dropzone${isDragOver ? " over" : ""}${fileName ? " filled" : ""}`}
-              onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
-              onDragLeave={() => setIsDragOver(false)}
-              onDrop={handleFileDrop}
-            >
-              <input ref={fileRef} type="file" accept=".csv,.txt,text/csv" hidden onChange={handleFileInput} />
-              <i aria-hidden="true" className="ti ti-upload dz-ic" />
-              <div className="dz-title">Dépose ton fichier CSV ici</div>
-              <div className="dz-sub">ou clique pour parcourir · CSV exporté depuis ta banque</div>
-              <div className="dz-file">{fileName ? `✓ ${fileName}` : ""}</div>
-            </label>
-            <button type="button" className="link-btn" onClick={loadSample}><i aria-hidden="true" className="ti ti-flask" /> Utiliser un relevé d&apos;exemple</button>
+            <div className="type-toggle" style={{ marginBottom: 14 }}>
+              <button type="button" className={`type-opt${source === "csv" ? " active" : ""}`} onClick={() => setSource("csv")}><i aria-hidden="true" className="ti ti-file-import" /> Fichier CSV de la banque</button>
+              <button type="button" className={`type-opt${source === "manual" ? " active" : ""}`} onClick={() => setSource("manual")}><i aria-hidden="true" className="ti ti-keyboard" /> Saisie manuelle</button>
+            </div>
+
+            {source === "csv" ? (
+              <>
+                <label className={`dropzone${isDragOver ? " over" : ""}${fileName ? " filled" : ""}`}
+                  onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }} onDragLeave={() => setIsDragOver(false)}
+                  onDrop={(e) => { e.preventDefault(); setIsDragOver(false); const f = e.dataTransfer.files[0]; if (f) readFile(f) }}>
+                  <input ref={fileRef} type="file" accept=".csv,.txt,text/csv" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) readFile(f) }} />
+                  <i aria-hidden="true" className="ti ti-upload dz-ic" />
+                  <div className="dz-title">Dépose ton fichier CSV ici</div>
+                  <div className="dz-sub">ou clique pour parcourir · CSV exporté depuis ta banque (UTF-8 ou Windows-1252)</div>
+                  <div className="dz-file">{fileName ? `✓ ${fileName}` : ""}</div>
+                </label>
+                <button type="button" className="link-btn" onClick={() => { setRawCsv(SAMPLE_CSV); setFileName("example.csv") }}><i aria-hidden="true" className="ti ti-flask" /> Utiliser un relevé d&apos;exemple</button>
+              </>
+            ) : (
+              <div className="field">
+                <label htmlFor="paste-area">Coller depuis un tableur <span style={{ color: "var(--fg-muted)", fontWeight: 400 }}>(facultatif)</span></label>
+                <textarea id="paste-area" rows={5} value={pasted} onChange={(e) => setPasted(e.target.value)}
+                  placeholder={"Une opération par ligne : date, libellé, montant, catégorie (facultative)\n15/08/2026\tCafé\t-3,50\tRestauration"} />
+                <div className="field-hint">Copiez des cellules d&apos;Excel ou de Google Sheets. Sans collage, vous saisissez les lignes une à une à l&apos;étape suivante.</div>
+              </div>
+            )}
+
             <div className="field-row" style={{ marginTop: 18 }}>
               <div className="field"><label>Banque</label>
                 <select value={bankId} onChange={(e) => setBankId(e.target.value)}>
@@ -419,13 +252,11 @@ export function CsvImportWizard({
                   {filteredAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select></div>
             </div>
-            {presetHint && <div className="preset-hint on"><i aria-hidden="true" className="ti ti-bookmark" /> <span>Format reconnu : <strong>{presetHint.name}</strong></span></div>}
             <div className="field">
               <label>Attribuer les opérations à</label>
               <div className="owner-picker">
                 {members.filter((m) => !m.isChild).map((m) => (
-                  <button key={m.id} type="button" className={`owner-opt${owners.includes(m.id) ? " on" : ""}`}
-                    onClick={() => setOwners((o) => (o.includes(m.id) ? o.filter((x) => x !== m.id) : [...o, m.id]))}>
+                  <button key={m.id} type="button" className={`owner-opt${owners.includes(m.id) ? " on" : ""}`} onClick={() => setOwners((o) => (o.includes(m.id) ? o.filter((x) => x !== m.id) : [...o, m.id]))}>
                     <MiniAv m={toMini(m)} size={24} /> {m.short || m.name}
                   </button>
                 ))}
@@ -434,112 +265,132 @@ export function CsvImportWizard({
             </div>
           </div>
 
-          {/* Étape 2 */}
-          <div className={`import-step${step === 2 ? " active" : ""}`}>
-            <div className="preset-bar">
-              <i aria-hidden="true" className="ti ti-bookmark" />
-              <div className="select" style={{ minWidth: 190 }}>
-                <select value={presetSel} onChange={(e) => setPresetSel(e.target.value)}>
-                  <option value="">{presets.length ? "Formats enregistrés…" : "Aucun format enregistré"}</option>
-                  {presets.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
-                </select>
+          {/* Étape 2 : colonnes */}
+          {source === "csv" && (
+            <div className={`import-step${step === 2 ? " active" : ""}`}>
+              {matchedName && <div className="preset-hint on"><i aria-hidden="true" className="ti ti-bookmark" /> <span>Format reconnu : <strong>{matchedName}</strong> — appliqué automatiquement.</span></div>}
+              <div className="preset-bar">
+                <i aria-hidden="true" className="ti ti-bookmark" />
+                <div className="select" style={{ minWidth: 190 }}>
+                  <select aria-label="Formats enregistrés" value={templateSel} onChange={(e) => setTemplateSel(e.target.value)}>
+                    <option value="">{templates.length ? "Formats enregistrés…" : "Aucun format enregistré"}</option>
+                    {templates.map((p) => <option key={p.id} value={p.name}>{p.name}{p.bankId ? ` · ${banks.find((b) => b.id === p.bankId)?.name ?? ""}` : ""}</option>)}
+                  </select>
+                </div>
+                <button type="button" className="btn btn-ghost" disabled={!templateSel} onClick={() => { const p = templates.find((x) => x.name === templateSel); if (p) applySaved(p) }}><i aria-hidden="true" className="ti ti-wand" /> Appliquer</button>
+                <button type="button" className="btn btn-ghost" title="Supprimer ce format" aria-label="Supprimer ce format" disabled={!templateSel} onClick={() => void deleteSaved()}><i aria-hidden="true" className="ti ti-trash" /></button>
+                <div style={{ flex: 1 }} />
+                <input className="preset-input" type="text" aria-label="Nom du format" placeholder={templateSel || "Nom du format (ex. BNP courant)"} value={templateName} onChange={(e) => setTemplateName(e.target.value)} />
+                <button type="button" className="btn btn-primary" disabled={!step2Ready} onClick={() => void saveTemplate(templateName || templateSel)}><i aria-hidden="true" className="ti ti-device-floppy" /> {templateName || !templateSel ? "Enregistrer" : "Mettre à jour"}</button>
               </div>
-              <button type="button" className="btn btn-ghost" disabled={!presetSel} onClick={() => { const p = presets.find((x) => x.name === presetSel); if (p) { applyPreset(p); setPresetMsg({ text: `Format « ${p.name} » appliqué.`, ok: true }) } }}><i aria-hidden="true" className="ti ti-wand" /> Appliquer</button>
-              <button type="button" className="btn btn-ghost" title="Oublier ce format" disabled={!presetSel} onClick={deletePreset}><i aria-hidden="true" className="ti ti-trash" /></button>
-              <div style={{ flex: 1 }} />
-              <input className="preset-input" type="text" placeholder="Nom du format" value={presetName} onChange={(e) => setPresetName(e.target.value)} />
-              <button type="button" className="btn btn-primary" onClick={handleSavePreset}><i aria-hidden="true" className="ti ti-device-floppy" /> Enregistrer</button>
-            </div>
-            {presetMsg && <div className={`preset-msg${presetMsg.ok ? " ok" : ""}`}>{presetMsg.text}</div>}
-            <div className="field-row">
-              <div className="field"><label>Séparateur</label>
-                <select value={separator} onChange={(e) => setSeparator(e.target.value)}>
-                  <option value=";">Point-virgule ;</option><option value=",">Virgule ,</option><option value={"\t"}>Tabulation</option>
-                </select></div>
-              <div className="field"><label>Format de date</label>
-                <select value={dateFormat} onChange={(e) => setDateFormat(e.target.value)}>
-                  <option value="DD/MM/YYYY">JJ/MM/AAAA</option><option value="YYYY-MM-DD">AAAA-MM-JJ</option><option value="MM/DD/YYYY">MM/JJ/AAAA</option>
-                </select></div>
-            </div>
-            <div className="field-row">
-              <div className="field"><label>Colonne date</label>
-                <select value={dateCol} onChange={(e) => setDateCol(e.target.value)}>{headers.map((h) => <option key={h} value={h}>{h}</option>)}</select></div>
-              <div className="field"><label>Colonne libellé</label>
-                <select value={labelCol} onChange={(e) => setLabelCol(e.target.value)}>{headers.map((h) => <option key={h} value={h}>{h}</option>)}</select></div>
-            </div>
-            <div className="field">
-              <label>Montants</label>
-              <div className="type-toggle">
-                <button type="button" className={`type-opt${amountMode === "single" ? " active" : ""}`} onClick={() => setAmountMode("single")}>Une colonne montant</button>
-                <button type="button" className={`type-opt${amountMode === "split" ? " active" : ""}`} onClick={() => setAmountMode("split")}>Débit / Crédit séparés</button>
-              </div>
-            </div>
-            {amountMode === "single" ? (
+              {templateMsg && <div className={`preset-msg${templateMsg.ok ? " ok" : ""}`} role="status">{templateMsg.text}</div>}
+
               <div className="field-row">
-                <div className="field"><label>Colonne montant</label>
-                  <select value={amountCol} onChange={(e) => setAmountCol(e.target.value)}><option value="">—</option>{headers.map((h) => <option key={h} value={h}>{h}</option>)}</select></div>
-                <div className="field"><label>Décimale</label>
-                  <select value={decimal} onChange={(e) => setDecimal(e.target.value)}><option value=",">Virgule (1 234,56)</option><option value=".">Point (1,234.56)</option></select></div>
+                <div className="field"><label htmlFor="csv-sep">Séparateur</label>
+                  <select id="csv-sep" value={t.separator} onChange={(e) => patch({ separator: e.target.value })}>{Object.entries(SEP_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
+                <div className="field"><label htmlFor="csv-skip">Lignes à ignorer avant l&apos;en-tête</label>
+                  <input id="csv-skip" type="number" min={0} max={50} value={t.skipLines} onChange={(e) => patch({ skipLines: Math.max(0, Math.min(50, Number(e.target.value) || 0)), dateCol: "", labelCol: "", amountCol: "", debitCol: "", creditCol: "" })} />
+                  <div className="field-hint">Certaines banques ajoutent des lignes (compte, période…) au-dessus des colonnes.</div></div>
               </div>
-            ) : (
               <div className="field-row">
-                <div className="field"><label>Colonne débit</label>
-                  <select value={debitCol} onChange={(e) => setDebitCol(e.target.value)}><option value="">—</option>{headers.map((h) => <option key={h} value={h}>{h}</option>)}</select></div>
-                <div className="field"><label>Colonne crédit</label>
-                  <select value={creditCol} onChange={(e) => setCreditCol(e.target.value)}><option value="">—</option>{headers.map((h) => <option key={h} value={h}>{h}</option>)}</select></div>
+                <div className="field"><label htmlFor="csv-date">Format de date</label>
+                  <select id="csv-date" value={t.dateFormat} onChange={(e) => patch({ dateFormat: e.target.value as CsvTemplate["dateFormat"] })}>{DATE_FORMATS.map((f) => <option key={f} value={f}>{DATE_LABELS[f]}</option>)}</select></div>
+                <div className="field"><label htmlFor="csv-dec">Décimale des montants</label>
+                  <select id="csv-dec" value={t.decimal} onChange={(e) => patch({ decimal: e.target.value as "," | "." })}><option value=",">Virgule (1 234,56)</option><option value=".">Point (1,234.56)</option></select></div>
               </div>
-            )}
-            {previewLines.length > 0 && (
-              <div className="raw-preview">
-                <div className="rp-title">Aperçu des {previewLines.length} premières lignes</div>
-                <div className="wizard-preview-scroll">
-                  <table className="rp-table">
-                    <thead><tr>{headers.map((h) => <th key={h}>{h}</th>)}</tr></thead>
-                    <tbody>{previewLines.map((row, ri) => <tr key={ri}>{row.map((cell, ci) => <td key={ci}>{cell}</td>)}</tr>)}</tbody>
-                  </table>
+              <div className="field-row">
+                <div className="field"><label htmlFor="csv-dcol">Colonne date</label>
+                  <select id="csv-dcol" value={t.dateCol} onChange={(e) => patch({ dateCol: e.target.value })}>{colOptions(true)}</select></div>
+                <div className="field"><label htmlFor="csv-lcol">Colonne libellé</label>
+                  <select id="csv-lcol" value={t.labelCol} onChange={(e) => patch({ labelCol: e.target.value })}>{colOptions(true)}</select></div>
+              </div>
+              <div className="field">
+                <label>Montants</label>
+                <div className="type-toggle">
+                  <button type="button" className={`type-opt${t.amountMode === "single" ? " active" : ""}`} onClick={() => patch({ amountMode: "single" })}>Une colonne montant</button>
+                  <button type="button" className={`type-opt${t.amountMode === "split" ? " active" : ""}`} onClick={() => patch({ amountMode: "split" })}>Débit / Crédit séparés</button>
                 </div>
               </div>
-            )}
-          </div>
+              {t.amountMode === "single" ? (
+                <>
+                  <div className="field"><label htmlFor="csv-acol">Colonne montant</label>
+                    <select id="csv-acol" value={t.amountCol} onChange={(e) => patch({ amountCol: e.target.value })}>{colOptions(true)}</select></div>
+                  <label className="set-row" style={{ cursor: "pointer" }}>
+                    <div className="flex-1"><div className="set-name">Inverser le signe</div><div className="set-desc">À cocher si les dépenses sont positives dans le fichier (cartes de crédit, certains exports).</div></div>
+                    <input type="checkbox" role="switch" aria-label="Inverser le signe des montants" checked={t.invertSign} onChange={(e) => patch({ invertSign: e.target.checked })} />
+                  </label>
+                </>
+              ) : (
+                <div className="field-row">
+                  <div className="field"><label htmlFor="csv-dbcol">Colonne débit</label>
+                    <select id="csv-dbcol" value={t.debitCol} onChange={(e) => patch({ debitCol: e.target.value })}>{colOptions(true)}</select></div>
+                  <div className="field"><label htmlFor="csv-crcol">Colonne crédit</label>
+                    <select id="csv-crcol" value={t.creditCol} onChange={(e) => patch({ creditCol: e.target.value })}>{colOptions(true)}</select></div>
+                </div>
+              )}
 
-          {/* Étape 3 */}
+              <div className={`preset-msg${parsed.rows.length ? " ok" : ""}`} role="status" data-testid="parse-summary">
+                {parsed.rows.length} opération{parsed.rows.length > 1 ? "s" : ""} lue{parsed.rows.length > 1 ? "s" : ""}
+                {parsed.issues.length > 0 && <> · <strong>{parsed.issues.length} ligne{parsed.issues.length > 1 ? "s" : ""} ignorée{parsed.issues.length > 1 ? "s" : ""}</strong> ({parsed.issues.slice(0, 3).map((i) => `ligne ${i.line} : ${i.reason}`).join(" ; ")}{parsed.issues.length > 3 ? "…" : ""})</>}
+              </div>
+              {tokens.length > 0 && (
+                <div className="raw-preview">
+                  <div className="rp-title">Aperçu du fichier à partir de la ligne {t.skipLines + 1}</div>
+                  <div className="wizard-preview-scroll">
+                    <table className="rp-table">
+                      <thead><tr>{headers.map((h, i) => <th key={i}>{h}</th>)}</tr></thead>
+                      <tbody>{tokens.slice(t.skipLines + 1).filter((r) => r.some(Boolean)).slice(0, 5).map((row, ri) => <tr key={ri}>{row.map((cell, ci) => <td key={ci}>{cell}</td>)}</tr>)}</tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Étape 3 : vérification / saisie */}
           <div className={`import-step${step === 3 ? " active" : ""}`}>
             <div className="import-summary">
               <div className="isum">
-                <div><div className="isum-lbl">Fichier</div><div className="isum-val">{fileName || "—"}</div></div>
+                <div><div className="isum-lbl">{source === "manual" ? "Source" : "Fichier"}</div><div className="isum-val">{source === "manual" ? "Saisie manuelle" : fileName || "—"}</div></div>
                 <div><div className="isum-lbl">Compte</div><div className="isum-val">{bank ? `${bank.name} · ` : ""}{acct?.name ?? "—"}</div></div>
                 <div><div className="isum-lbl">Attribué à</div><div className="isum-val">{ownerNames.length ? ownerNames.join(", ") : "—"}</div></div>
                 <div><div className="isum-lbl">Solde net</div><div className={`isum-val num ${netCents >= 0 ? "pos" : "neg"}`}>{netCents >= 0 ? "+" : "−"}{formatCents(Math.abs(netCents))}</div></div>
               </div>
-              {dups > 0 && <div className="warn"><i aria-hidden="true" className="ti ti-alert-triangle" /> {dups} ligne{dups > 1 ? "s" : ""} ignorée{dups > 1 ? "s" : ""} — doublon probable avec l&apos;historique.</div>}
+              {dups > 0 && <div className="warn"><i aria-hidden="true" className="ti ti-alert-triangle" /> {dups} ligne{dups > 1 ? "s" : ""} en doublon probable avec l&apos;historique (décochée{dups > 1 ? "s" : ""} par défaut).</div>}
+              {issues.length > 0 && <div className="warn" data-testid="import-issues"><i aria-hidden="true" className="ti ti-alert-triangle" /> {issues.length} ligne{issues.length > 1 ? "s" : ""} non lue{issues.length > 1 ? "s" : ""} : {issues.slice(0, 3).map((i) => `ligne ${i.line} (${i.reason})`).join(" ; ")}{issues.length > 3 ? "…" : ""}</div>}
             </div>
             <div className="preview-list">
-              {previewRows.map((row, i) => {
+              {view.map((row) => {
                 const cat = categories.find((c) => c.id === row.categoryId)
                 return (
-                  <label key={i} className={`pv-row${row.isDup ? " dup" : ""}`}>
-                    <input type="checkbox" checked={row.checked} onChange={() => toggleRow(i)} />
+                  <div key={row.key} className={`pv-row pv-edit${row.dup ? " dup" : ""}${row.errors.length ? " invalid" : ""}`}>
+                    <input type="checkbox" aria-label="Importer cette ligne" checked={row.checked} onChange={(e) => setRow(row.key, { checked: e.target.checked })} />
                     <span className="tx-icon" style={{ width: 32, height: 32, background: `${cat?.colorHex ?? "#888780"}22`, color: cat?.colorHex ?? "#888780" }}><i aria-hidden="true" className={`ti ${cat?.icon ?? "ti-tag"}`} /></span>
-                    <span className="pv-info"><span className="pv-name">{row.name}</span>{row.isDup && <span className="pv-raw">Doublon détecté</span>}</span>
-                    <select className="pv-cat" value={row.categoryId} onChange={(e) => setRowCat(i, e.target.value)}>
+                    <input type="date" aria-label="Date" className="pv-in" value={row.date} onChange={(e) => setRow(row.key, { date: e.target.value })} />
+                    <input type="text" aria-label="Libellé" className="pv-in pv-name-in" placeholder="Libellé" value={row.name} onChange={(e) => setRow(row.key, { name: e.target.value })} />
+                    <select aria-label="Catégorie" className="pv-cat" value={row.categoryId} onChange={(e) => setRow(row.key, { categoryId: e.target.value })}>
                       <option value="">Catégorie…</option>
                       {categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
                     </select>
-                    <span className="pv-date">{fmtDate(row.date)}</span>
-                    <span className={`pv-amt num ${row.amountCents >= 0 ? "pos" : "neg"}`}>{row.amountCents >= 0 ? "+" : "−"}{formatCents(Math.abs(row.amountCents))}</span>
-                  </label>
+                    <input type="text" inputMode="decimal" aria-label="Montant" className={`pv-in pv-amt-in num ${row.cents !== null && row.cents < 0 ? "neg" : "pos"}`} placeholder="-12,50" value={row.amountText} onChange={(e) => setRow(row.key, { amountText: e.target.value })} />
+                    <button type="button" className="icon-btn" aria-label="Supprimer cette ligne" onClick={() => setRows((prev) => prev.filter((r) => r.key !== row.key))}><i aria-hidden="true" className="ti ti-trash" /></button>
+                    {row.dup && <span className="pv-raw">Doublon détecté</span>}
+                    {row.errors.length > 0 && <span className="pv-raw" style={{ color: "var(--danger)" }}>À corriger : {row.errors.join(", ")}</span>}
+                  </div>
                 )
               })}
             </div>
+            <button type="button" className="link-btn" onClick={() => setRows((prev) => [...prev, blankRow()])}><i aria-hidden="true" className="ti ti-plus" /> Ajouter une ligne</button>
+            <div className="field-hint">Montant négatif = dépense, positif = revenu. Les lignes à corriger ne sont pas importées.</div>
             {importError && <div className="obj-modal-err"><i aria-hidden="true" className="ti ti-alert-circle" /> {importError}</div>}
           </div>
         </div>
 
         <div className="modal-foot">
-          <button type="button" className="btn btn-ghost" style={{ visibility: step === 1 ? "hidden" : "visible" }} onClick={() => setStep(step === 3 ? 2 : 1)}>Retour</button>
+          <button type="button" className="btn btn-ghost" style={{ visibility: step === 1 ? "hidden" : "visible" }} onClick={back}>Retour</button>
           <div style={{ flex: 1 }} />
           <button type="button" className="btn btn-ghost" onClick={onClose}>Annuler</button>
-          <button type="button" className="btn btn-primary" disabled={nextDisabled} onClick={() => (step === 1 ? goToStep2() : step === 2 ? goToStep3() : void handleImport())}>
+          <button type="button" className="btn btn-primary" disabled={nextDisabled} onClick={next}>
             {nextLabel} {step < 3 && <i aria-hidden="true" className="ti ti-arrow-right" />}
           </button>
         </div>

@@ -1,4 +1,6 @@
 "use client"
+import { SortTh } from "@/components/ui/TableView"
+import { useTableView } from "@/lib/use-table-view"
 import { useState, useEffect, useMemo } from "react"
 import { Line } from "react-chartjs-2"
 import {
@@ -337,6 +339,11 @@ export function TrajectoireClient() {
       .catch(() => setError("Impossible de charger les données."))
       .finally(() => setLoading(false))
   }, [])
+
+  const projections = useMemo(() => (data?.projections ?? []).map((row) => ({ ...row, variation: row.patrimoineNetCents - (data?.patrimoineNetCents ?? 0) })), [data])
+  const projView = useTableView(projections, {
+    horizon: (r) => r.year, financier: (r) => r.financierCents, immobilier: (r) => r.immobilierCents, dettes: (r) => r.dettesCents, net: (r) => r.patrimoineNetCents, variation: (r) => r.variation,
+  })
 
   const sim = useMemo(() => {
     if (!data) return null
@@ -718,17 +725,17 @@ export function TrajectoireClient() {
             <table className="traj-table">
               <thead>
                 <tr>
-                  <th className="traj-th">Horizon</th>
-                  <th className="traj-th">Financier</th>
-                  <th className="traj-th">Immobilier</th>
-                  <th className="traj-th">Dettes</th>
-                  <th className="traj-th">Patrimoine net</th>
-                  <th className="traj-th">Variation</th>
+                  <SortTh view={projView} col="horizon" className="traj-th">Horizon</SortTh>
+                  <SortTh view={projView} col="financier" className="traj-th">Financier</SortTh>
+                  <SortTh view={projView} col="immobilier" className="traj-th">Immobilier</SortTh>
+                  <SortTh view={projView} col="dettes" className="traj-th">Dettes</SortTh>
+                  <SortTh view={projView} col="net" className="traj-th">Patrimoine net</SortTh>
+                  <SortTh view={projView} col="variation" className="traj-th">Variation</SortTh>
                 </tr>
               </thead>
               <tbody>
-                {data.projections.map(row => {
-                  const variation = row.patrimoineNetCents - data.patrimoineNetCents
+                {projView.rows.map(row => {
+                  const variation = row.variation
                   return (
                     <tr key={row.year} className="traj-row">
                       <td className="traj-td">
