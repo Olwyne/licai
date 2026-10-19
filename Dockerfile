@@ -14,4 +14,4 @@ ENV NEXT_TELEMETRY_DISABLED=1
 EXPOSE 3000
 
 # npm install : le volume node_modules persiste entre les rebuilds, il faut donc resynchroniser les dépendances au démarrage
-CMD ["sh", "-c", "npm install --no-audit --no-fund && npm run db:migrate && npm run dev -- --hostname 0.0.0.0"]
+CMD ["sh", "-c", "npm install --no-audit --no-fund && (npm run db:migrate || echo \"[licai] migration Drizzle en échec : voir ci-dessus\") && npm run dev -- --hostname 0.0.0.0"]
