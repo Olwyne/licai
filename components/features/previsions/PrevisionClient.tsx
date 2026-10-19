@@ -1,5 +1,6 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useFetch } from "@/lib/use-fetch"
+import { useState } from "react"
 import { Chip } from "@/components/ui/Chip"
 import { BarChart } from "@/components/charts/BarChart"
 import Link from "next/link"
@@ -30,16 +31,7 @@ function sign(n: number): string { return n >= 0 ? `+ ${formatCents(n)}` : `− 
 
 export function PrevisionClient() {
   const [horizon, setHorizon] = useState<Horizon>(12)
-  const [data, setData]       = useState<PrevisionData | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    setLoading(true)
-    fetch(`/api/previsions?horizon=${horizon}`)
-      .then(r => r.json())
-      .then((json: { data?: PrevisionData }) => { if (json.data) setData(json.data) })
-      .finally(() => setLoading(false))
-  }, [horizon])
+  const { data, loading } = useFetch<PrevisionData>(`/api/previsions?horizon=${horizon}`)
 
   const months = data?.months ?? []
   const kpi    = data?.kpi

@@ -1,5 +1,6 @@
 "use client"
-import { useEffect, useState, useCallback } from "react"
+
+import { useFetch } from "@/lib/use-fetch"
 import { useRouter } from "next/navigation"
 import { formatCents } from "@/lib/money"
 
@@ -78,31 +79,8 @@ interface Props {
 
 export function RapportView({ month }: Props) {
   const router = useRouter()
-  const [data, setData] = useState<RapportData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const loadData = useCallback(async (m: string) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch(`/api/rapport?month=${m}`)
-      const json: { data?: RapportData; error?: string } = await res.json()
-      if (!res.ok || json.error) {
-        setError(json.error ?? "Erreur inconnue")
-      } else if (json.data) {
-        setData(json.data)
-      }
-    } catch {
-      setError("Erreur de chargement")
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    void loadData(month)
-  }, [month, loadData])
+  const { data, error: fetchError, loading } = useFetch<RapportData>(`/api/rapport?month=${month}`, "Erreur de chargement")
+  const error = fetchError || null
 
   const goMonth = (m: string) => {
     router.push(`/rapport?month=${m}`)

@@ -1,11 +1,11 @@
 "use client"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import Link from "next/link"
 import type { DashboardData } from "@/lib/server/dashboard-data"
 import type { Series } from "@/lib/server/dashboard-series"
-import { ASSETS, computePortfolio, type ProfileKey } from "@/lib/finance/invest"
+import { ASSETS, computePortfolio } from "@/lib/finance/invest"
 import { eur, eurS, pc, pcS } from "@/lib/finance/format"
-import { loadProfile, loadQuotes, overrides } from "@/components/features/finance/quotes"
+import { useQuoteOverrides, useStoredProfile } from "@/components/features/finance/quotes"
 import { Kpi, PageHeader, StatRow } from "@/components/features/finance/ui"
 import { DonutChart } from "@/components/charts/DonutChart"
 import { FlowBars, SoldeLine } from "@/components/features/dashboard/DashCharts"
@@ -65,10 +65,8 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
   const [custom, setCustom] = useState<{ from: string; to: string } | null>(null)
   const [rangeOpen, setRangeOpen] = useState(false)
   const [series, setSeries] = useState<Series>(d.series)
-  const [profile, setProfile] = useState<ProfileKey>("equilibre")
-  const [quotes, setQuotes] = useState(() => ({}) as ReturnType<typeof overrides>)
-
-  useEffect(() => { setProfile(loadProfile()); setQuotes(overrides(loadQuotes())) }, [])
+  const profile = useStoredProfile()
+  const quotes = useQuoteOverrides()
 
   const loadSeries = useCallback(async (p: string, range?: { from: string; to: string }) => {
     if (p === "m" && !range) { setSeries(d.series); return }

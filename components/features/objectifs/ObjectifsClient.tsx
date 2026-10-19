@@ -1,5 +1,6 @@
 "use client"
-import { useState, useEffect, useCallback } from "react"
+import { useFetch } from "@/lib/use-fetch"
+import { useState } from "react"
 import { Chip } from "@/components/ui/Chip"
 import { formatCents } from "@/lib/money"
 import { goalOutlook } from "@/lib/finance/alerts-engine"
@@ -308,40 +309,20 @@ function KpiRow({ goalList }: { goalList: Goal[] }) {
 // ─── Main client component ───────────────────────────────────────────────────
 
 export default function ObjectifsClient() {
-  const [goalList, setGoalList]   = useState<GoalWithPockets[]>([])
-  const [accounts, setAccounts]   = useState<AccountRow[]>([])
-  const [members, setMembers]     = useState<MemberRow[]>([])
-  const [loading, setLoading]     = useState(true)
-  const [loadError, setLoadError] = useState("")
+  const goals = useFetch<GoalWithPockets[]>("/api/goals", "Impossible de charger les objectifs.")
+  const accountsFetch = useFetch<(AccountRow & { balanceBaseCents?: number })[]>("/api/accounts")
+  const membersFetch = useFetch<MemberRow[]>("/api/members")
+  const goalList = goals.data ?? []
+  const setGoalList = (u: GoalWithPockets[] | ((prev: GoalWithPockets[]) => GoalWithPockets[])) =>
+    goals.setData((prev) => (typeof u === "function" ? u(prev ?? []) : u))
+  // les soldes des comptes sont affichés dans la devise de référence
+  const accounts = (accountsFetch.data ?? []).map((a) => ({ ...a, balanceCents: a.balanceBaseCents ?? a.balanceCents }))
+  const members = membersFetch.data ?? []
+  const loading = goals.loading && !goals.data
+  const loadError = goals.error
   const [filter, setFilter]       = useState<FilterMode>("tous")
   const [modalGoal, setModalGoal] = useState<GoalWithPockets | null | "new">(null)
   const [addFundsGoal, setAddFundsGoal] = useState<GoalWithPockets | null>(null)
-
-  const load = useCallback(async () => {
-    try {
-      const [gRes, aRes, mRes] = await Promise.all([fetch("/api/goals"), fetch("/api/accounts"), fetch("/api/members")])
-      if (gRes.ok) {
-        const json = (await gRes.json()) as { data: GoalWithPockets[] }
-        setGoalList(json.data)
-      } else {
-        setLoadError("Impossible de charger les objectifs.")
-      }
-      if (aRes.ok) {
-        const aJson = (await aRes.json()) as { data: AccountRow[] }
-        setAccounts(aJson.data.map((a) => ({ ...a, balanceCents: (a as AccountRow & { balanceBaseCents?: number }).balanceBaseCents ?? a.balanceCents })))
-      }
-      if (mRes.ok) {
-        const mJson = (await mRes.json()) as { data: MemberRow[] }
-        setMembers(mJson.data)
-      }
-    } catch {
-      setLoadError("Erreur réseau. Veuillez réessayer.")
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => { void load() }, [load])
 
   const filtered = goalList.filter((g) => {
     if (filter === "court") return g.kind === "court"

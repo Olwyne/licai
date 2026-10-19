@@ -1,21 +1,26 @@
 "use client"
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useCallback, useContext, useMemo, useSyncExternalStore } from "react"
 
 interface PrivacyCtx { private: boolean; toggle: () => void }
 const Ctx = createContext<PrivacyCtx>({ private: false, toggle: () => {} })
 
+const KEY = "licai-privacy"
+const EVENT = "licai-privacy-changed"
+const subscribe = (cb: () => void) => {
+  window.addEventListener("storage", cb); window.addEventListener(EVENT, cb)
+  return () => { window.removeEventListener("storage", cb); window.removeEventListener(EVENT, cb) }
+}
+const read = (): boolean => { try { return localStorage.getItem(KEY) === "1" } catch { return false } }
+
 export function PrivacyProvider({ children }: { children: React.ReactNode }) {
-  const [priv, setPriv] = useState(false)
-  useEffect(() => {
-    try { setPriv(localStorage.getItem("licai-privacy") === "1") } catch {}
+  // faux au rendu serveur et à l'hydratation, puis valeur enregistrée dans le navigateur
+  const priv = useSyncExternalStore(subscribe, read, () => false)
+  const toggle = useCallback(() => {
+    try { localStorage.setItem(KEY, read() ? "0" : "1") } catch { /* stockage indisponible */ }
+    window.dispatchEvent(new Event(EVENT))
   }, [])
-  function toggle() {
-    setPriv(p => {
-      try { localStorage.setItem("licai-privacy", p ? "0" : "1") } catch {}
-      return !p
-    })
-  }
-  return <Ctx.Provider value={{ private: priv, toggle }}>{children}</Ctx.Provider>
+  const value = useMemo(() => ({ private: priv, toggle }), [priv, toggle])
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 
 export const usePrivacy = () => useContext(Ctx)

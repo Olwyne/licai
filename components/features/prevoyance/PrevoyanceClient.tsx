@@ -1,6 +1,7 @@
 "use client"
-import { useState, useEffect, useCallback } from "react"
+import { useState } from "react"
 import { formatCents } from "@/lib/money"
+import { useFetch } from "@/lib/use-fetch"
 import { PrevoyanceAnalysis } from "@/components/features/prevoyance/PrevoyanceAnalysis"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -198,28 +199,12 @@ function ContractModal({ contract, onClose, onSaved, onDeleted }: ContractModalP
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function PrevoyanceClient() {
-  const [data, setData] = useState<PrevoyanceData | null>(null)
-  const [loadError, setLoadError] = useState("")
-  const [reloadKey, setReloadKey] = useState(0)
+  const { data, error: loadError, reload: load, version: reloadKey, setData } = useFetch<PrevoyanceData>("/api/prevoyance", "Impossible de charger les contrats.")
   const [modal, setModal] = useState<{ open: boolean; item: ContractRow | null }>({ open: false, item: null })
-
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch("/api/prevoyance")
-      if (!res.ok) { setLoadError("Impossible de charger les contrats."); return }
-      const json = (await res.json()) as { data: PrevoyanceData }
-      setData(json.data)
-    } catch {
-      setLoadError("Erreur réseau.")
-    }
-  }, [])
-
-  useEffect(() => { void load() }, [load])
 
   function onSaved() {
     setModal({ open: false, item: null })
     void load()
-    setReloadKey((k) => k + 1)
   }
 
   function onDeleted(id: string) {

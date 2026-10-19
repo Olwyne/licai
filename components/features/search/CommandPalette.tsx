@@ -24,7 +24,12 @@ const KIND_ICONS: Record<SearchResult["kind"], string> = {
 
 const KIND_ORDER: SearchResult["kind"][] = ["transaction", "account", "member", "category"]
 
+/** La palette n'existe que lorsqu'elle est ouverte : sa saisie et ses résultats repartent de zéro à chaque ouverture. */
 export function CommandPalette({ open, onClose }: Props) {
+  return open ? <PaletteContent onClose={onClose} /> : null
+}
+
+function PaletteContent({ onClose }: { onClose: () => void }) {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState("")
@@ -34,18 +39,10 @@ export function CommandPalette({ open, onClose }: Props) {
   const [selected, setSelected] = useState(0)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Reset on close
   useEffect(() => {
-    if (!open) {
-      setQuery("")
-      setResults([])
-      setLoading(false)
-      setError(false)
-      setSelected(0)
-    } else {
-      setTimeout(() => inputRef.current?.focus(), 30)
-    }
-  }, [open])
+    const t = setTimeout(() => inputRef.current?.focus(), 30)
+    return () => clearTimeout(t)
+  }, [])
 
   // Debounced fetch
   const doSearch = useCallback((q: string) => {
@@ -84,7 +81,6 @@ export function CommandPalette({ open, onClose }: Props) {
 
   // Keyboard navigation
   useEffect(() => {
-    if (!open) return
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault()
@@ -106,9 +102,8 @@ export function CommandPalette({ open, onClose }: Props) {
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [open, results, selected, router, onClose])
+  }, [results, selected, router, onClose])
 
-  if (!open) return null
 
   // Group results by kind in order
   const grouped = KIND_ORDER

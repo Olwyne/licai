@@ -3,7 +3,8 @@ import { fmtCurrency } from "@/lib/finance/fx"
 import Link from "next/link"
 import { LoanModal } from "@/components/features/credits/LoanModal"
 import { PatrimoineInsights } from "./PatrimoineInsights"
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useFetch } from "@/lib/use-fetch"
+import { useState, useEffect, useRef } from "react"
 import { formatCents } from "@/lib/money"
 import type { Property, Loan } from "@/db/schema"
 
@@ -759,28 +760,12 @@ function EstimModal({ property, onClose, onDone }: { property: PropertyWithOwner
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function PatrimoineClient() {
-  const [data, setData] = useState<PatrimoineData | null>(null)
-  const [loadError, setLoadError] = useState("")
+  const { data, error: loadError, reload: load, version: insightsKey, setData } = useFetch<PatrimoineData>("/api/patrimoine")
 
   const [propertyModal, setPropertyModal] = useState<{ open: boolean; item: PropertyWithOwners | null }>({ open: false, item: null })
   const [patFilter, setPatFilter] = useState<string>("all")
-  const [insightsKey, setInsightsKey] = useState(0)
   const [estimModal, setEstimModal] = useState<PropertyWithOwners | null>(null)
   const [loanModal, setLoanModal] = useState<{ open: boolean; item: Loan | null }>({ open: false, item: null })
-
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch("/api/patrimoine")
-      if (!res.ok) { setLoadError("Impossible de charger les données."); return }
-      const json = (await res.json()) as { data: PatrimoineData }
-      setData(json.data)
-    } catch {
-      setLoadError("Erreur réseau.")
-    }
-  }, [])
-
-  useEffect(() => { void load() }, [load])
-  useEffect(() => { if (data) setInsightsKey((k) => k + 1) }, [data])
 
   function onPropertySaved(p: PropertyWithOwners) {
     setPropertyModal({ open: false, item: null })
@@ -801,7 +786,6 @@ export function PatrimoineClient() {
       return recompute({ ...prev, properties: prev.properties.filter((x) => x.id !== id) })
     })
   }
-
 
   if (loadError) {
     return (
