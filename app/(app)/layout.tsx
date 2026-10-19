@@ -6,7 +6,6 @@ import { CurrencyInit } from "@/components/layout/CurrencyInit"
 import { NavProvider } from "@/contexts/NavContext"
 import { MobileBar } from "@/components/layout/MobileBar"
 import { PeriodProvider } from "@/contexts/PeriodContext"
-import { PeriodPill } from "@/components/layout/PeriodPill"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { PrivacyProvider } from "@/contexts/PrivacyContext"
 import { ThemeProvider } from "@/contexts/ThemeContext"
@@ -30,7 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <Sidebar />
               <main className="main">
                 <MobileBar />
-                <div className="main-inner"><PeriodPill />{children}</div>
+                <div className="main-inner">{children}</div>
               </main>
             </div>
             <AssistantChat />

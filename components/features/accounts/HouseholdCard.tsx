@@ -53,7 +53,7 @@ export function HouseholdCard({
   return (
     <Card>
       <div className="hh-head">
-        <div className="hh-mark">🏠</div>
+        <div className="hh-mark"><i className="ti ti-home-heart" /></div>
         <div>
           <div className="hh-name">{householdName}</div>
           <div className="hh-sub">

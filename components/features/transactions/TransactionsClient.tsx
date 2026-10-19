@@ -1,4 +1,5 @@
 "use client"
+import { PeriodPill } from "@/components/layout/PeriodPill"
 import { usePeriod } from "@/contexts/PeriodContext"
 import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/Button"
@@ -179,14 +180,18 @@ export function TransactionsClient({
 
   return (
     <div className="page-transactions">
-      <div className="tx-page-header">
-        <h1>Transactions</h1>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Transactions</h1>
+          <div className="page-sub">{n} opération{n > 1 ? "s" : ""} · {isPrivate ? maskAmount("") : formatCents(Math.abs(expenseCents))} de dépenses</div>
+        </div>
         <div className="tx-page-actions">
+          <PeriodPill />
           <Button variant="ghost" size="sm" onClick={() => setShowImportModal(true)}>
-            Importer CSV
+            <i className="ti ti-upload" /> Importer CSV
           </Button>
           <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
-            + Ajouter une transaction
+            <i className="ti ti-plus" /> Ajouter une transaction
           </Button>
         </div>
       </div>
@@ -201,35 +206,13 @@ export function TransactionsClient({
         onChange={setFilters}
       />
 
-      <div className="tx-count-bar">
-        {n} opération{n > 1 ? "s" : ""}
-        {" · "}
-        <span className={isPrivate ? "private" : ""}>
-          {isPrivate ? maskAmount("") : formatCents(Math.abs(expenseCents))}
-        </span>
-        {" de dépenses"}
-        {totalPages > 1 && (
-          <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
-            <button
-              className="pagination-btn"
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={safePage === 0}
-            >
-              <i className="ti ti-chevron-left" />
-            </button>
-            <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>
-              {safePage + 1} / {totalPages}
-            </span>
-            <button
-              className="pagination-btn"
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={safePage === totalPages - 1}
-            >
-              <i className="ti ti-chevron-right" />
-            </button>
-          </span>
-        )}
-      </div>
+      {totalPages > 1 && (
+        <div className="tx-count-bar" style={{ justifyContent: "flex-end" }}>
+          <button className="pagination-btn" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={safePage === 0}><i className="ti ti-chevron-left" /></button>
+          <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>{safePage + 1} / {totalPages}</span>
+          <button className="pagination-btn" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={safePage === totalPages - 1}><i className="ti ti-chevron-right" /></button>
+        </div>
+      )}
 
       <BulkBar
         selected={selected}
@@ -245,6 +228,8 @@ export function TransactionsClient({
         transactions={pagedTx}
         accounts={accounts}
         categories={categories}
+        banks={banks}
+        members={members}
         selected={selected}
         onToggleSelect={toggleSelect}
         allPageSelected={allPageSelected}

@@ -26,13 +26,13 @@ test.describe("Impôts", () => {
 
   test("changing the tax situation recalculates and persists", async ({ page }) => {
     await page.goto("/impots")
-    await page.getByText("Modifier la situation fiscale").click()
+    await page.getByRole("button", { name: /^\W*Situation fiscale$/ }).click()
     await expect(page.getByRole("heading", { name: /situation fiscale du foyer/i })).toBeVisible()
     await page.locator(".modal .field", { hasText: "Dons aux associations" }).locator("input").fill("1000")
     await page.getByRole("button", { name: /recalculer/i }).click()
     await expect(page.getByRole("heading", { name: /situation fiscale du foyer/i })).not.toBeVisible()
     await page.reload()
-    await page.getByText("Modifier la situation fiscale").click()
+    await page.getByRole("button", { name: /^\W*Situation fiscale$/ }).click()
     await expect(page.locator(".modal .field", { hasText: "Dons aux associations" }).locator("input")).toHaveValue("1000")
   })
 })

@@ -2,6 +2,7 @@
 import { fmtCurrency, getBaseCurrency } from "@/lib/finance/fx"
 import { formatCents } from "@/lib/money"
 import { usePrivacy } from "@/contexts/PrivacyContext"
+import Link from "next/link"
 import { Chip } from "@/components/ui/Chip"
 import type { EnrichedAccount, Member, Bank } from "./types"
 
@@ -23,7 +24,7 @@ interface Props {
   accounts: EnrichedAccount[]
   ownerFilter: string
   onOwnerFilter: (f: string) => void
-  onAddAccount: () => void
+  txCounts?: Record<string, number>
   onEditAccount?: (account: EnrichedAccount) => void
   childViewId?: string | null
 }
@@ -34,7 +35,7 @@ export function AccountGroups({
   accounts,
   ownerFilter,
   onOwnerFilter,
-  onAddAccount,
+  txCounts = {},
   onEditAccount,
   childViewId,
 }: Props) {
@@ -88,9 +89,7 @@ export function AccountGroups({
               Comptes partagés
             </Chip>
           </div>
-          <button className="btn btn-primary btn-sm" onClick={onAddAccount} type="button">
-            + Nouveau compte
-          </button>
+          <Link className="btn btn-primary" href="/transactions?import=1"><i className="ti ti-file-import" /> Importer un CSV</Link>
         </div>
       )}
 
@@ -140,53 +139,43 @@ export function AccountGroups({
                       <div>
                         <div className="acct-name">{account.name}</div>
                         <div className="acct-meta">
-                          {typeLabel}
-                          {isShared && (
-                            <span className="acct-shared"> · Partagé</span>
-                          )}
+                          {typeLabel}{account.last4 ? ` · •••• ${account.last4}` : ""}
+                          {isShared && <> · <span className="acct-shared">Partagé</span></>}
                         </div>
-                        {account.ownerIds.length > 0 && (
-                          <div className="acct-owners">
-                            {account.ownerIds.map((ownerId) => {
-                              const m = members.find((mm) => mm.id === ownerId)
-                              if (m) {
-                                return (
-                                  <span
-                                    key={ownerId}
-                                    className="mini-av"
-                                    style={{
-                                      background: `${m.colorHex}22`,
-                                      color: m.colorHex,
-                                      borderColor: `${m.colorHex}55`,
-                                    }}
-                                    title={m.name}
-                                  >
-                                    {m.short[0]}
-                                  </span>
-                                )
-                              }
-                              return (
-                                <span key={ownerId} className="mini-av">
-                                  {ownerId[0]}
-                                </span>
-                              )
-                            })}
-                          </div>
-                        )}
+                        {account.purpose && <div className="acct-purpose"><i className="ti ti-target-arrow" /> {account.purpose}</div>}
                       </div>
+                      {account.ownerIds.length > 0 && (
+                        <div className="acct-owners">
+                          {account.ownerIds.map((ownerId) => {
+                            const m = members.find((mm) => mm.id === ownerId)
+                            return (
+                              <span
+                                key={ownerId}
+                                className="mini-av"
+                                style={m ? { background: `${m.colorHex}22`, color: m.colorHex, borderColor: `${m.colorHex}55`, width: 26, height: 26 } : { width: 26, height: 26 }}
+                                title={m?.name}
+                              >
+                                {(m?.short ?? ownerId)[0]}
+                              </span>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
-                    <div className={`acct-balance${isPrivate ? " private" : ""}`}>
+                    <div className={`acct-balance num${isPrivate ? " private" : ""}`}>
                       {account.currency !== getBaseCurrency() ? fmtCurrency(account.balanceCents / 100, account.currency) : formatCents(account.balanceCents)}
-                      {account.currency !== getBaseCurrency() && <small style={{ display: "block", fontSize: 11, color: "var(--fg-muted)", fontWeight: 400 }}>≈ {formatCents(account.balanceBaseCents)}</small>}
                     </div>
+                    {account.currency !== getBaseCurrency() && (
+                      <div className={`acct-cur num${isPrivate ? " private" : ""}`}>≈ {formatCents(account.balanceBaseCents)}</div>
+                    )}
                     <div className="acct-foot">
                       <span className="acct-sync">
-                        <i className="ti ti-refresh" /> Aucune opération importée
+                        <i className="ti ti-refresh" /> {(txCounts[account.id] ?? 0) === 0 ? "Aucune opération" : `${txCounts[account.id]} opération${txCounts[account.id] > 1 ? "s" : ""}`}
                       </span>
                       {!childOnly && (
-                        <button className="acct-import" disabled type="button">
-                          ⬆ Importer
-                        </button>
+                        <Link className="acct-import" href="/transactions?import=1" onClick={(e) => e.stopPropagation()}>
+                          <i className="ti ti-file-import" /> Importer
+                        </Link>
                       )}
                     </div>
                   </div>

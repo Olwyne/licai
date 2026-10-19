@@ -160,15 +160,15 @@ export function ImpotsClient() {
 
   return (
     <div className="page-impots">
-      <PageHeader title="Impôts" sub="Calcul, analyse et pistes d'optimisation du foyer" />
+      <PageHeader title="Impôts" sub="Calcul, analyse et pistes d'optimisation du foyer">
+        <button className="btn btn-primary" onClick={() => setOpen(true)}><i className="ti ti-adjustments" /> Situation fiscale</button>
+      </PageHeader>
 
       <div className="toolbar">
         <div className="chips" style={{ margin: 0 }}>
           <span className="budget-hint">{sub}</span>
           <span className="budget-hint">· montants en {getBaseCurrency()}</span>
         </div>
-        <div style={{ flex: 1 }} />
-        <span className="card-link" role="button" onClick={() => setOpen(true)}>Modifier la situation fiscale</span>
       </div>
 
       <div className="metrics">

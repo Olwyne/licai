@@ -1,6 +1,5 @@
 "use client"
 import { useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { CURRENCIES, currencySym, exposure, fmtCurrency, fxRate, getBaseCurrency, baseSym, type FxSource, type FxTable } from "@/lib/finance/fx"
 import { eur, pc } from "@/lib/finance/format"
@@ -25,10 +24,11 @@ interface Props {
   accounts: EnrichedAccount[]
   childGoals?: Record<string, Goal[]>
   childSpending?: Record<string, ChildSpending>
+  txCounts?: Record<string, number>
   fx: { rates: FxTable; source: FxSource; ts: string; positions: { value: number; qty: number; price: number; cur: string }[] }
 }
 
-export function AccountsClient({ household, members, banks, accounts, childGoals = {}, childSpending = {}, fx }: Props) {
+export function AccountsClient({ household, members, banks, accounts, childGoals = {}, childSpending = {}, txCounts = {}, fx }: Props) {
   const router = useRouter()
   const [fxOpen, setFxOpen] = useState(false)
   const [memberList, setMemberList] = useState<Member[]>(members)
@@ -93,7 +93,6 @@ export function AccountsClient({ household, members, banks, accounts, childGoals
           </div>
           {!childViewId && (
             <div style={{ display: "flex", gap: 8 }}>
-              <Link className="btn btn-ghost btn-sm" href="/transactions?import=1"><i className="ti ti-upload" /> Importer un CSV</Link>
               <button className="btn btn-primary btn-sm" type="button" onClick={() => setShowAccountModal(true)}>
                 <i className="ti ti-plus" /> Nouveau compte
               </button>
@@ -174,7 +173,7 @@ export function AccountsClient({ household, members, banks, accounts, childGoals
           accounts={accountList}
           ownerFilter={ownerFilter}
           onOwnerFilter={setOwnerFilter}
-          onAddAccount={() => setShowAccountModal(true)}
+          txCounts={txCounts}
           onEditAccount={(a) => setEditAccount(a)}
           childViewId={childViewId}
         />
