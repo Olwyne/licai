@@ -307,7 +307,7 @@ function ResetDataButton() {
       </button>
 
       {done && (
-        <p className="set-desc" style={{ padding: "8px 14px", color: "var(--primary)" }}>
+        <p className="set-desc" style={{ padding: "8px 14px", color: "var(--primary-ink)" }}>
           <i aria-hidden="true" className="ti ti-circle-check" /> Toutes les données ont été supprimées.
         </p>
       )}

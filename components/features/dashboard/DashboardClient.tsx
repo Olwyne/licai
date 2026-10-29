@@ -145,17 +145,22 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
         <button className="btn btn-ghost" onClick={() => window.open(`/rapport?month=${d.month}`, "_blank")}><i aria-hidden="true" className="ti ti-download" /> Exporter le rapport</button>
       </div>
 
+      <section className="card ov-lead" aria-label="Situation du mois">
+        <div className="ov-lead-main">
+          <h2 className="ov-lead-label">Reste à vivre</h2>
+          <div className={`ov-lead-fig num private${d.resteJour < 0 ? " neg" : ""}`}>{eur(d.resteJour)}<span> / jour</span></div>
+          <p className="ov-lead-sentence">Après charges fixes et crédits. {eur(d.depenses)} déjà dépensés en {d.monthLabel.split(" ")[0]}.</p>
+        </div>
+        <div className="stat-list ov-lead-side">
+          <StatRow label="Revenus du foyer" value={eur(d.revenus)} hint={d.salaires + d.loyers > 0 ? `salaires ${eur(d.salaires)} · loyers ${eur(d.loyers)}` : "entrées du mois"} />
+          <StatRow label="Dépenses" value={eur(d.depenses)} hint={`${d.nbExpenseTx} opérations`} />
+          <StatRow label="Épargne du mois" value={eur(d.epargne)} hint={`taux d'épargne ${pc(d.tauxEpargne)}`} cls={d.tauxEpargne >= 20 ? "pos" : ""} />
+        </div>
+      </section>
+
       <div className="metrics">
         <Kpi label={`Trésorerie · ${d.nbAccounts} comptes`} icon="ti-wallet" color="#1D9E75" value={eur(d.cash)}
           sub={d.cashPrevMonthPct != null ? <><i aria-hidden="true" className="ti ti-trending-up" /> {pcS(d.cashPrevMonthPct)} vs mois précédent</> : d.monthLabel} tone={d.cashPrevMonthPct != null && d.cashPrevMonthPct < 0 ? "down" : "up"} />
-        <Kpi label="Revenus du foyer" icon="ti-arrow-down-left" color="#1D9E75" value={eur(d.revenus)}
-          sub={d.salaires + d.loyers > 0 ? `Salaires ${eur(d.salaires)} · loyers ${eur(d.loyers)}` : "Entrées du mois"} />
-        <Kpi label={`Dépenses · ${d.monthLabel.split(" ")[0]}`} icon="ti-arrow-up-right" color="#D85A30" value={eur(d.depenses)} sub={`${d.nbExpenseTx} opérations`} />
-        <Kpi label="Épargne du mois" icon="ti-pig-money" color="#378ADD" value={eur(d.epargne)}
-          sub={<><i aria-hidden="true" className="ti ti-percentage" /> Taux d&apos;épargne {pc(d.tauxEpargne)}</>} tone={d.tauxEpargne >= 20 ? "up" : "down"} />
-      </div>
-      <div className="metrics">
-        <Kpi label="Reste à vivre / jour" icon="ti-calendar-dollar" color="#EF9F27" value={eur(d.resteJour)} sub="Après charges fixes et crédits" />
         <Kpi label="Charges fixes" icon="ti-repeat" color="#7C6BD6" value={eur(d.chargesFixes)} sub={`${d.nbRecurring} prélèvements actifs`} />
         <Kpi label="Taux d'endettement" icon="ti-percentage" color="#D4537E" value={d.tauxEndett != null ? pc(d.tauxEndett) : "—"}
           sub={d.tauxEndett != null && d.tauxEndett > 35 ? <><i aria-hidden="true" className="ti ti-alert-triangle" /> Seuil 35 % dépassé</> : "Sous le seuil de 35 %"} tone={d.tauxEndett != null && d.tauxEndett > 35 ? "down" : "up"} />
@@ -408,16 +413,25 @@ export function DashboardClient({ initialData: d }: { initialData: DashboardData
       <div className="grid-2 mb-16">
         <div className="card">
           <div className="card-header"><span className="card-title">Patrimoine &amp; dettes</span><Link className="card-link" href="/patrimoine">Patrimoine</Link></div>
-          <div className="stat-list">
-            <StatRow label="Immobilier estimé" value={eur(m.immo)} hint={`${d.ctx.properties.length} bien${d.ctx.properties.length > 1 ? "s" : ""} · ${d.ctx.properties.reduce((s, p) => s + (p.surface ?? 0), 0)} m²`} />
-            <StatRow label="Plus-value latente" value={"+ " + eur(m.immo - m.immoAchat)} hint={`${pc(m.immoAchat ? ((m.immo - m.immoAchat) / m.immoAchat) * 100 : 0, 1)} vs prix d'achat`} />
-            <StatRow label="Placements financiers" value={eur(S.total)} hint="actions, ETF, fonds euro, crypto" />
-            <StatRow label="Trésorerie" value={eur(d.cash)} hint={`${d.nbAccounts} comptes`} />
-            <StatRow label="Capital restant dû" value={"− " + eur(m.dette)} hint={`${d.ctx.loans.length} crédit${d.ctx.loans.length > 1 ? "s" : ""}`} />
-            <StatRow label="Patrimoine net" value={eur(m.net)} hint="actifs − dettes" />
-            <StatRow label="Rendement locatif brut" value={pc(m.rendement, 2)} hint={`${eur(d.loyers)} de loyer / mois`} />
-            <StatRow label="Taux moyen des crédits" value={pc(m.tauxMoyen, 2)} hint="pondéré par le capital" />
-            <StatRow label="Coût du crédit / mois" value={eur(m.coutCredit)} hint="part d'intérêts estimée" />
+          <div className="stat-groups">
+            <div className="stat-group">
+              <h3 className="stat-group-title">Ce que vous possédez</h3>
+              <StatRow label="Immobilier estimé" value={eur(m.immo)} hint={`${d.ctx.properties.length} bien${d.ctx.properties.length > 1 ? "s" : ""} · ${d.ctx.properties.reduce((s, p) => s + (p.surface ?? 0), 0)} m²`} />
+              <StatRow label="Plus-value latente" value={"+ " + eur(m.immo - m.immoAchat)} hint={`${pc(m.immoAchat ? ((m.immo - m.immoAchat) / m.immoAchat) * 100 : 0, 1)} vs prix d'achat`} />
+              <StatRow label="Placements financiers" value={eur(S.total)} hint="actions, ETF, fonds euro, crypto" />
+              <StatRow label="Trésorerie" value={eur(d.cash)} hint={`${d.nbAccounts} comptes`} />
+            </div>
+            <div className="stat-group">
+              <h3 className="stat-group-title">Ce que vous devez</h3>
+              <StatRow label="Capital restant dû" value={"− " + eur(m.dette)} hint={`${d.ctx.loans.length} crédit${d.ctx.loans.length > 1 ? "s" : ""}`} />
+              <StatRow label="Taux moyen des crédits" value={pc(m.tauxMoyen, 2)} hint="pondéré par le capital" />
+              <StatRow label="Coût du crédit / mois" value={eur(m.coutCredit)} hint="part d'intérêts estimée" />
+            </div>
+            <div className="stat-group">
+              <h3 className="stat-group-title">Bilan</h3>
+              <StatRow label="Patrimoine net" value={eur(m.net)} hint="actifs − dettes" />
+              <StatRow label="Rendement locatif brut" value={pc(m.rendement, 2)} hint={`${eur(d.loyers)} de loyer / mois`} />
+            </div>
           </div>
         </div>
         <div className="card">

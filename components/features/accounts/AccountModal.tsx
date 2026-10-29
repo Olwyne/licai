@@ -229,7 +229,7 @@ export function AccountModal({ members, banks, account, onClose, onSaved, onDele
                 <div className="owner-picker">
                   {members.map((m) => (
                     <button key={m.id} type="button" className={`owner-opt${ownerIds.includes(m.id) ? " on" : ""}`} onClick={() => toggleOwner(m.id)}>
-                      <span className="mini-av" style={{ background: `${m.colorHex}22`, color: m.colorHex, borderColor: `${m.colorHex}55`, width: 24, height: 24, fontSize: 10 }}>{initials(m.name)}</span>
+                      <span className="mini-av" style={{ background: `${m.colorHex}22`, color: m.colorHex, borderColor: `${m.colorHex}55`, width: 24, height: 24, fontSize: 11 }}>{initials(m.name)}</span>
                       {m.short}
                     </button>
                   ))}
