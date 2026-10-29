@@ -2111,3 +2111,18 @@ textarea:focus-visible, summary:focus-visible, [role="button"]:focus-visible, [t
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
   .spin { animation: none; }
 }
+
+/* ── Tableau de bord : situation du mois ───────────────────── */
+.ov-lead { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: center; margin-bottom: 18px; padding: 24px 26px; }
+.ov-lead-label { font-size: 14.5px; font-weight: 600; letter-spacing: -0.2px; color: var(--fg-secondary); }
+.ov-lead-fig { font-size: 44px; font-weight: 600; letter-spacing: -1.2px; line-height: 1.1; margin-top: 6px; overflow-wrap: anywhere; }
+.ov-lead-fig span { font-size: 15px; font-weight: 500; letter-spacing: 0; color: var(--fg-secondary); }
+.ov-lead-fig.neg { color: var(--danger); }
+.ov-lead-sentence { font-size: 13.5px; color: var(--fg-secondary); margin-top: 10px; max-width: 46ch; text-wrap: pretty; }
+.ov-lead-side .stat-row:first-child { padding-top: 0; }
+.stat-groups { display: flex; flex-direction: column; gap: 22px; }
+.stat-group-title { font-size: 13px; font-weight: 600; color: var(--fg); margin-bottom: 2px; }
+@media (max-width: 768px) {
+  .ov-lead { grid-template-columns: 1fr; gap: 18px; padding: 20px; }
+  .ov-lead-fig { font-size: 36px; }
+}
