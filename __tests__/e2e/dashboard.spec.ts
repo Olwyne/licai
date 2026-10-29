@@ -11,9 +11,10 @@ test.describe("Dashboard", () => {
     await expect(page.getByText(/tableau de bord & rapports du foyer/i)).toBeVisible()
   })
 
-  test("shows the 8 KPI cards", async ({ page }) => {
-    await expect(page.locator(".metric")).toHaveCount(8)
-    await expect(page.getByText("Revenus du foyer", { exact: true })).toBeVisible()
+  test("shows the month summary and the 4 KPI cards", async ({ page }) => {
+    await expect(page.getByRole("region", { name: "Situation du mois" }).getByRole("heading", { name: "Reste à vivre" })).toBeVisible()
+    await expect(page.locator(".metric")).toHaveCount(4)
+    await expect(page.getByText("Revenus du foyer").first()).toBeVisible()
     await expect(page.getByText("Patrimoine net", { exact: true }).first()).toBeVisible()
   })
 
