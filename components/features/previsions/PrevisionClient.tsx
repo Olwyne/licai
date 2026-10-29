@@ -120,7 +120,7 @@ export function PrevisionClient() {
             <span className="metric-label">Épargne placée</span>
             <span className="metric-ic" style={{ background: "#1D9E7520" }}><i aria-hidden="true" className="ti ti-pig-money" style={{ color: "#1D9E75" }} /></span>
           </div>
-          <div className="metric-value" style={{ color: "var(--primary)" }}>
+          <div className="metric-value" style={{ color: "var(--primary-ink)" }}>
             {loading ? "—" : kpi ? formatCents(kpi.epargneTotaleCents) : "—"}
           </div>
           <div className="metric-sub neutral">vers les placements</div>
@@ -188,11 +188,11 @@ export function PrevisionClient() {
               {monthView.rows.map((m: MonthForecast) => (
                 <tr key={m.month}>
                   <td>{longLabel(m.month)}</td>
-                  <td style={{ color: "var(--primary)" }}>{formatCents(m.incomeCents)}</td>
+                  <td style={{ color: "var(--primary-ink)" }}>{formatCents(m.incomeCents)}</td>
                   <td>{formatCents(m.chargesFixesCents)}</td>
                   <td>{formatCents(m.variableCents)}</td>
                   <td>{m.exceptionnelCents > 0 ? formatCents(m.exceptionnelCents) : "—"}</td>
-                  <td style={{ color: "var(--primary)" }}>{formatCents(m.epargne)}</td>
+                  <td style={{ color: "var(--primary-ink)" }}>{formatCents(m.epargne)}</td>
                   <td className="fw-600" style={{ color: m.netCents >= 0 ? "var(--primary)" : "var(--danger)" }}>
                     {sign(m.netCents)}
                   </td>

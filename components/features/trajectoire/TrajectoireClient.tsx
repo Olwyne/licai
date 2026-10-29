@@ -417,7 +417,7 @@ export function TrajectoireClient() {
           <div className="metric-top">
             <div className="metric-label">Patrimoine net</div>
             <div className="metric-ic" style={{ background: "var(--primary-muted)" }}>
-              <i aria-hidden="true" className="ti ti-database" style={{ color: "var(--primary)" }} />
+              <i aria-hidden="true" className="ti ti-database" style={{ color: "var(--primary-ink)" }} />
             </div>
           </div>
           <div className="metric-value">
@@ -432,7 +432,7 @@ export function TrajectoireClient() {
           <div className="metric-top">
             <div className="metric-label">Épargne mensuelle</div>
             <div className="metric-ic" style={{ background: "var(--primary-muted)" }}>
-              <i aria-hidden="true" className="ti ti-refresh" style={{ color: "var(--primary)" }} />
+              <i aria-hidden="true" className="ti ti-refresh" style={{ color: "var(--primary-ink)" }} />
             </div>
           </div>
           <div className="metric-value">
@@ -566,7 +566,7 @@ export function TrajectoireClient() {
               ))}
               <div style={{ padding: "12px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontWeight: 600, fontSize: 13 }}>Patrimoine net</span>
-                <span style={{ fontWeight: 700, fontSize: 15, color: "var(--primary)" }}>
+                <span style={{ fontWeight: 700, fontSize: 15, color: "var(--primary-ink)" }}>
                   {fmt(data.patrimoineNetCents)}
                 </span>
               </div>
